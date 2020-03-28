@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebAPI</name>
+    </assembly>
+    <members>
+        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.Core.Annotations.HttpFile,System.Decimal,System.Int32,System.Boolean)">
+            <summary>
+            test doc Test001
+            and Test001
+            </summary>
+            <param name="token">A token sample222</param>
+            <param name="arg"></param>
+            <param name="dateTime"></param>
+            <param name="httpFile"></param>
+            <param name="mm">mmmmmmmm!</param>
+            <param name="fff"></param>
+            <param name="bbb"></param>
+            <returns>
+            rrrrrr
+            rrrrrr2
+            </returns>
+        </member>
+        <member name="T:WebAPI.MyEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+            </summary>
+        </member>
+        <member name="F:WebAPI.MyEnum.A">
+            <summary>
+            MyEnum A
+            </summary>
+        </member>
+        <member name="F:WebAPI.MyEnum.B">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:WebAPI.MyEnum.C">
+            <summary>
+            MyEnum C
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test002.BB">
+            <summary>
+            Test002 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test003`1.BBB">
+            <summary>
+            Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="T:WebAPI.Test004">
+            <summary>
+            Test004Test004Test004Test004Test004Test004Test004
+            Test004Test004Test004Test004Test004Test004Test004
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test004.BBBB">
+            <summary>
+            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="T:WebAPI.Test001`1">
+            <summary>
+            Test001Test001Tes
+            t001Test001Test001Test001
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.AAA">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.A">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.B">
+            <summary>
+            BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.D">
+            <summary>
+            DDD
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.F">
+            <summary>
+            FF
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.myEnum">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:WebAPI.Test001`1.Test0010`1">
+            <summary>
+            Test0010 Test0010 Test0010 Test0010
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:WebAPI.Test001`1.Test0010`1.C1">
+            <summary>
+            C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.Test0010`1.C2">
+            <summary>
+            C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test001`1.Test0010`1.C3">
+            <summary>
+            C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test0011.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test0011.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI.Test0011.AAA">
+            <summary>
+            AAA@@@
+            </summary>
+        </member>
+    </members>
+</doc>

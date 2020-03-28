@@ -37,6 +37,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.HttpOverrides;
+using Business.Core.Auth;
 
 namespace Business.AspNet
 {
@@ -222,23 +223,6 @@ namespace Business.AspNet
         public string Index { get; set; }
     }
 
-    [Use]
-    [Logger(canWrite: false)]
-    public struct Token : Core.Auth.IToken
-    {
-        [System.Text.Json.Serialization.JsonPropertyName("K")]
-        public string Key { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("R")]
-        public string Remote { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("P")]
-        public string Path { get; set; }
-
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string Callback { get; set; }
-    }
-
     public struct Host
     {
         /// <summary>
@@ -267,8 +251,6 @@ namespace Business.AspNet
     public abstract class BusinessBase : BusinessBase<ResultObject<object>>
     {
         public BusinessBase() => this.Logger = new Logger(async (Logger.LoggerData x) => Help.Console(x.ToString()));
-
-        public Func<dynamic, Core.Auth.IToken, Task<Core.Auth.IToken>> GetToken { get; set; } = async (c, token) => token;
     }
 
     /// <summary>
@@ -368,11 +350,11 @@ namespace Business.AspNet
                 return Help.ErrorCmd(business, c);
             }
 
-            var token = await ((BusinessBase)business).GetToken(this.HttpContext, new Token //token
+            var token = await business.GetToken(this.HttpContext, new Token //token
             {
                 Key = t,
                 Remote = string.Format("{0}:{1}", this.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString(), this.HttpContext.Connection.RemotePort),
-                Path = this.Request.Path.Value,
+                //Path = this.Request.Path.Value,
             });
 
             var result = null != route.Command && null != parameters ?

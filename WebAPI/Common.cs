@@ -36,7 +36,7 @@ namespace WebAPI
     {
         static BusinessBase()
         {
-            Utils.LogClient.BaseAddress = new Uri("http://47.115.31.62:8000/Log");
+            Utils.LogClient.BaseAddress = new Uri("http://xx:8000/Log");
         }
 
         public BusinessBase()
