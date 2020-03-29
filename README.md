@@ -6,6 +6,6 @@ using Business.AspNet;
 
 public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
-    app.InitBusiness();
+    app.UseBusiness();
 }
 ```

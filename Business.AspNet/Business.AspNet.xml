@@ -139,18 +139,28 @@
             "context", "socket", "httpFile" 
             </summary>
         </member>
-        <member name="M:Business.AspNet.Utils.InitBusiness(Microsoft.AspNetCore.Builder.IApplicationBuilder,Business.Core.BootstrapAll,System.String)">
+        <member name="M:Business.AspNet.Utils.UseBusiness(Microsoft.AspNetCore.Builder.IApplicationBuilder,Business.Core.BootstrapAll{Business.AspNet.BusinessBase},System.String)">
             <summary>
-            Use in the startup class Configure method
+            Configure Business.Core in the startup class configure method
             </summary>
             <param name="app"></param>
             <param name="bootstrap"></param>
             <param name="docDir"></param>
             <returns></returns>
         </member>
-        <member name="F:Business.AspNet.Utils.receiveBufferSize">
+        <member name="F:Business.AspNet.Utils.SocketKeepAliveInterval">
+            <summary>
+            120
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.SocketReceiveBufferSize">
             <summary>
             4096
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.SocketMaxDegreeOfParallelism">
+            <summary>
+            -1
             </summary>
         </member>
     </members>

@@ -243,6 +243,33 @@ namespace Business.AspNet
         public IHttpClientFactory HttpClientFactory { get; set; }
     }
 
+    [Use]
+    [Logger(canWrite: false)]
+    public struct Token : IToken
+    {
+        [System.Text.Json.Serialization.JsonPropertyName("K")]
+        public string Key { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("R")]
+        public string Remote { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("P")]
+        public string Path { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string Callback { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public OriginValue Origin { get; set; }
+
+        public enum OriginValue
+        {
+            Default,
+            Http,
+            WebSocket
+        }
+    }
+
     [Command(Group = Utils.BusinessJsonGroup)]
     [JsonArg(Group = Utils.BusinessJsonGroup)]
     [Command(Group = Utils.BusinessSocketGroup)]
@@ -251,6 +278,8 @@ namespace Business.AspNet
     public abstract class BusinessBase : BusinessBase<ResultObject<object>>
     {
         public BusinessBase() => this.Logger = new Logger(async (Logger.LoggerData x) => Help.Console(x.ToString()));
+
+        public Func<dynamic, Token, Task<IToken>> GetToken { get; set; }
     }
 
     /// <summary>
@@ -262,7 +291,6 @@ namespace Business.AspNet
     [RequestSizeLimit(long.MaxValue)]
     //int.MaxValue bug https://github.com/aspnet/AspNetCore/issues/13719
     [RequestFormLimits(KeyLengthLimit = 1_009_100_000, ValueCountLimit = 1_009_100_000, ValueLengthLimit = 1_009_100_000, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
-    //[EnableCors("any")]
     public class BusinessController : Controller
     {
         /// <summary>
@@ -278,7 +306,7 @@ namespace Business.AspNet
 
             var g = Utils.BusinessJsonGroup;//fixed grouping
             var path = this.Request.Path.Value.TrimStart('/');
-            if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Configer.BusinessList.TryGetValue(route.Business, out IBusiness business)) { return this.NotFound(); }
+            if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out BusinessBase business)) { return this.NotFound(); }
 
             string c = null;
             string t = null;
@@ -352,9 +380,10 @@ namespace Business.AspNet
 
             var token = await business.GetToken(this.HttpContext, new Token //token
             {
+                Origin = Token.OriginValue.Http,
                 Key = t,
                 Remote = string.Format("{0}:{1}", this.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString(), this.HttpContext.Connection.RemotePort),
-                //Path = this.Request.Path.Value,
+                Path = this.Request.Path.Value,
             });
 
             var result = null != route.Command && null != parameters ?
@@ -379,8 +408,15 @@ namespace Business.AspNet
 
     public static class Utils
     {
+        internal static BootstrapAll<BusinessBase> bootstrap;
+
         public const string BusinessJsonGroup = "j";
         public const string BusinessSocketGroup = "s";
+
+        /// <summary>
+        /// "context", "socket", "httpFile" 
+        /// </summary>
+        internal static readonly string[] contextParameterNames = new string[] { "context", "socket", "httpFile" };
 
         public static readonly string LocalLogPath = System.IO.Path.Combine(System.IO.Path.DirectorySeparatorChar.ToString(), "data", $"{AppDomain.CurrentDomain.FriendlyName}.log.txt");
 
@@ -417,27 +453,32 @@ namespace Business.AspNet
             LogClient = Host.HttpClientFactory.CreateClient("log");
         }
 
-        public static async Task<string> Call(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
+        #region Call
+
+        public static async Task<string> Callctd(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
         public static async Task<string> Call(this HttpClient httpClient, params KeyValuePair<string, string>[] keyValues)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == keyValues) { throw new ArgumentNullException(nameof(keyValues)); }
 
             using (var content = new FormUrlEncodedContent(keyValues))
-            using (var request = new HttpRequestMessage { Method = HttpMethod.Post, Content = content })
-            using (var response = await httpClient.SendAsync(request))
             {
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
+                return await httpClient.Call(content);
             }
         }
-        public static async Task<string> CallJson(this HttpClient httpClient, string data, string mediaType = "application/json")
+        public static async Task<string> Call(this HttpClient httpClient, string data, string mediaType = "application/json")
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == data) { throw new ArgumentNullException(nameof(data)); }
 
             using (var content = new StringContent(data, System.Text.Encoding.UTF8, mediaType))
-            using (var request = new HttpRequestMessage { Method = HttpMethod.Post, Content = content })
+            {
+                return await httpClient.Call(content);
+            }
+        }
+        public static async Task<string> Call(this HttpClient httpClient, HttpContent content, HttpMethod method = null)
+        {
+            using (var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content })
             using (var response = await httpClient.SendAsync(request))
             {
                 response.EnsureSuccessStatusCode();
@@ -445,21 +486,18 @@ namespace Business.AspNet
             }
         }
 
-        public static async Task<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Call(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
+        #endregion
+
+        public static async Task<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Callctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
         /// <summary>
-        /// "context", "socket", "httpFile" 
-        /// </summary>
-        internal static readonly string[] contextParameterNames = new string[] { "context", "socket", "httpFile" };
-
-        /// <summary>
-        /// Use in the startup class Configure method
+        /// Configure Business.Core in the startup class configure method
         /// </summary>
         /// <param name="app"></param>
         /// <param name="bootstrap"></param>
         /// <param name="docDir"></param>
         /// <returns></returns>
-        public static IApplicationBuilder InitBusiness(this IApplicationBuilder app, BootstrapAll bootstrap = null, string docDir = "wwwroot")
+        public static IApplicationBuilder UseBusiness(this IApplicationBuilder app, BootstrapAll<BusinessBase> bootstrap = null, string docDir = "wwwroot")
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
 
@@ -471,7 +509,7 @@ namespace Business.AspNet
             var staticDir = app.UseStaticDir(docDir);
             Console.WriteLine($"Static Directory: {staticDir}");
 
-            bootstrap = bootstrap ?? Bootstrap.Create();
+            bootstrap = bootstrap ?? Bootstrap.CreateAll<BusinessBase>();
             bootstrap.UseType(contextParameterNames)
                 .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterNames)
                 .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterNames);
@@ -489,8 +527,13 @@ namespace Business.AspNet
             {
                 bootstrap.Config.UseDoc.Config.Host = Host.Addresses;
             }
+            if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Group))
+            {
+                bootstrap.Config.UseDoc.Config.Group = BusinessJsonGroup;
+            }
 
             bootstrap.Build();
+            Utils.bootstrap = bootstrap;
 
             //writ url to page
             DocUI.Write(staticDir);
@@ -521,15 +564,15 @@ namespace Business.AspNet
             #region AcceptWebSocket
 
             var webSocketcfg = Host.AppSettings.GetSection("WebSocket");
-            var keepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", 120);
-            receiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", 4096);
-            maxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", -1);
+            SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
+            SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
+            SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
             //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
 
             var webSocketOptions = new WebSocketOptions()
             {
-                KeepAliveInterval = TimeSpan.FromSeconds(keepAliveInterval),
-                ReceiveBufferSize = receiveBufferSize
+                KeepAliveInterval = TimeSpan.FromSeconds(SocketKeepAliveInterval),
+                ReceiveBufferSize = SocketReceiveBufferSize
             };
 
             //foreach (var item in allowedOrigins)
@@ -571,7 +614,7 @@ namespace Business.AspNet
         static string UseStaticDir(this IApplicationBuilder app, string staticDir)
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
-            if (null == staticDir) { throw new ArgumentNullException(nameof(staticDir)); }
+            if (string.IsNullOrWhiteSpace(staticDir)) { throw new ArgumentException("must have value", nameof(staticDir)); }
 
             var dir = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, staticDir);
 
@@ -611,11 +654,19 @@ namespace Business.AspNet
         #region WebSocket
 
         /// <summary>
+        /// 120
+        /// </summary>
+        public static int SocketKeepAliveInterval = 120;
+
+        /// <summary>
         /// 4096
         /// </summary>
-        public static int receiveBufferSize = 4096;
+        public static int SocketReceiveBufferSize = 4096;
 
-        public static int maxDegreeOfParallelism;
+        /// <summary>
+        /// -1
+        /// </summary>
+        public static int SocketMaxDegreeOfParallelism = -1;
 
         public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> Sockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
 
@@ -632,10 +683,12 @@ namespace Business.AspNet
 
             try
             {
-                var buffer = new byte[receiveBufferSize];
-                var socketResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                while (!socketResult.CloseStatus.HasValue)
+                var buffer = new byte[SocketReceiveBufferSize];
+                WebSocketReceiveResult socketResult;
+                do
                 {
+                    socketResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
                     try
                     {
                         var receiveData = MessagePack.MessagePackSerializer.Deserialize<ReceiveData>(buffer);
@@ -650,9 +703,9 @@ namespace Business.AspNet
                         //receiveData.b = "bbb";
                         //*
 
-                        if (string.IsNullOrWhiteSpace(receiveData.a) || !Configer.BusinessList.TryGetValue(receiveData.a, out IBusiness business))
+                        if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out BusinessBase business))
                         {
-                            result = ResultType.ErrorBusiness(receiveData.a);// Bind.BusinessError(ResultObject<string>.ResultTypeDefinition, receiveData.a);
+                            result = ResultType.ErrorBusiness(receiveData.a);
                             await SocketSendAsync(result.ToBytes(), id);
                         }
                         else
@@ -669,12 +722,14 @@ namespace Business.AspNet
                                                  //the incoming use object
                             new UseEntry(context, "context"), //context
                             new UseEntry(webSocket, "socket"), //webSocket
-                            new UseEntry(new Token //token
+                            new UseEntry(await business.GetToken(context, new Token //token
                             {
+                                Origin = Token.OriginValue.WebSocket,
                                 Key = receiveData.t,
                                 Remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort),
-                                Callback = b
-                            }, "session")
+                                Callback = b,
+                                //Path = this.Request.Path.Value,
+                            }), "session")
                             );
 
                             // Socket set callback
@@ -685,7 +740,7 @@ namespace Business.AspNet
                                     var result2 = result as IResult;
                                     result2.Callback = b;
 
-                                    var data = ResultFactory.ResultCreateToDataBytes(result2).ToBytes();
+                                    var data = result2.ResultCreateToDataBytes().ToBytes();
 
                                     await SocketSendAsync(data, id);
                                 }
@@ -703,9 +758,7 @@ namespace Business.AspNet
                     {
                         break;
                     }
-
-                    socketResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-                }
+                } while (!socketResult.CloseStatus.HasValue);
 
                 if (webSocket.State == WebSocketState.Open)
                 {
@@ -730,7 +783,7 @@ namespace Business.AspNet
         {
             if (null == id || 0 == id.Length)
             {
-                Parallel.ForEach(Sockets, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, async c =>
+                Parallel.ForEach(Sockets, new ParallelOptions { MaxDegreeOfParallelism = SocketMaxDegreeOfParallelism }, async c =>
                 {
                     if (c.Value.State != WebSocketState.Open) { return; }
 
@@ -751,7 +804,7 @@ namespace Business.AspNet
             }
             else
             {
-                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism }, async c =>
+                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = SocketMaxDegreeOfParallelism }, async c =>
                 {
                     if (string.IsNullOrWhiteSpace(c)) { return; }
 

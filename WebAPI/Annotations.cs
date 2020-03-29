@@ -18,9 +18,6 @@ namespace WebAPI.Annotations
 
         public override async ValueTask<IResult> Proces(dynamic value)
         {
-            var result = CheckNull(this, value);
-            if (!result.HasData) { return result; }
-
             var key = value.Key as string;
 
             //..1: check token key
@@ -44,9 +41,6 @@ namespace WebAPI.Annotations
 
         public override async ValueTask<IResult> Proces(dynamic value)
         {
-            var result = CheckNull(this, value);
-            if (!result.HasData) { return result; }
-
             var key = value.Key as string;
 
             //..1: check 2: convert

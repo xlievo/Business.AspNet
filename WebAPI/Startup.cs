@@ -40,17 +40,16 @@ namespace WebAPI
 
             /*
             location / {
-            proxy_pass http://id4.sts.identity:80;
-            proxy_set_header Host $host;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
+                proxy_pass http://github.com:80;
+                proxy_set_header Host $host;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+            }
             */
 
             app.UseCors("any");
 
-            app.InitBusiness(Business.Core.Bootstrap.Create()
-                .UseDoc(new Business.Core.Document.Config { Debug = true, Benchmark = true, SetToken = false, Testing = true, Group = Utils.BusinessJsonGroup, GroupEnable = true, Navigtion = true }));
+            app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>().UseDoc(new Business.Core.Document.Config { Debug = true, Benchmark = true, Testing = true, Navigtion = true }));
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Business.AspNet;
 using Business.Core;
 using Business.Core.Annotations;
+using Business.Core.Auth;
 using Business.Core.Utils;
 using System;
 using WebAPI.Annotations;
@@ -10,7 +11,7 @@ namespace WebAPI
     [TokenCheck]
     [Use]
     [Logger(canWrite: false)]
-    public struct Token : Business.Core.Auth.IToken
+    public struct Token : IToken
     {
         [System.Text.Json.Serialization.JsonPropertyName("K")]
         public string Key { get; set; }
@@ -23,6 +24,9 @@ namespace WebAPI
 
         [System.Text.Json.Serialization.JsonIgnore]
         public string Callback { get; set; }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public Business.AspNet.Token.OriginValue Origin { get; set; }
     }
 
     [SessionCheck]
@@ -43,10 +47,11 @@ namespace WebAPI
         {
             this.GetToken = async (context, token) => new Token
             {
+                Origin = token.Origin,
                 Key = token.Key,
                 Remote = token.Remote,
                 Callback = token.Callback,
-                Path = context.Request.Path.Value,
+                Path = token.Path,
             };
 
             this.Logger = new Logger(async (Logger.LoggerData x) =>
