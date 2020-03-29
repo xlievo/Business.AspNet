@@ -516,7 +516,7 @@ namespace Business.AspNet
 
             if (null == bootstrap.Config.UseDoc)
             {
-                bootstrap.UseDoc(staticDir, new Config { Debug = true, Benchmark = true, SetToken = false, Testing = true, Group = BusinessJsonGroup, Navigtion = false });
+                bootstrap.UseDoc(staticDir, new Config { Debug = true, Benchmark = true, Group = BusinessJsonGroup });
             }
 
             if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.OutDir))

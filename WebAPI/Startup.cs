@@ -49,7 +49,12 @@ namespace WebAPI
 
             app.UseCors("any");
 
-            app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>().UseDoc(new Business.Core.Document.Config { Debug = true, Benchmark = true, Testing = true, Navigtion = true }));
+            app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>().UseDoc(new Business.Core.Document.Config
+            {
+                Debug = true,
+                Benchmark = true,
+                Navigtion = true
+            }));
         }
     }
 }
