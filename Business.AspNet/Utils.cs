@@ -124,10 +124,16 @@ namespace Business.AspNet
         [System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
 
+        /// <summary>
+        /// Data type
+        /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
         public System.Type DataType { get; set; }
 
+        /// <summary>
+        /// Result object generic definition
+        /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
         public System.Type GenericDefinition { get; }
@@ -157,7 +163,7 @@ namespace Business.AspNet
         public byte[] ToDataBytes() => MessagePack.MessagePackSerializer.Serialize(this.Data);
     }
 
-    public struct ReceiveData
+    struct ReceiveData
     {
         /// <summary>
         /// business
@@ -185,8 +191,16 @@ namespace Business.AspNet
         public string b;
     }
 
+    /// <summary>
+    /// Deserialization of binary format
+    /// </summary>
     public class MessagePackArg : ArgumentAttribute
     {
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
         public MessagePackArg(int state = -13, string message = null) : base(state, message)
         {
             this.CanNull = false;
@@ -194,6 +208,12 @@ namespace Business.AspNet
             this.ArgMeta.Filter |= FilterModel.NotDefinition;
         }
 
+        /// <summary>
+        /// processing method
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public override async ValueTask<IResult> Proces<Type>(dynamic value)
         {
             var result = CheckNull(this, value);
@@ -223,6 +243,9 @@ namespace Business.AspNet
         public string Index { get; set; }
     }
 
+    /// <summary>
+    /// Environment
+    /// </summary>
     public struct Host
     {
         /// <summary>
@@ -231,7 +254,7 @@ namespace Business.AspNet
         public string Addresses { get; set; }
 
         /// <summary>
-        /// AppSettings node
+        /// Configuration file "AppSettings" node
         /// </summary>
         public IConfigurationSection AppSettings { get; set; }
 
@@ -243,33 +266,67 @@ namespace Business.AspNet
         public IHttpClientFactory HttpClientFactory { get; set; }
     }
 
+    /// <summary>
+    /// Built in token object
+    /// </summary>
     [Use]
     [Logger(canWrite: false)]
     public struct Token : IToken
     {
+        /// <summary>
+        /// token
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("K")]
         public string Key { get; set; }
 
+        /// <summary>
+        /// Client IP address
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("R")]
         public string Remote { get; set; }
 
+        /// <summary>
+        /// Request path
+        /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("P")]
         public string Path { get; set; }
 
+        /// <summary>
+        /// Request callback data
+        /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public string Callback { get; set; }
 
+        /// <summary>
+        /// Source of request
+        /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
         public OriginValue Origin { get; set; }
 
+        /// <summary>
+        /// Source of request
+        /// </summary>
         public enum OriginValue
         {
+            /// <summary>
+            /// Default call
+            /// </summary>
             Default,
+            /// <summary>
+            /// HTTP request
+            /// </summary>
             Http,
+            /// <summary>
+            /// WebSocket request
+            /// </summary>
             WebSocket
         }
     }
 
+    /// <summary>
+    /// Business base class
+    /// <para>With "j", "s" group</para>
+    /// </summary>
     [Command(Group = Utils.BusinessJsonGroup)]
     [JsonArg(Group = Utils.BusinessJsonGroup)]
     [Command(Group = Utils.BusinessSocketGroup)]
@@ -277,8 +334,14 @@ namespace Business.AspNet
     [Logger]
     public abstract class BusinessBase : BusinessBase<ResultObject<object>>
     {
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public BusinessBase() => this.Logger = new Logger(async (Logger.LoggerData x) => Help.Console(x.ToString()));
 
+        /// <summary>
+        /// Get the requested token
+        /// </summary>
         public Func<dynamic, Token, Task<IToken>> GetToken { get; set; }
     }
 
@@ -358,8 +421,8 @@ namespace Business.AspNet
             {
                 var arg = d.TryJsonDeserialize<DocUI.BenchmarkArg>();
                 if (default(DocUI.BenchmarkArg).Equals(arg)) { return new ArgumentNullException(nameof(arg)).Message; }
-                arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
-                //arg.host = $"{Utils.Host.Addresses}/{business.Configer.Info.BusinessName}";
+                //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
+                arg.host = $"{Utils.Host.Addresses}/{business.Configer.Info.BusinessName}";
                 return await DocUI.Benchmark(arg);
             }
 
@@ -406,24 +469,45 @@ namespace Business.AspNet
         }
     }
 
+    /// <summary>
+    /// Business.AspNet
+    /// </summary>
     public static class Utils
     {
         internal static BootstrapAll<BusinessBase> bootstrap;
-
-        public const string BusinessJsonGroup = "j";
-        public const string BusinessSocketGroup = "s";
 
         /// <summary>
         /// "context", "socket", "httpFile" 
         /// </summary>
         internal static readonly string[] contextParameterNames = new string[] { "context", "socket", "httpFile" };
 
+        /// <summary>
+        /// Default JSON format grouping
+        /// </summary>
+        public const string BusinessJsonGroup = "j";
+        /// <summary>
+        /// Default binary format grouping
+        /// </summary>
+        public const string BusinessSocketGroup = "s";
+
+        /// <summary>
+        /// local log path
+        /// </summary>
         public static readonly string LocalLogPath = System.IO.Path.Combine(System.IO.Path.DirectorySeparatorChar.ToString(), "data", $"{AppDomain.CurrentDomain.FriendlyName}.log.txt");
 
+        /// <summary>
+        /// result type
+        /// </summary>
         public static readonly Type ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
 
+        /// <summary>
+        /// Environment instance
+        /// </summary>
         public static Host Host = new Host();
 
+        /// <summary>
+        /// Log client
+        /// </summary>
         public readonly static HttpClient LogClient;
 
         static Utils()
@@ -455,7 +539,21 @@ namespace Business.AspNet
 
         #region Call
 
+        /// <summary>
+        /// Called in "c,t,d" "application/x-www-form-urlencoded" format
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="c"></param>
+        /// <param name="t"></param>
+        /// <param name="d"></param>
+        /// <returns></returns>
         public static async Task<string> Callctd(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
+        /// <summary>
+        /// Called in "application/x-www-form-urlencoded" format
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="keyValues"></param>
+        /// <returns></returns>
         public static async Task<string> Call(this HttpClient httpClient, params KeyValuePair<string, string>[] keyValues)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
@@ -466,6 +564,13 @@ namespace Business.AspNet
                 return await httpClient.Call(content);
             }
         }
+        /// <summary>
+        /// Called in "application/json" format
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="data"></param>
+        /// <param name="mediaType"></param>
+        /// <returns></returns>
         public static async Task<string> Call(this HttpClient httpClient, string data, string mediaType = "application/json")
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
@@ -476,6 +581,13 @@ namespace Business.AspNet
                 return await httpClient.Call(content);
             }
         }
+        /// <summary>
+        /// HTTP call
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="content"></param>
+        /// <param name="method"></param>
+        /// <returns></returns>
         public static async Task<string> Call(this HttpClient httpClient, HttpContent content, HttpMethod method = null)
         {
             using (var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content })
@@ -488,10 +600,20 @@ namespace Business.AspNet
 
         #endregion
 
+        /// <summary>
+        /// Write out the default log
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="data"></param>
+        /// <param name="index"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
         public static async Task<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Callctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
         /// <summary>
         /// Configure Business.Core in the startup class configure method
+        /// <para>Injection context parameter name: "context", "socket", "httpFile"</para>
+        /// <para>Injection token parameter name:"session"</para>
         /// </summary>
         /// <param name="app"></param>
         /// <param name="bootstrap"></param>
@@ -504,10 +626,17 @@ namespace Business.AspNet
             app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
 
             Host.AppSettings = app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings");
+
             Host.Addresses = app.ServerFeatures.Get<IServerAddressesFeature>().Addresses.FirstOrDefault() ?? "http://localhost:5000";
+            var addresses = Host.Addresses.ToLower();
+            if (addresses.StartsWith("http://*:") || addresses.StartsWith("https://*:") || addresses.StartsWith("http://+:") || addresses.StartsWith("https://+:"))
+            {
+                Host.Addresses = Host.Addresses.Replace("*", "localhost").Replace("+", "localhost");
+            }
 
             var staticDir = app.UseStaticDir(docDir);
             Console.WriteLine($"Static Directory: {staticDir}");
+            Console.WriteLine($"Addresses: {Host.Addresses}");
 
             bootstrap = bootstrap ?? Bootstrap.CreateAll<BusinessBase>();
             bootstrap.UseType(contextParameterNames)
@@ -523,13 +652,13 @@ namespace Business.AspNet
             {
                 bootstrap.Config.UseDoc.OutDir = staticDir;
             }
-            if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
-            {
-                bootstrap.Config.UseDoc.Config.Host = Host.Addresses;
-            }
             if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Group))
             {
                 bootstrap.Config.UseDoc.Config.Group = BusinessJsonGroup;
+            }
+            if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
+            {
+                bootstrap.Config.UseDoc.Config.Host = Host.Addresses;
             }
 
             bootstrap.Build();

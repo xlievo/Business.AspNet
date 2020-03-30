@@ -36,8 +36,6 @@ namespace WebAPI
                 app.UseDeveloperExceptionPage();
             }
 
-            //app.UseRouting();
-
             /*
             location / {
                 proxy_pass http://github.com:80;

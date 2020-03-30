@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.1.0</Version>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <Version>0.2.0</Version>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>https://github.com/xlievo/Business.AspNet</Description>
     <Copyright>Copyright ©  2014~2020 Business Project - http://www.tmopen.com</Copyright>
     <PackageProjectUrl>https://github.com/xlievo/Business.AspNet</PackageProjectUrl>
@@ -12,14 +12,19 @@
     <RepositoryUrl>https://github.com/xlievo/Business.AspNet</RepositoryUrl>
     <PackageReleaseNotes>This is the middleware library from Business.Core to ASP.NET</PackageReleaseNotes>
     <PackageTags>Business.Core, Business.AspNet</PackageTags>
+    <Authors>xlievo</Authors>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>D:\Source\Repos\Business.AspNet\Business.AspNet\Business.AspNet.xml</DocumentationFile>
+    <DocumentationFile></DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="Business.AspNet.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="..\icon.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
@@ -32,7 +37,7 @@
 
   <ItemGroup>
     <PackageReference Include="Business.Core" Version="1.4.5" />
-    <PackageReference Include="Business.DocUI" Version="1.0.6" />
+    <PackageReference Include="Business.DocUI" Version="1.0.7" />
     <PackageReference Include="MessagePack" Version="2.1.90" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="2.2.0" />
