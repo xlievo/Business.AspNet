@@ -16,6 +16,7 @@
 ==================================*/
 
 using Business.Core;
+using Business.Core.Auth;
 using Business.Core.Annotations;
 using Business.Core.Result;
 using Business.Core.Utils;
@@ -25,6 +26,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -36,8 +38,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.WebSockets;
-using Microsoft.AspNetCore.HttpOverrides;
-using Business.Core.Auth;
 
 namespace Business.AspNet
 {
@@ -163,49 +163,102 @@ namespace Business.AspNet
         public byte[] ToDataBytes() => MessagePack.MessagePackSerializer.Serialize(this.Data);
     }
 
-    struct ReceiveData
+    readonly struct WebSocketReceive
+    {
+        public WebSocketReceive(string token, IReceiveData data, BusinessBase business, HttpContext context, WebSocket webSocket)
+        {
+            Token = token;
+            Data = data;
+            Business = business;
+            Context = context;
+            WebSocket = webSocket;
+        }
+
+        public string Token { get; }
+
+        public IReceiveData Data { get; }
+
+        public BusinessBase Business { get; }
+
+        public HttpContext Context { get; }
+
+        public WebSocket WebSocket { get; }
+    }
+
+    /// <summary>
+    /// Business package
+    /// </summary>
+    public interface IReceiveData
     {
         /// <summary>
         /// business
         /// </summary>
-        public string a;
+        string a { get; set; }
 
         /// <summary>
         /// cmd
         /// </summary>
-        public string c;
+        string c { get; set; }
 
-        /// <summary>
-        /// token
-        /// </summary>
-        public string t;
+        //string t { get; set; }
 
         /// <summary>
         /// data
         /// </summary>
-        public byte[] d;
+        byte[] d { get; set; }
 
         /// <summary>
-        /// callback
+        /// callback Default c
         /// </summary>
-        public string b;
+        string b { get; set; }
+    }
+
+    /// <summary>
+    /// Business package
+    /// </summary>
+    public struct ReceiveData : IReceiveData
+    {
+        /// <summary>
+        /// business
+        /// </summary>
+        public string a { get; set; }
+
+        /// <summary>
+        /// cmd
+        /// </summary>
+        public string c { get; set; }
+
+        ///// <summary>
+        ///// token
+        ///// </summary>
+        //public string t { get; set; }
+
+        /// <summary>
+        /// data
+        /// </summary>
+        public byte[] d { get; set; }
+
+        /// <summary>
+        /// callback Default c
+        /// </summary>
+        public string b { get; set; }
     }
 
     /// <summary>
     /// Deserialization of binary format
     /// </summary>
-    public class MessagePackArg : ArgumentAttribute
+    public class MessagePackAttribute : ArgumentAttribute
     {
         /// <summary>
         /// Default constructor
         /// </summary>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public MessagePackArg(int state = -13, string message = null) : base(state, message)
+        public MessagePackAttribute(int state = -13, string message = null) : base(state, message)
         {
             this.CanNull = false;
             this.Description = "MessagePackArg Binary parsing";
-            this.ArgMeta.Filter |= FilterModel.NotDefinition;
+            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition;
         }
 
         /// <summary>
@@ -224,6 +277,44 @@ namespace Business.AspNet
                 return this.ResultCreate(MessagePack.MessagePackSerializer.Deserialize<Type>(value));
             }
             catch (Exception ex) { return this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"); }
+        }
+    }
+
+    /// <summary>
+    /// Socket group
+    /// </summary>
+    public abstract class SocketGroupAttribute : ArgumentAttribute
+    {
+        /// <summary>
+        /// Socket group
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        public SocketGroupAttribute(int state, string message) : base(state, message)
+        {
+            this.CanNull = false;
+            this.Description = "Socket group";
+            this.Group = Utils.BusinessWebSocketGroup;
+            //this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition;
+        }
+    }
+
+    /// <summary>
+    /// Json group
+    /// </summary>
+    public abstract class JsonGroupAttribute : ArgumentAttribute
+    {
+        /// <summary>
+        /// Json group
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        public JsonGroupAttribute(int state, string message) : base(state, message)
+        {
+            this.CanNull = false;
+            this.Description = "Json group";
+            this.Group = Utils.BusinessJsonGroup;
+            //this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition;
         }
     }
 
@@ -324,14 +415,16 @@ namespace Business.AspNet
     }
 
     /// <summary>
-    /// Business base class
-    /// <para>With "j", "s" group</para>
+    /// Business base class for ASP.Net Core
+    /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
     [Command(Group = Utils.BusinessJsonGroup)]
     [JsonArg(Group = Utils.BusinessJsonGroup)]
-    [Command(Group = Utils.BusinessSocketGroup)]
-    [MessagePackArg(Group = Utils.BusinessSocketGroup)]
-    [Logger]
+    [Command(Group = Utils.BusinessWebSocketGroup)]
+    [MessagePack(Group = Utils.BusinessWebSocketGroup)]
+    [Logger(Group = Utils.BusinessJsonGroup)]
+    [Logger(Group = Utils.BusinessWebSocketGroup, ValueType = Logger.ValueType.Out)]
+    //[Logger(Group = Utils.BusinessUDPGroup, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : BusinessBase<ResultObject<object>>
     {
         /// <summary>
@@ -342,7 +435,36 @@ namespace Business.AspNet
         /// <summary>
         /// Get the requested token
         /// </summary>
-        public Func<dynamic, Token, Task<IToken>> GetToken { get; set; }
+        /// <returns></returns>
+        [Ignore]
+        public abstract ValueTask<IToken> GetToken(dynamic context, Token token);
+
+        /// <summary>
+        /// Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
+        /// <para>checked and return a token</para>
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="webSocket"></param>
+        /// <returns></returns>
+        [Ignore]
+        public virtual async ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket) => string.Empty;
+
+        /// <summary>
+        /// Receive a websocket packet, return IReceiveData object
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        [Ignore]
+        public virtual async ValueTask<IReceiveData> WebSocketReceive(byte[] buffer) => MessagePack.MessagePackSerializer.Deserialize<ReceiveData>(buffer);
+
+        /// <summary>
+        /// WebSocket dispose
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="webSocket"></param>
+        /// <returns></returns>
+        [Ignore]
+        public virtual async ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket) { }
     }
 
     /// <summary>
@@ -353,7 +475,8 @@ namespace Business.AspNet
     [Logger(canWrite: false)]
     [RequestSizeLimit(long.MaxValue)]
     //int.MaxValue bug https://github.com/aspnet/AspNetCore/issues/13719
-    [RequestFormLimits(KeyLengthLimit = 1_009_100_000, ValueCountLimit = 1_009_100_000, ValueLengthLimit = 1_009_100_000, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
+    //[RequestFormLimits(KeyLengthLimit = 1_009_100_000, ValueCountLimit = 1_009_100_000, ValueLengthLimit = 1_009_100_000, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
+    [RequestFormLimits(KeyLengthLimit = int.MaxValue, ValueCountLimit = int.MaxValue, ValueLengthLimit = int.MaxValue, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
     public class BusinessController : Controller
     {
         /// <summary>
@@ -363,7 +486,7 @@ namespace Business.AspNet
         [HttpGet]
         [HttpPost]
         [EnableCors("any")]
-        public async Task<dynamic> Call()
+        public virtual async ValueTask<dynamic> Call()
         {
             #region route fixed grouping
 
@@ -475,6 +598,7 @@ namespace Business.AspNet
     public static class Utils
     {
         internal static BootstrapAll<BusinessBase> bootstrap;
+        internal static BusinessBase businessFirst;
 
         /// <summary>
         /// "context", "socket", "httpFile" 
@@ -488,7 +612,11 @@ namespace Business.AspNet
         /// <summary>
         /// Default binary format grouping
         /// </summary>
-        public const string BusinessSocketGroup = "s";
+        public const string BusinessWebSocketGroup = "w";
+        ///// <summary>
+        ///// Default binary format grouping
+        ///// </summary>
+        //public const string BusinessUDPGroup = "u";
 
         /// <summary>
         /// local log path
@@ -547,14 +675,14 @@ namespace Business.AspNet
         /// <param name="t"></param>
         /// <param name="d"></param>
         /// <returns></returns>
-        public static async Task<string> Callctd(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
+        public static async ValueTask<string> Callctd(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
         /// <summary>
         /// Called in "application/x-www-form-urlencoded" format
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="keyValues"></param>
         /// <returns></returns>
-        public static async Task<string> Call(this HttpClient httpClient, params KeyValuePair<string, string>[] keyValues)
+        public static async ValueTask<string> Call(this HttpClient httpClient, params KeyValuePair<string, string>[] keyValues)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == keyValues) { throw new ArgumentNullException(nameof(keyValues)); }
@@ -571,7 +699,7 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="mediaType"></param>
         /// <returns></returns>
-        public static async Task<string> Call(this HttpClient httpClient, string data, string mediaType = "application/json")
+        public static async ValueTask<string> Call(this HttpClient httpClient, string data, string mediaType = "application/json")
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == data) { throw new ArgumentNullException(nameof(data)); }
@@ -588,7 +716,7 @@ namespace Business.AspNet
         /// <param name="content"></param>
         /// <param name="method"></param>
         /// <returns></returns>
-        public static async Task<string> Call(this HttpClient httpClient, HttpContent content, HttpMethod method = null)
+        public static async ValueTask<string> Call(this HttpClient httpClient, HttpContent content, HttpMethod method = null)
         {
             using (var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content })
             using (var response = await httpClient.SendAsync(request))
@@ -608,7 +736,7 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async Task<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Callctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
+        public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Callctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
         /// <summary>
         /// Configure Business.Core in the startup class configure method
@@ -663,6 +791,7 @@ namespace Business.AspNet
 
             bootstrap.Build();
             Utils.bootstrap = bootstrap;
+            businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
 
             //writ url to page
             DocUI.Write(staticDir);
@@ -679,23 +808,23 @@ namespace Business.AspNet
                 }
             });
 
-            /* 3.x
-            services.AddControllers()
+            // 3.x
+            //services.AddControllers()
 
-            app.UseEndpoints(endpoints =>
-            {
-                foreach (var item in Business.Core.Configer.BusinessList)
-                {
-                    endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Business", action = "Call" });
-                }
-            });
-            */
+            //app.UseEndpoints(endpoints =>
+            //{
+            //    foreach (var item in Business.Core.Configer.BusinessList)
+            //    {
+            //        endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Business", action = "Call" });
+            //    }
+            //});
+
             #region AcceptWebSocket
 
             var webSocketcfg = Host.AppSettings.GetSection("WebSocket");
             SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
             SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
-            SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
+            //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
             //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
 
             var webSocketOptions = new WebSocketOptions()
@@ -717,16 +846,7 @@ namespace Business.AspNet
                 {
                     using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
                     {
-                        Sockets.TryAdd(context.Connection.Id, webSocket);
-#if DEBUG
-                        Console.WriteLine($"Add:{context.Connection.Id} Sockets:{Sockets.Count}");
-#endif
                         await Keep(context, webSocket);
-
-                        Sockets.TryRemove(context.Connection.Id, out _);
-#if DEBUG
-                        Console.WriteLine($"Remove:{context.Connection.Id} Sockets:{Sockets.Count}");
-#endif
                     }
                 }
                 else
@@ -734,6 +854,14 @@ namespace Business.AspNet
                     await next();
                 }
             });
+
+            //Task.Factory.StartNew(() =>
+            //{
+            //    foreach (var item in WebSocketQueue.GetConsumingEnumerable())
+            //    {
+            //        Task.Run(async () => await WebSocketCall(item).ContinueWith(c => c.Exception?.Console()));
+            //    }
+            //}, TaskCreationOptions.LongRunning);
 
             #endregion
 
@@ -790,97 +918,130 @@ namespace Business.AspNet
         /// <summary>
         /// 4096
         /// </summary>
-        public static int SocketReceiveBufferSize = 4096;
+        public static int SocketReceiveBufferSize = 4 * 1024;
 
         /// <summary>
         /// -1
         /// </summary>
-        public static int SocketMaxDegreeOfParallelism = -1;
+        //public static int SocketMaxDegreeOfParallelism = -1;
 
-        public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> Sockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
+        ///// <summary>
+        ///// WebSocket dictionary
+        ///// </summary>
+        //public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> WebSockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
 
-        static async Task Keep(HttpContext context, WebSocket webSocket)
+        //static readonly System.Collections.Concurrent.BlockingCollection<WebSocketReceive> WebSocketQueue = new System.Collections.Concurrent.BlockingCollection<WebSocketReceive>();
+
+        static async ValueTask<dynamic> WebSocketCall(WebSocketReceive receive)
         {
-            //var auth = context.Request.Headers["u"].ToString();
+            var b = receive.Data.b ?? receive.Data.c;
 
-            //if (string.IsNullOrWhiteSpace(auth))
-            //{
-            //    return;
-            //}
+            var result = await receive.Business.Command.AsyncCall(
+            //the cmd of this request.
+            receive.Data.c,
+            //the data of this request, allow null.
+            new object[] { receive.Data.d },
+            //the group of this request.
+            BusinessWebSocketGroup, //fixed grouping
+                                    //the incoming use object
+            new UseEntry(receive.Context, "context"), //context
+            new UseEntry(receive.WebSocket, "socket"), //webSocket
+            new UseEntry(await receive.Business.GetToken(receive.Context, new Token //token
+            {
+                Origin = Token.OriginValue.WebSocket,
+                Key = receive.Token,
+                //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
+                Remote = string.Format("{0}:{1}", receive.Context.Connection.RemoteIpAddress.MapToIPv4().ToString(), receive.Context.Connection.RemotePort),
+                Callback = b,
+                Path = receive.Context.Request.Path.Value,
+            }), "session")
+            );
 
-            var id = context.Connection.Id;
+            // Socket set callback
+            if (!Equals(null, result))
+            {
+                if (typeof(IResult).IsAssignableFrom(result.GetType()))
+                {
+                    var result2 = result as IResult;
+                    result2.Callback = b;
+
+                    var data = result2.ResultCreateToDataBytes().ToBytes();
+
+                    await receive.WebSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    //await SocketSendAsync(data, receive.Context.Connection.Id);
+                }
+            }
+
+            return result;
+        }
+
+        static async ValueTask Keep(HttpContext context, WebSocket webSocket)
+        {
+            if (null == businessFirst)
+            {
+                return;
+            }
+
+            //var id = context.Connection.Id;
+            var acceptBusiness = businessFirst;
 
             try
             {
+                string token = null;
+                var hasBusiness = true;
+                var a = context.Request.Headers["a"].ToString();
+                if (!string.IsNullOrWhiteSpace(a))
+                {
+                    hasBusiness = bootstrap.BusinessList.TryGetValue(a, out acceptBusiness);
+                }
+
+                if (hasBusiness)
+                {
+                    token = await acceptBusiness.WebSocketAccept(context, webSocket);
+                }
+
+                if (null == token)
+                {
+                    if (webSocket.State == WebSocketState.Open)
+                    {
+                        await webSocket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "(1007) The client or server is terminating the connection because it has received data inconsistent with the message type.", CancellationToken.None);
+                    }
+
+                    return;
+                }
+
+                //                WebSockets.TryAdd(id, webSocket);
+                //#if DEBUG
+                //                Console.WriteLine($"Add:{id} Connections:{WebSockets.Count}");
+                //#endif
+
                 var buffer = new byte[SocketReceiveBufferSize];
-                WebSocketReceiveResult socketResult;
+                WebSocketReceiveResult socketResult = null;
+
                 do
                 {
                     socketResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
                     try
                     {
-                        var receiveData = MessagePack.MessagePackSerializer.Deserialize<ReceiveData>(buffer);
-
-                        dynamic result;
-
-                        //* test data
-                        //receiveData.a = "API";
-                        //receiveData.c = "Test001";
-                        //receiveData.t = "token";
-                        //receiveData.d = new Args.Test001 { A = "error", B = "bbb" }.BinarySerialize();
-                        //receiveData.b = "bbb";
-                        //*
+                        var receiveData = await acceptBusiness.WebSocketReceive(buffer);
 
                         if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out BusinessBase business))
                         {
-                            result = ResultType.ErrorBusiness(receiveData.a);
-                            await SocketSendAsync(result.ToBytes(), id);
+                            await webSocket.SendAsync(new ArraySegment<byte>(ResultType.ErrorBusiness(receiveData.a).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                         }
                         else
                         {
-                            var b = receiveData.b ?? receiveData.c;
+                            //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
 
-                            result = await business.Command.AsyncCall(
-                            //the cmd of this request.
-                            receiveData.c,
-                            //the data of this request, allow null.
-                            new object[] { receiveData.d },
-                            //the group of this request.
-                            BusinessSocketGroup, //fixed grouping
-                                                 //the incoming use object
-                            new UseEntry(context, "context"), //context
-                            new UseEntry(webSocket, "socket"), //webSocket
-                            new UseEntry(await business.GetToken(context, new Token //token
-                            {
-                                Origin = Token.OriginValue.WebSocket,
-                                Key = receiveData.t,
-                                Remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort),
-                                Callback = b,
-                                //Path = this.Request.Path.Value,
-                            }), "session")
-                            );
-
-                            // Socket set callback
-                            if (!Equals(null, result))
-                            {
-                                if (typeof(IResult).IsAssignableFrom(result.GetType()))
-                                {
-                                    var result2 = result as IResult;
-                                    result2.Callback = b;
-
-                                    var data = result2.ResultCreateToDataBytes().ToBytes();
-
-                                    await SocketSendAsync(data, id);
-                                }
-                            }
+                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => c2.Exception?.Console()), new WebSocketReceive(token, receiveData, business, context, webSocket));
                         }
                     }
                     catch (Exception ex)
                     {
                         Help.ExceptionWrite(ex, true, true, LocalLogPath);
                         var result = ResultType.ResultCreate(0, Convert.ToString(ex));
-                        await SocketSendAsync(result.ToBytes(), id);
+                        await webSocket.SendAsync(new ArraySegment<byte>(result.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                     }
 
                     if (webSocket.State != WebSocketState.Open)
@@ -891,28 +1052,78 @@ namespace Business.AspNet
 
                 if (webSocket.State == WebSocketState.Open)
                 {
+                    //client close
                     await webSocket.CloseAsync(socketResult.CloseStatus.Value, socketResult.CloseStatusDescription, CancellationToken.None);
                 }
             }
             catch (Exception ex)
             {
                 Help.ExceptionWrite(ex, true, true, LocalLogPath);
-                var result = ResultType.ResultCreate(0, Convert.ToString(ex));
-                await SocketSendAsync(result.ToBytes(), id);
+                //var result = ResultType.ResultCreate(0, Convert.ToString(ex));
+                //await SocketSendAsync(result.ToBytes(), id);
+                if (webSocket.State == WebSocketState.Open)
+                {
+                    //server close
+                    await webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, Convert.ToString(ex), CancellationToken.None);
+                }
+            }
+            finally
+            {
+                //                WebSockets.TryRemove(id, out _);
+                //#if DEBUG
+                //                Console.WriteLine($"Remove:{id} Connectionss:{WebSockets.Count}");
+                //#endif
+                await acceptBusiness.WebSocketDispose(context, webSocket);
             }
         }
 
         #region SendAsync
 
-        public static async Task SocketSendAsync(byte[] bytes, params string[] id) => await SocketSendAsync(bytes, WebSocketMessageType.Binary, true, id);
+        /// <summary>
+        /// Send socket message
+        /// </summary>
+        /// <param name="webSockets"></param>
+        /// <param name="bytes"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, params string[] id) => await SocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, -1, id);
 
-        public static async Task SocketSendAsync(byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, params string[] id) => await SocketSendAsync(bytes, messageType, true, id);
+        /// <summary>
+        /// Send socket message
+        /// </summary>
+        /// <param name="webSockets"></param>
+        /// <param name="bytes"></param>
+        /// <param name="sendMaxDegreeOfParallelism"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
 
-        public static async Task SocketSendAsync(byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, params string[] id)
+        /// <summary>
+        /// Send socket message
+        /// </summary>
+        /// <param name="webSockets"></param>
+        /// <param name="bytes"></param>
+        /// <param name="messageType"></param>
+        /// <param name="sendMaxDegreeOfParallelism"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SocketSendAsync(webSockets, bytes, messageType, true, sendMaxDegreeOfParallelism, id);
+
+        /// <summary>
+        /// Send socket message
+        /// </summary>
+        /// <param name="webSockets"></param>
+        /// <param name="bytes"></param>
+        /// <param name="messageType"></param>
+        /// <param name="endOfMessage"></param>
+        /// <param name="sendMaxDegreeOfParallelism"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
         {
             if (null == id || 0 == id.Length)
             {
-                Parallel.ForEach(Sockets, new ParallelOptions { MaxDegreeOfParallelism = SocketMaxDegreeOfParallelism }, async c =>
+                Parallel.ForEach(webSockets, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, async c =>
                 {
                     if (c.Value.State != WebSocketState.Open) { return; }
 
@@ -925,7 +1136,7 @@ namespace Business.AspNet
 
                 if (string.IsNullOrWhiteSpace(c)) { return; }
 
-                if (!Sockets.TryGetValue(c, out WebSocket webSocket)) { return; }
+                if (!webSockets.TryGetValue(c, out WebSocket webSocket)) { return; }
 
                 if (webSocket.State != WebSocketState.Open) { return; }
 
@@ -933,11 +1144,11 @@ namespace Business.AspNet
             }
             else
             {
-                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = SocketMaxDegreeOfParallelism }, async c =>
+                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, async c =>
                 {
                     if (string.IsNullOrWhiteSpace(c)) { return; }
 
-                    if (!Sockets.TryGetValue(c, out WebSocket webSocket)) { return; }
+                    if (!webSockets.TryGetValue(c, out WebSocket webSocket)) { return; }
 
                     if (webSocket.State != WebSocketState.Open) { return; }
 

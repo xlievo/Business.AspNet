@@ -28,6 +28,8 @@ namespace WebAPI
                         options.AllowSynchronousIO = true;
                         options.Limits.MinRequestBodyDataRate = null;
                         options.Limits.MinResponseDataRate = null;
+                        options.Limits.MaxConcurrentConnections = long.MaxValue;
+                        options.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
                     })
                     .UseStartup<Startup>();
                 });

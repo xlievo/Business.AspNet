@@ -1,4 +1,5 @@
-﻿using Business.Core;
+﻿using Business.AspNet;
+using Business.Core;
 using Business.Core.Annotations;
 using Business.Core.Result;
 using System;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace WebAPI
 {
+    [Info("API/v2")]
     public class BusinessMember : BusinessBase
     {
         /// <summary>
@@ -27,7 +29,7 @@ namespace WebAPI
         /// </returns>
         //[Doc(Group = "Module 1", Position = 1)]
         //[Command("AAA")]
-        [Command("jjjTest001jjj", Group = Business.AspNet.Utils.BusinessJsonGroup)]
+        [Command("jjjTest001jjj", Group = Utils.BusinessJsonGroup)]
         //[Command("wwwwwwwwwwww", Group = "j")]
         //[Command(Group = "zzz")]
         [Testing("test2",
@@ -43,12 +45,13 @@ namespace WebAPI
              "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T08:24\",99.0234,777,false]")]
         public virtual async Task<dynamic> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true)
         {
+            var ss =  System.Text.Encoding.UTF8.GetBytes("a1");
             dynamic args = new System.Dynamic.ExpandoObject();
             args.token = session;
             args.arg = arg;
             if (args.arg.B == "ex")
             {
-                throw new System.Exception("Method exception!");
+                throw new Exception("Method exception!");
             }
 
             if (args.arg.B == "ex2")
@@ -58,8 +61,25 @@ namespace WebAPI
 
             var files = httpFile.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
-            return this.ResultCreate(new { arg, files });
+            return this.ResultCreate(new { session, arg, files });
         }
+
+        [Command("abc", Group = Utils.BusinessWebSocketGroup)]
+        public virtual async Task<dynamic> Test004(Session session, List<Test001> arg, dynamic context, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
+        {
+            Microsoft.AspNetCore.Http.HttpContext httpContext = context.HttpContext;
+
+            //await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
+            //return this.ResultCreate();
+            return this.ResultCreate(new { session, arg, State = httpContext.Connection.RemoteIpAddress.ToString() }, "aaaa!@#$");
+        }
+    }
+
+    public struct Test001
+    {
+        public string A { get; set; }
+
+        public string B { get; set; }
     }
 
     /// <summary>
@@ -101,10 +121,11 @@ namespace WebAPI
     /// Test004Test004Test004Test004Test004Test004Test004
     /// Test004Test004Test004Test004Test004Test004Test004
     /// </summary>
+    //[Parameters(Group = Utils.BusinessJsonGroup)]
     public class Test004 : Test003<Test0011>
     {
         /// <summary>
-        /// Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+        /// Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
         /// </summary>
         public string BBBB { get; set; }
     }
@@ -241,7 +262,7 @@ public class TestAttribute : ArgumentAttribute
             default: break;
         }
 
-        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(new System.Exception("Argument exception!")).Throw();
+        System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(new Exception("Argument exception!")).Throw();
 
         return default;
     }

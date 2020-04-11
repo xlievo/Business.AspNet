@@ -51,7 +51,8 @@ namespace WebAPI
             {
                 Debug = true,
                 Benchmark = true,
-                Navigtion = true
+                Navigtion = true,
+                Testing = true,
             }));
         }
     }

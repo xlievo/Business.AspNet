@@ -59,7 +59,7 @@
         </member>
         <member name="P:WebAPI.Test004.BBBB">
             <summary>
-            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
             </summary>
         </member>
         <member name="T:WebAPI.Test001`1">
@@ -132,6 +132,11 @@
         <member name="P:WebAPI.Test0011.AAA">
             <summary>
             AAA@@@
+            </summary>
+        </member>
+        <member name="F:WebAPI.BusinessBase.WebSockets">
+            <summary>
+            WebSocket dictionary
             </summary>
         </member>
     </members>
