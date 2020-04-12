@@ -27,7 +27,7 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 ```
 ## Step 2: declare your business base class
 ```C#
-[TokenCheck]//This is your token verification
+//[TokenCheck]//This is your token verification
 [Use]
 [Logger(canWrite: false)]
 public struct Token : IToken
