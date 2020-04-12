@@ -5,6 +5,7 @@ using Business.Core.Auth;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 using WebAPI.Annotations;
@@ -41,24 +42,29 @@ namespace WebAPI
 
     public abstract class BusinessBase : Business.AspNet.BusinessBase
     {
+        /// <summary>
+        /// Log client
+        /// </summary>
+        public readonly static HttpClient LogClient = Utils.Environment.HttpClientFactory.CreateClient("log");
+
         static BusinessBase()
         {
-            //Utils.LogClient.BaseAddress = new Uri("http://xx:8000/Log");
+            LogClient.Timeout = TimeSpan.FromSeconds(3);
+            LogClient.BaseAddress = new Uri("http://xx:8000/Log");
         }
 
         public BusinessBase()
         {
-            this.Logger = new Logger(async (Logger.LoggerData x) =>
+            this.Logger = new Logger(async (Logger.LoggerData log) =>
             {
-                //var result = await Utils.LogClient.Log(x);
+                //var result = await LogClient.Log(log);
 
-                Help.Console(x.ToString());
+                Console.WriteLine(log.ToString());
+                //Help.Console(x.ToString());
             });
         }
 
-        /********** Must achieve GetToken **********/
-
-        public sealed override async ValueTask<IToken> GetToken(dynamic context, Business.AspNet.Token token) => new Token
+        public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) => new Token
         {
             Origin = token.Origin,
             Key = token.Key,
@@ -86,11 +92,10 @@ namespace WebAPI
 #if DEBUG
             Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
 #endif
-            await WebSockets.SocketSendAsync(new byte[] { 0x01 }, context.Connection.Id);
             return t.ToString();
         }
 
-        public sealed override ValueTask<IReceiveData> WebSocketReceive(byte[] buffer) => base.WebSocketReceive(buffer);
+        public sealed override ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
 
         public sealed override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
         {

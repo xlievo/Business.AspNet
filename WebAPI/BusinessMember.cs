@@ -45,7 +45,7 @@ namespace WebAPI
              "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T08:24\",99.0234,777,false]")]
         public virtual async Task<dynamic> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true)
         {
-            var ss =  System.Text.Encoding.UTF8.GetBytes("a1");
+            var ss = System.Text.Encoding.UTF8.GetBytes("a1");
             dynamic args = new System.Dynamic.ExpandoObject();
             args.token = session;
             args.arg = arg;

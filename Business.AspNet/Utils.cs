@@ -337,24 +337,31 @@ namespace Business.AspNet
     /// <summary>
     /// Environment
     /// </summary>
-    public struct Host
+    public readonly struct Environment
     {
+        public Environment(string addresses, IConfigurationSection appSettings, IHttpClientFactory httpClientFactory)
+        {
+            Addresses = addresses;
+            AppSettings = appSettings;
+            HttpClientFactory = httpClientFactory;
+        }
+
         /// <summary>
         /// The urls the hosted application will listen on.
         /// </summary>
-        public string Addresses { get; set; }
+        public string Addresses { get; }
 
         /// <summary>
         /// Configuration file "AppSettings" node
         /// </summary>
-        public IConfigurationSection AppSettings { get; set; }
+        public IConfigurationSection AppSettings { get; }
 
         //public IHostingEnvironment ENV { get; set; }
 
         /// <summary>
         /// HttpClient factory
         /// </summary>
-        public IHttpClientFactory HttpClientFactory { get; set; }
+        public IHttpClientFactory HttpClientFactory { get; }
     }
 
     /// <summary>
@@ -424,7 +431,6 @@ namespace Business.AspNet
     [MessagePack(Group = Utils.BusinessWebSocketGroup)]
     [Logger(Group = Utils.BusinessJsonGroup)]
     [Logger(Group = Utils.BusinessWebSocketGroup, ValueType = Logger.ValueType.Out)]
-    //[Logger(Group = Utils.BusinessUDPGroup, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : BusinessBase<ResultObject<object>>
     {
         /// <summary>
@@ -437,7 +443,7 @@ namespace Business.AspNet
         /// </summary>
         /// <returns></returns>
         [Ignore]
-        public abstract ValueTask<IToken> GetToken(dynamic context, Token token);
+        public virtual async ValueTask<IToken> GetToken(HttpContext context, Token token) => token;
 
         /// <summary>
         /// Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
@@ -452,10 +458,12 @@ namespace Business.AspNet
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
         /// </summary>
+        /// <param name="context"></param>
+        /// <param name="webSocket"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<IReceiveData> WebSocketReceive(byte[] buffer) => MessagePack.MessagePackSerializer.Deserialize<ReceiveData>(buffer);
+        public virtual async ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => MessagePack.MessagePackSerializer.Deserialize<ReceiveData>(buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -545,7 +553,7 @@ namespace Business.AspNet
                 var arg = d.TryJsonDeserialize<DocUI.BenchmarkArg>();
                 if (default(DocUI.BenchmarkArg).Equals(arg)) { return new ArgumentNullException(nameof(arg)).Message; }
                 //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
-                arg.host = $"{Utils.Host.Addresses}/{business.Configer.Info.BusinessName}";
+                arg.host = $"{Utils.Environment.Addresses}/{business.Configer.Info.BusinessName}";
                 return await DocUI.Benchmark(arg);
             }
 
@@ -610,7 +618,7 @@ namespace Business.AspNet
         /// </summary>
         public const string BusinessJsonGroup = "j";
         /// <summary>
-        /// Default binary format grouping
+        /// Default WebSocket format grouping
         /// </summary>
         public const string BusinessWebSocketGroup = "w";
         ///// <summary>
@@ -629,14 +637,14 @@ namespace Business.AspNet
         public static readonly Type ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
 
         /// <summary>
-        /// Environment instance
+        /// Host environment instance
         /// </summary>
-        public static Host Host = new Host();
+        public static Environment Environment;
 
-        /// <summary>
-        /// Log client
-        /// </summary>
-        public readonly static HttpClient LogClient;
+        ///// <summary>
+        ///// Log client
+        ///// </summary>
+        //public readonly static HttpClient LogClient;
 
         static Utils()
         {
@@ -654,21 +662,14 @@ namespace Business.AspNet
 
             MessagePack.MessagePackSerializer.DefaultOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
 
-            Host.HttpClientFactory = new ServiceCollection()
-                .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
-                {
-                    AllowAutoRedirect = false,
-                    UseDefaultCredentials = true,
-                }).Services
-                .BuildServiceProvider().GetService<IHttpClientFactory>();
             AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
-            LogClient = Host.HttpClientFactory.CreateClient("log");
+            //LogClient = Environment.HttpClientFactory.CreateClient("log");
         }
 
         #region Call
 
         /// <summary>
-        /// Called in "c,t,d" "application/x-www-form-urlencoded" format
+        /// Called in POST "c,t,d" "application/x-www-form-urlencoded" format
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="c"></param>
@@ -677,7 +678,7 @@ namespace Business.AspNet
         /// <returns></returns>
         public static async ValueTask<string> Callctd(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
         /// <summary>
-        /// Called in "application/x-www-form-urlencoded" format
+        /// Called in POST "application/x-www-form-urlencoded" format
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="keyValues"></param>
@@ -693,7 +694,7 @@ namespace Business.AspNet
             }
         }
         /// <summary>
-        /// Called in "application/json" format
+        /// Called in POST "application/json" format
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="data"></param>
@@ -712,9 +713,9 @@ namespace Business.AspNet
         /// <summary>
         /// HTTP call
         /// </summary>
-        /// <param name="httpClient"></param>
-        /// <param name="content"></param>
-        /// <param name="method"></param>
+        /// <param name="httpClient">httpClient</param>
+        /// <param name="content">content</param>
+        /// <param name="method">Default POST</param>
         /// <returns></returns>
         public static async ValueTask<string> Call(this HttpClient httpClient, HttpContent content, HttpMethod method = null)
         {
@@ -729,7 +730,7 @@ namespace Business.AspNet
         #endregion
 
         /// <summary>
-        /// Write out the default log
+        /// Write out the Elasticsearch default log
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="data"></param>
@@ -753,18 +754,24 @@ namespace Business.AspNet
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
 
-            Host.AppSettings = app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings");
-
-            Host.Addresses = app.ServerFeatures.Get<IServerAddressesFeature>().Addresses.FirstOrDefault() ?? "http://localhost:5000";
-            var addresses = Host.Addresses.ToLower();
-            if (addresses.StartsWith("http://*:") || addresses.StartsWith("https://*:") || addresses.StartsWith("http://+:") || addresses.StartsWith("https://+:"))
+            var addresses = app.ServerFeatures.Get<IServerAddressesFeature>().Addresses.FirstOrDefault() ?? "http://localhost:5000";
+            var addresses2 = addresses.ToLower();
+            if (addresses2.StartsWith("http://*:") || addresses2.StartsWith("https://*:") || addresses2.StartsWith("http://+:") || addresses2.StartsWith("https://+:"))
             {
-                Host.Addresses = Host.Addresses.Replace("*", "localhost").Replace("+", "localhost");
+                addresses = addresses.Replace("*", "localhost").Replace("+", "localhost");
             }
+
+            Environment = new Environment(addresses, app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings"), new ServiceCollection()
+                .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+                {
+                    AllowAutoRedirect = false,
+                    UseDefaultCredentials = true,
+                }).Services
+                .BuildServiceProvider().GetService<IHttpClientFactory>());
 
             var staticDir = app.UseStaticDir(docDir);
             Console.WriteLine($"Static Directory: {staticDir}");
-            Console.WriteLine($"Addresses: {Host.Addresses}");
+            Console.WriteLine($"Addresses: {Environment.Addresses}");
 
             bootstrap = bootstrap ?? Bootstrap.CreateAll<BusinessBase>();
             bootstrap.UseType(contextParameterNames)
@@ -786,7 +793,7 @@ namespace Business.AspNet
             }
             if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
             {
-                bootstrap.Config.UseDoc.Config.Host = Host.Addresses;
+                bootstrap.Config.UseDoc.Config.Host = Environment.Addresses;
             }
 
             bootstrap.Build();
@@ -821,7 +828,7 @@ namespace Business.AspNet
 
             #region AcceptWebSocket
 
-            var webSocketcfg = Host.AppSettings.GetSection("WebSocket");
+            var webSocketcfg = Environment.AppSettings.GetSection("WebSocket");
             SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
             SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
             //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
@@ -1024,7 +1031,7 @@ namespace Business.AspNet
 
                     try
                     {
-                        var receiveData = await acceptBusiness.WebSocketReceive(buffer);
+                        var receiveData = await acceptBusiness.WebSocketReceive(context, webSocket, buffer);
 
                         if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out BusinessBase business))
                         {
