@@ -1,7 +1,7 @@
 # Business.AspNet
 This is the middleware library from Business.Core to ASP.NET
 
-## Step 1: register Middleware
+## Step 1: Create a new asp.net core web empty project and register Middleware
 ```C#
 using Business.AspNet;
 
