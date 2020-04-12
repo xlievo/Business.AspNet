@@ -7,8 +7,8 @@ using Business.AspNet;
 
 public void ConfigureServices(IServiceCollection services)
 {
-	services.AddMvc(option => option.EnableEndpointRouting = false)
-	    .SetCompatibilityVersion(CompatibilityVersion.Latest);
+    services.AddMvc(option => option.EnableEndpointRouting = false)
+        .SetCompatibilityVersion(CompatibilityVersion.Latest);
 }
 
 public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -18,9 +18,9 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     //If you want to configure documents
     app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>().UseDoc(new Business.Core.Document.Config
     {
-	    Debug = true,
-	    Benchmark = true,
-	    Navigtion = true
+        Debug = true,
+        Benchmark = true,
+        Navigtion = true
     }));
 }
 ```
@@ -51,20 +51,21 @@ public abstract class BusinessBase : Business.AspNet.BusinessBase
 {
     public BusinessBase()
     {
-	    this.Logger = new Logger(async (Logger.LoggerData log) =>
-	    {
-		    Console.WriteLine(log.ToString());
-	    });
+        this.Logger = new Logger(async (Logger.LoggerData log) =>
+        {
+            Console.WriteLine(log.ToString());
+        });
     }
 
-public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) => new Token
-{
-    Origin = token.Origin,
-    Key = token.Key,
-    Remote = token.Remote,
-    Callback = token.Callback,
-    Path = token.Path
-};
+	public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token)
+		=> new Token
+	{
+		Origin = token.Origin,
+		Key = token.Key,
+		Remote = token.Remote,
+		Callback = token.Callback,
+		Path = token.Path
+	};
 }
 ```
 ## Step 3: start using your business class
