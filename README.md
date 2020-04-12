@@ -16,7 +16,8 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     app.UseBusiness();
 	
     //If you want to configure documents
-    app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>().UseDoc(new Business.Core.Document.Config
+    app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>()
+    .UseDoc(new Business.Core.Document.Config
     {
         Debug = true,
         Benchmark = true,
@@ -57,15 +58,15 @@ public abstract class BusinessBase : Business.AspNet.BusinessBase
         });
     }
 
-	public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token)
-		=> new Token
-	{
-		Origin = token.Origin,
-		Key = token.Key,
-		Remote = token.Remote,
-		Callback = token.Callback,
-		Path = token.Path
-	};
+    public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token)
+        => new Token
+    {
+        Origin = token.Origin,
+        Key = token.Key,
+        Remote = token.Remote,
+        Callback = token.Callback,
+        Path = token.Path
+    };
 }
 ```
 ## Step 3: start using your business class
@@ -81,7 +82,7 @@ public class BusinessMember : BusinessBase
 {
     public virtual async Task<IResult<MyBusinessArg>> MyBusiness(Token token, MyBusinessArg arg)
     {
-	    return this.ResultCreate(arg);
+        return this.ResultCreate(arg);
     }
 }
 ```
