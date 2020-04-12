@@ -339,6 +339,12 @@ namespace Business.AspNet
     /// </summary>
     public readonly struct Environment
     {
+        /// <summary>
+        /// Environment
+        /// </summary>
+        /// <param name="addresses"></param>
+        /// <param name="appSettings"></param>
+        /// <param name="httpClientFactory"></param>
         public Environment(string addresses, IConfigurationSection appSettings, IHttpClientFactory httpClientFactory)
         {
             Addresses = addresses;
