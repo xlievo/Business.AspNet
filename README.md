@@ -9,29 +9,45 @@ using Business.AspNet;
 
 public void ConfigureServices(IServiceCollection services)
 {
+    //Configure cross domain policy
+    services.AddCors(options =>
+    {
+        options.AddPolicy("any", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+    });
     services.AddMvc(option => option.EnableEndpointRouting = false)
         .SetCompatibilityVersion(CompatibilityVersion.Latest);
 }
 
 public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
-    app.UseBusiness();
+    //app.UseBusiness();
+	
+    app.UseCors("any");//Document UI needs to be cross domain
 	
     //If you want to configure documents
-    app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>()
+    app.UseBusiness(Business.Core.Bootstrap.CreateAll<BusinessBase>()
         .UseDoc(new Business.Core.Document.Config
         {
-	    Debug = true,
-	    Benchmark = true,
-	    Navigtion = true
+            Debug = true,
+            Benchmark = true,
+            Navigtion = true
         }));
 }
 ```
-## Step 2: declare your business class
+## Step 2: declare your business class, Create a new class and copy the following
 ```C#
+using Business.Core;
+using Business.Core.Annotations;
+using Business.Core.Auth;
+using Business.Core.Result;
+using Business.AspNet;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+using System;
+
 [TokenCheck]//This is your token verification
 [Use]
-[Logger(canWrite: false)]
+[Logger(canWrite: false)]//Do not output log
 public struct Token : IToken
 {
     [System.Text.Json.Serialization.JsonPropertyName("K")]
@@ -50,6 +66,7 @@ public struct Token : IToken
     public Business.AspNet.Token.OriginValue Origin { get; set; }
 }
 
+//This is your token verification
 public class TokenCheck : ArgumentAttribute
 {
     public TokenCheck(int state = -80, string message = null) : base(state, message) { }
@@ -58,19 +75,27 @@ public class TokenCheck : ArgumentAttribute
     {
         var key = value.Key as string;
 
-	//..1: check token key
-	if (string.IsNullOrWhiteSpace(key))
-	{
-	    //return this.ResultCreate(this.State, this.Message);
-	}
-	return this.ResultCreate(); //ok
+        //..1: check token key
+        if (string.IsNullOrWhiteSpace(key))
+        {
+	        //return this.ResultCreate(this.State, this.Message);
+        }
+        return this.ResultCreate(); //ok
     }
 }
 
-public struct MyBusinessArg
+/// <summary>
+/// MyLogicArg!
+/// </summary>
+public struct MyLogicArg
 {
+    /// <summary>
+    /// AAA
+    /// </summary>
     public string A { get; set; }
-
+    /// <summary>
+    /// BBB
+    /// </summary>
     public string B { get; set; }
 }
 
@@ -86,17 +111,16 @@ public class MyBusiness : Business.AspNet.BusinessBase
     }
 	
     //Override, using custom token
-    public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token)
-        => new Token
+    public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) => new Token
     {
-        Origin = token.Origin,
-        Key = token.Key,
-        Remote = token.Remote,
-        Callback = token.Callback,
-        Path = token.Path
+	    Origin = token.Origin,
+	    Key = token.Key,
+	    Remote = token.Remote,
+	    Callback = token.Callback,
+	    Path = token.Path
     };
 	
-    public virtual async Task<IResult<MyBusinessArg>> MyLogic(Token token, MyBusinessArg arg)
+    public virtual async Task<IResult<MyLogicArg>> MyLogic(Token token, MyLogicArg arg)
     {
         return this.ResultCreate(arg);
     }
