@@ -133,8 +133,8 @@ It only needs 2 steps, less than 100 lines of code. With the minimum configurati
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
 Now, you can use HTTP and websocket to call the same interface, and have a document that can be debugged. Try it?
-If you know enough about Business.Core, you can call your API with any communication layer, including from the class library,
-ASP.NET just acts as the communication layer, you can even replace it with any communication layer you like.
+
+ASP.NET just acts as the communication layer. If you know business.core well, you can replace it with any communication layer you need, Include calls from class libraries
 
 ## You want to control websocket?
 There are three ways of rewriting to help you
