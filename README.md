@@ -130,9 +130,14 @@ public class MyBusiness : Business.AspNet.BusinessBase
 ## Step 3: start your current project and navigate to http://localhost:5000/doc/index.html
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
+
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
-Now, you can use HTTP and WebSocket to call the same interface, and have a document that can be debugged. Try it?
+
+Now, you can use HTTP and WebSocket to call the same interface, and have a document that can be debugged. 
+
+Try clicking the Debug button on the document?
+
 
 ASP.NET just acts as the communication layer. 
 If you know Business.Core well, you can replace it with any communication layer you need, Include calls from class libraries
