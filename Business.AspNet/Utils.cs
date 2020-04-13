@@ -967,8 +967,7 @@ namespace Business.AspNet
                 Remote = string.Format("{0}:{1}", receive.Context.Connection.RemoteIpAddress.MapToIPv4().ToString(), receive.Context.Connection.RemotePort),
                 Callback = b,
                 Path = receive.Context.Request.Path.Value,
-            }), "session")
-            );
+            }), "session"));
 
             // Socket set callback
             if (!Equals(null, result))
