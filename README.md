@@ -3,7 +3,7 @@ This is the middleware library from Business.Core to ASP.NET
 ## Install
 [![NuGet Version](https://img.shields.io/nuget/v/Business.AspNet.svg?style=flat)](https://www.nuget.org/packages/Business.AspNet/)
 [![NuGet](https://img.shields.io/nuget/dt/Business.AspNet.svg)](https://www.nuget.org/packages/Business.AspNet)
-## Step 1: Create a new asp.net core web empty project and register Middleware
+## Step 1: Create a new asp.net core web empty project and register Middleware in Startup.cs
 ```C#
 using Business.AspNet;
 
@@ -22,15 +22,14 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
     //app.UseBusiness();
 	
-    app.UseCors("any");//Document UI needs to be cross domain
+    app.UseCors("any");//API static documents need cross domain support
 	
     //If you want to configure documents
     app.UseBusiness(Business.Core.Bootstrap.CreateAll<BusinessBase>()
         .UseDoc(new Business.Core.Document.Config
         {
             Debug = true,
-            Benchmark = true,
-            Navigtion = true
+            Benchmark = true
         }));
 }
 ```
@@ -128,9 +127,24 @@ public class MyBusiness : Business.AspNet.BusinessBase
     }
 }
 ```
-## Step 3: start your asp.net project and navigate to http://localhost:5000/doc/index.html
+## Step 3: start your current project and navigate to http://localhost:5000/doc/index.html
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
+
+Now, you can use HTTP and websocket to call the same interface, and have a document that can be debugged. Try it?
+
+## You want to control websocket?
+There are three ways of rewriting to help you
+
+a: [WebSocketAccept] is accepting a websocket connection. You can return null to refuse to disconnect the connection
+   If you return any string, it will represent the token of the client. It's better to get this credential from request.headers
+
+b: [WebSocketReceive] is receiving a packet from a websocket connection and returning an object that implements ireceivedata
+    You can try to parse or return the base class by yourself
+
+c: [WebSocketDispose] is disconnecting a websocket connection to facilitate your own connection management, or do nothing?
+
+
 
 If you have any questions, you can email me xlievo@live.com and I will try my best to answer them
