@@ -78,7 +78,7 @@ public class TokenCheck : ArgumentAttribute
         //..1: check token key
         if (string.IsNullOrWhiteSpace(key))
         {
-	        //return this.ResultCreate(this.State, this.Message);
+            //return this.ResultCreate(this.State, this.Message);
         }
         return this.ResultCreate(); //ok
     }
@@ -111,13 +111,14 @@ public class MyBusiness : Business.AspNet.BusinessBase
     }
 	
     //Override, using custom token
-    public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) => new Token
+    public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) 
+       => new Token
     {
-	    Origin = token.Origin,
-	    Key = token.Key,
-	    Remote = token.Remote,
-	    Callback = token.Callback,
-	    Path = token.Path
+        Origin = token.Origin,
+        Key = token.Key,
+        Remote = token.Remote,
+        Callback = token.Callback,
+        Path = token.Path
     };
 	
     public virtual async Task<IResult<MyLogicArg>> MyLogic(Token token, MyLogicArg arg)
