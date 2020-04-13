@@ -132,20 +132,21 @@ public class MyBusiness : Business.AspNet.BusinessBase
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
-Now, you can use HTTP and websocket to call the same interface, and have a document that can be debugged. Try it?
+Now, you can use HTTP and WebSocket to call the same interface, and have a document that can be debugged. Try it?
 
-ASP.NET just acts as the communication layer. If you know business.core well, you can replace it with any communication layer you need, Include calls from class libraries
+ASP.NET just acts as the communication layer. 
+If you know Business.Core well, you can replace it with any communication layer you need, Include calls from class libraries
 
-## You want to control websocket?
+## You want to control WebSocket?
 There are three ways of rewriting to help you
 
-a: [WebSocketAccept] is accepting a websocket connection. You can return null to refuse to disconnect the connection
+a: [WebSocketAccept] is accepting a WebSocket connection. You can return null to refuse to disconnect the connection
    If you return any string, it will represent the token of the client. It's better to get this credential from request.headers
 
-b: [WebSocketReceive] is receiving a packet from a websocket connection and returning an object that implements ireceivedata
+b: [WebSocketReceive] is receiving a packet from a WebSocket connection and returning an object that implements ireceivedata
     You can try to parse or return the base class by yourself
 
-c: [WebSocketDispose] is disconnecting a websocket connection to facilitate your own connection management, or do nothing?
+c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your own connection management, or do nothing?
 
 
 
