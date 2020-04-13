@@ -19,12 +19,12 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	
     //If you want to configure documents
     app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>()
-    .UseDoc(new Business.Core.Document.Config
-    {
-        Debug = true,
-        Benchmark = true,
-        Navigtion = true
-    }));
+        .UseDoc(new Business.Core.Document.Config
+        {
+	    Debug = true,
+	    Benchmark = true,
+	    Navigtion = true
+        }));
 }
 ```
 ## Step 2: declare your business class
@@ -52,21 +52,19 @@ public struct Token : IToken
 
 public class TokenCheck : ArgumentAttribute
 {
-	public TokenCheck(int state = -80, string message = null) : base(state, message) { }
+    public TokenCheck(int state = -80, string message = null) : base(state, message) { }
 
-	public override async ValueTask<IResult> Proces(dynamic value)
+    public override async ValueTask<IResult> Proces(dynamic value)
+    {
+        var key = value.Key as string;
+
+	//..1: check token key
+	if (string.IsNullOrWhiteSpace(key))
 	{
-		var key = value.Key as string;
-
-		//..1: check token key
-
-		if (string.IsNullOrWhiteSpace(key))
-		{
-			//return this.ResultCreate(this.State, this.Message);
-		}
-
-		return this.ResultCreate(); //ok
+	    //return this.ResultCreate(this.State, this.Message);
 	}
+	return this.ResultCreate(); //ok
+    }
 }
 
 public struct MyBusinessArg
@@ -98,7 +96,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
         Path = token.Path
     };
 	
-	public virtual async Task<IResult<MyBusinessArg>> MyLogic(Token token, MyBusinessArg arg)
+    public virtual async Task<IResult<MyBusinessArg>> MyLogic(Token token, MyBusinessArg arg)
     {
         return this.ResultCreate(arg);
     }
