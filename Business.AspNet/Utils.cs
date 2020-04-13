@@ -345,7 +345,7 @@ namespace Business.AspNet
         /// <param name="addresses"></param>
         /// <param name="appSettings"></param>
         /// <param name="httpClientFactory"></param>
-        public Environment(string addresses, IConfigurationSection appSettings, IHttpClientFactory httpClientFactory)
+        public Environment(string[] addresses, IConfigurationSection appSettings, IHttpClientFactory httpClientFactory)
         {
             Addresses = addresses;
             AppSettings = appSettings;
@@ -355,7 +355,7 @@ namespace Business.AspNet
         /// <summary>
         /// The urls the hosted application will listen on.
         /// </summary>
-        public string Addresses { get; }
+        public string[] Addresses { get; }
 
         /// <summary>
         /// Configuration file "AppSettings" node
@@ -559,7 +559,11 @@ namespace Business.AspNet
                 var arg = d.TryJsonDeserialize<DocUI.BenchmarkArg>();
                 if (default(DocUI.BenchmarkArg).Equals(arg)) { return new ArgumentNullException(nameof(arg)).Message; }
                 //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
-                arg.host = $"{Utils.Environment.Addresses}/{business.Configer.Info.BusinessName}";
+                if (null != Utils.httpAddress)
+                {
+                    //arg.host = $"{Utils.Environment.Addresses[0]}/{business.Configer.Info.BusinessName}";
+                    arg.host = $"{Utils.httpAddress}/{business.Configer.Info.BusinessName}";
+                }
                 return await DocUI.Benchmark(arg);
             }
 
@@ -618,6 +622,8 @@ namespace Business.AspNet
         /// "context", "socket", "httpFile" 
         /// </summary>
         internal static readonly string[] contextParameterNames = new string[] { "context", "socket", "httpFile" };
+
+        internal static string httpAddress = null;
 
         /// <summary>
         /// Default JSON format grouping
@@ -760,12 +766,20 @@ namespace Business.AspNet
 
             app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
 
-            var addresses = app.ServerFeatures.Get<IServerAddressesFeature>().Addresses.FirstOrDefault() ?? "http://localhost:5000";
-            var addresses2 = addresses.ToLower();
-            if (addresses2.StartsWith("http://*:") || addresses2.StartsWith("https://*:") || addresses2.StartsWith("http://+:") || addresses2.StartsWith("https://+:"))
+            var addresses = app.ServerFeatures.Get<IServerAddressesFeature>().Addresses.Select(c =>
             {
-                addresses = addresses.Replace("*", "localhost").Replace("+", "localhost");
-            }
+                var address = c;
+                var address2 = address.ToLower();
+                if (address2.StartsWith("http://+:") || address2.StartsWith("http://*:") || address2.StartsWith("https://+:") || address2.StartsWith("https://*:"))
+                {
+                    address = address.Replace("*", "localhost").Replace("+", "localhost");
+                }
+                if (null == httpAddress && address2.StartsWith("http://"))
+                {
+                    httpAddress = address;
+                }
+                return address;
+            }).ToArray();
 
             Environment = new Environment(addresses, app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings"), new ServiceCollection()
                 .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
@@ -777,7 +791,7 @@ namespace Business.AspNet
 
             var staticDir = app.UseStaticDir(docDir);
             Console.WriteLine($"Static Directory: {staticDir}");
-            Console.WriteLine($"Addresses: {Environment.Addresses}");
+            Console.WriteLine($"Addresses: {string.Join(" ", Environment.Addresses)}");
 
             bootstrap = bootstrap ?? Bootstrap.CreateAll<BusinessBase>();
             bootstrap.UseType(contextParameterNames)
@@ -797,10 +811,13 @@ namespace Business.AspNet
             {
                 bootstrap.Config.UseDoc.Config.Group = BusinessJsonGroup;
             }
-            if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
-            {
-                bootstrap.Config.UseDoc.Config.Host = Environment.Addresses;
-            }
+            //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
+            //{
+            //    if (0 < Environment.Addresses.Length)
+            //    {
+            //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
+            //    }
+            //}
 
             bootstrap.Build();
             Utils.bootstrap = bootstrap;
