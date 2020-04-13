@@ -17,7 +17,7 @@ public void ConfigureServices(IServiceCollection services)
         options.AddPolicy("any", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
     });
     services.AddMvc(option => option.EnableEndpointRouting = false)
-        .SetCompatibilityVersion(CompatibilityVersion.Latest);
+        .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Latest);
 }
 
 public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
