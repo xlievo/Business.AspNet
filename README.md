@@ -131,13 +131,8 @@ public class MyBusiness : Business.AspNet.BusinessBase
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
 
-To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
-
-
-Now, you can use HTTP and WebSocket to call the same interface, and have a document that can be debugged. 
-
+Now, you can use HTTP and WebSocket to call the same interface, and have a document that can be debugged.   
 Try clicking the Debug button on the document?
-
 
 ASP.NET just acts as the communication layer. 
 If you know Business.Core well, you can replace it with any communication layer you need, Include calls from class libraries
@@ -153,6 +148,6 @@ b: [WebSocketReceive] is receiving a packet from a WebSocket connection and retu
 
 c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your own connection management, or do nothing?
 
-
+To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
 If you have any questions, you can email me xlievo@live.com and I will try my best to answer them
