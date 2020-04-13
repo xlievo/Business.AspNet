@@ -110,7 +110,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
         });
     }
 	
-    //Override, using custom token
+    //Override, using custom token In order to be able to process token data
     public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) 
        => new Token
     {
