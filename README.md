@@ -35,7 +35,7 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         }));
 }
 ```
-## Step 2: declare your business class, Create a new class and copy the following
+## Step 2: Declare your business class, Create a new class and copy the following
 ```C#
 using Business.Core;
 using Business.Core.Annotations;
@@ -129,7 +129,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
     }
 }
 ```
-## Step 3: start your current project and navigate to http://localhost:5000/doc/index.html
+## Step 3: Start the project in a self hosted way and navigate to http://localhost:5000/doc/index.html
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
 
