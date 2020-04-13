@@ -27,9 +27,9 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     }));
 }
 ```
-## Step 2: declare your business base class
+## Step 2: declare your business class
 ```C#
-//[TokenCheck]//This is your token verification
+[TokenCheck]//This is your token verification
 [Use]
 [Logger(canWrite: false)]
 public struct Token : IToken
@@ -50,16 +50,44 @@ public struct Token : IToken
     public Business.AspNet.Token.OriginValue Origin { get; set; }
 }
 
-public abstract class BusinessBase : Business.AspNet.BusinessBase
+public class TokenCheck : ArgumentAttribute
 {
-    public BusinessBase()
+	public TokenCheck(int state = -80, string message = null) : base(state, message) { }
+
+	public override async ValueTask<IResult> Proces(dynamic value)
+	{
+		var key = value.Key as string;
+
+		//..1: check token key
+
+		if (string.IsNullOrWhiteSpace(key))
+		{
+			//return this.ResultCreate(this.State, this.Message);
+		}
+
+		return this.ResultCreate(); //ok
+	}
+}
+
+public struct MyBusinessArg
+{
+    public string A { get; set; }
+
+    public string B { get; set; }
+}
+
+public class MyBusiness : Business.AspNet.BusinessBase
+{
+    public MyBusiness()
     {
         this.Logger = new Logger(async (Logger.LoggerData log) =>
         {
+            //Output log
             Console.WriteLine(log.ToString());
         });
     }
-
+	
+    //Override, using custom token
     public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token)
         => new Token
     {
@@ -69,28 +97,16 @@ public abstract class BusinessBase : Business.AspNet.BusinessBase
         Callback = token.Callback,
         Path = token.Path
     };
-}
-```
-## Step 3: start using your business class
-```C#
-public struct MyBusinessArg
-{
-    public string A { get; set; }
-
-    public string B { get; set; }
-}
-
-public class BusinessMember : BusinessBase
-{
-    public virtual async Task<IResult<MyBusinessArg>> MyBusiness(Token token, MyBusinessArg arg)
+	
+	public virtual async Task<IResult<MyBusinessArg>> MyLogic(Token token, MyBusinessArg arg)
     {
         return this.ResultCreate(arg);
     }
 }
 ```
-## Step 4: start your asp.net project and navigate to http://localhost:5000/doc/index.html
+## Step 3: start your asp.net project and navigate to http://localhost:5000/doc/index.html
 
-It only needs 4 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
+It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
 If you have any questions, you can email me xlievo@live.com and I will try my best to answer them

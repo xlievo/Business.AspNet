@@ -9,12 +9,7 @@ namespace WebAPI.Annotations
 {
     public class TokenCheck : ArgumentAttribute
     {
-        public TokenCheck(int state = -80, string message = null) : base(state, message)
-        {
-            this.CanNull = false;
-            this.Description = "Token check";
-            this.Message = "Token is null";
-        }
+        public TokenCheck(int state = -80, string message = null) : base(state, message) { }
 
         public override async ValueTask<IResult> Proces(dynamic value)
         {
