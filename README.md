@@ -150,5 +150,6 @@ c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
 ASP.NET just acts as the communication layer. 
-If you know Business.Core well, you can replace it with any communication layer you need, Include calls from class libraries  
-If you have any questions, you can email me xlievo@live.com and I will try my best to answer them
+If you know Business.Core well, you can replace it with any communication layer you need, Include calls from class libraries
+
+*If you have any questions, you can email me xlievo@live.com and I will try my best to answer them*
