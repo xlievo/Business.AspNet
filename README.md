@@ -137,7 +137,7 @@ Now, you can use HTTP and WebSocket to call the same interface, and have a docum
 **Try clicking the Debug button on the document?**
 
 Why is there no comment on the document?  
-In project properties -> generate -> select XML document file
+**In project properties -> generate -> select XML document file**
 
 ## You want to control WebSocket?
 There are three ways of rewriting to help you
