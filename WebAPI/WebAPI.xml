@@ -134,5 +134,15 @@
             AAA@@@
             </summary>
         </member>
+        <member name="F:WebAPI.BusinessBase.LogClient">
+            <summary>
+            Log client
+            </summary>
+        </member>
+        <member name="F:WebAPI.BusinessBase.WebSockets">
+            <summary>
+            WebSocket dictionary
+            </summary>
+        </member>
     </members>
 </doc>

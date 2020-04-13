@@ -121,6 +121,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
         Path = token.Path
     };
 	
+    //My first business logic
     public virtual async Task<IResult<MyLogicArg>> MyLogic(Token token, MyLogicArg arg)
     {
         return this.ResultCreate(arg);
