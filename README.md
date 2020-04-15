@@ -47,7 +47,7 @@ using System.Threading.Tasks;
 using System;
 
 [TokenCheck]//This is your token verification
-[Use]
+[Use]//Comments required for injection into parameters
 [Logger(canWrite: false)]//Do not output log
 public struct Token : IToken
 {
@@ -67,9 +67,10 @@ public struct Token : IToken
     public Business.AspNet.Token.OriginValue Origin { get; set; }
 }
 
-//This is your token verification
+//This is your token verification, must be inherited ArgumentAttribute
 public class TokenCheck : ArgumentAttribute
 {
+    //Good state specifications are important
     public TokenCheck(int state = -80, string message = null) : base(state, message) { }
 
     public override async ValueTask<IResult> Proces(dynamic value)
@@ -100,6 +101,7 @@ public struct MyLogicArg
     public string B { get; set; }
 }
 
+//Maybe you need a custom base class? To unify the processing of logs and token
 public class MyBusiness : Business.AspNet.BusinessBase
 {
     public MyBusiness()
@@ -123,6 +125,8 @@ public class MyBusiness : Business.AspNet.BusinessBase
     };
 	
     //My first business logic
+    //Logical method must be public virtual!
+    //If you customize the base class, you just need to concentrate on writing logical methods!
     public virtual async Task<IResult<MyLogicArg>> MyLogic(Token token, MyLogicArg arg)
     {
         return this.ResultCreate(arg);
