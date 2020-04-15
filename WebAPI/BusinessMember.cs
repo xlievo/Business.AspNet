@@ -243,14 +243,11 @@ public class TestAttribute : ArgumentAttribute
 {
     public TestAttribute(int state = 111, string message = null) : base(state, message) { }
 
-    public override async ValueTask<IResult> Proces<Type>(dynamic value)
+    public override async ValueTask<IResult> Proces<Type>(dynamic token, dynamic value)
     {
-        //var exit = await RedisHelper.HExistsAsync("Role", "value2");
-
         switch (value)
         {
             case "ok":
-                //return this.ResultCreate(exit ? await RedisHelper.HGetAsync("Role", "value2") : "not!");
                 return this.ResultCreate("OK!!!");
             case "error":
                 return this.ResultCreate(this.State, $"{this.Alias} cannot be empty");
@@ -258,7 +255,6 @@ public class TestAttribute : ArgumentAttribute
             case "data":
                 return this.ResultCreate(value + "1122");
 
-            //default: throw new System.Exception("Argument exception!");
             default: break;
         }
 

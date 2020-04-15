@@ -149,6 +149,10 @@ b: [WebSocketReceive] is receiving a packet from a WebSocket connection and retu
     You can try to parse or return the base class by yourself
 
 c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your own connection management, or do nothing?
+
+## Do you think it's over? Did not!
+You also need to understand call wrapping and return wrapping
+
 ***
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
