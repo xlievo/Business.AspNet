@@ -153,6 +153,8 @@ c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your
 ## Do you think it's over? Did not!
 You also need to understand call wrapping and return wrapping
 
+![image](https://github.com/xlievo/Business.AspNet/blob/master/images/aspnet00x.png)
+
 ***
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
