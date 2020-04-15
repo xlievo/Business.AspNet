@@ -155,7 +155,9 @@ b: [WebSocketReceive] is receiving a packet from a WebSocket connection and retu
 c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your own connection management, or do nothing?
 
 ## Do you think it's over? Did not!
-You also need to understand call wrapping and return wrapping
+~~You also need to understand call wrapping and return wrapping~~
+
+![image](https://github.com/xlievo/Business.AspNet/blob/master/images/aspnet00x.png)
 
 ***
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
