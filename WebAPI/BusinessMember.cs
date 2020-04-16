@@ -5,6 +5,7 @@ using Business.Core.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Threading.Tasks;
 
 namespace WebAPI
@@ -65,13 +66,13 @@ namespace WebAPI
         }
 
         [Command("abc", Group = Utils.BusinessWebSocketGroup)]
-        public virtual async Task<dynamic> Test004(Session session, List<Test001> arg, dynamic context, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
+        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, dynamic socket, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
         {
-            Microsoft.AspNetCore.Http.HttpContext httpContext = context.HttpContext;
+            WebSocket _socket = socket;
 
             //await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
             //return this.ResultCreate();
-            return this.ResultCreate(new { session, arg, State = httpContext.Connection.RemoteIpAddress.ToString() }, "aaaa!@#$");
+            return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
         }
     }
 

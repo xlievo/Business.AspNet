@@ -165,22 +165,22 @@ namespace Business.AspNet
 
     readonly struct WebSocketReceive
     {
-        public WebSocketReceive(string token, IReceiveData data, BusinessBase business, HttpContext context, WebSocket webSocket)
+        public WebSocketReceive(IToken token, IReceiveData data, BusinessBase business, WebSocket webSocket)
         {
             Token = token;
             Data = data;
             Business = business;
-            Context = context;
+            //Context = context;
             WebSocket = webSocket;
         }
 
-        public string Token { get; }
+        public IToken Token { get; }
 
         public IReceiveData Data { get; }
 
         public BusinessBase Business { get; }
 
-        public HttpContext Context { get; }
+        //public HttpContext Context { get; }
 
         public WebSocket WebSocket { get; }
     }
@@ -596,14 +596,14 @@ namespace Business.AspNet
                         //the data of this request, allow null.
                         parameters,
                         //the incoming use object
-                        new UseEntry(this, Utils.contextParameterNames), //context
+                        new UseEntry(this, "context", "httpFile"), //context
                         new UseEntry(token, "session")) :
                     // Framework routing mode
                     await cmd.AsyncCall(
                         //the data of this request, allow null.
                         cmd.HasArgSingle ? new object[] { d } : d.TryJsonDeserializeStringArray(),
                         //the incoming use object
-                        new UseEntry(this, Utils.contextParameterNames), //context
+                        new UseEntry(this, "context", "httpFile"), //context
                         new UseEntry(token, "session"));
 
             return result;
@@ -676,6 +676,7 @@ namespace Business.AspNet
 
             AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
             //LogClient = Environment.HttpClientFactory.CreateClient("log");
+            //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
 
         #region Call
@@ -962,10 +963,8 @@ namespace Business.AspNet
 
         //static readonly System.Collections.Concurrent.BlockingCollection<WebSocketReceive> WebSocketQueue = new System.Collections.Concurrent.BlockingCollection<WebSocketReceive>();
 
-        static async ValueTask<dynamic> WebSocketCall(WebSocketReceive receive)
+        static async ValueTask WebSocketCall(WebSocketReceive receive)
         {
-            var b = receive.Data.b ?? receive.Data.c;
-
             var result = await receive.Business.Command.AsyncCall(
             //the cmd of this request.
             receive.Data.c,
@@ -974,17 +973,9 @@ namespace Business.AspNet
             //the group of this request.
             BusinessWebSocketGroup, //fixed grouping
                                     //the incoming use object
-            new UseEntry(receive.Context, "context"), //context
+                                    //new UseEntry(receive.WebSocket, "context"), //context
             new UseEntry(receive.WebSocket, "socket"), //webSocket
-            new UseEntry(await receive.Business.GetToken(receive.Context, new Token //token
-            {
-                Origin = Token.OriginValue.WebSocket,
-                Key = receive.Token,
-                //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
-                Remote = string.Format("{0}:{1}", receive.Context.Connection.RemoteIpAddress.MapToIPv4().ToString(), receive.Context.Connection.RemotePort),
-                Callback = b,
-                Path = receive.Context.Request.Path.Value,
-            }), "session"));
+            new UseEntry(receive.Token, "session"));
 
             // Socket set callback
             if (!Equals(null, result))
@@ -992,16 +983,14 @@ namespace Business.AspNet
                 if (typeof(IResult).IsAssignableFrom(result.GetType()))
                 {
                     var result2 = result as IResult;
-                    result2.Callback = b;
+                    result2.Callback = receive.Token.Callback;
 
                     var data = result2.ResultCreateToDataBytes().ToBytes();
 
-                    await receive.WebSocket.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
                     //await SocketSendAsync(data, receive.Context.Connection.Id);
                 }
             }
-
-            return result;
         }
 
         static async ValueTask Keep(HttpContext context, WebSocket webSocket)
@@ -1063,7 +1052,25 @@ namespace Business.AspNet
                         {
                             //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
 
-                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => c2.Exception?.Console()), new WebSocketReceive(token, receiveData, business, context, webSocket));
+                            //var token = await receive.Business.GetToken(receive.Context, new Token //token
+                            //{
+                            //    Origin = Token.OriginValue.WebSocket,
+                            //    Key = receive.Token,
+                            //    //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
+                            //    Remote = string.Format("{0}:{1}", receive.Context.Connection.RemoteIpAddress.MapToIPv4().ToString(), receive.Context.Connection.RemotePort),
+                            //    Callback = b,
+                            //    Path = receive.Context.Request.Path.Value,
+                            //});
+
+                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => c2.Exception?.Console()), new WebSocketReceive(await business.GetToken(context, new Token //token
+                            {
+                                Origin = Token.OriginValue.WebSocket,
+                                Key = token,
+                                //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
+                                Remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort),
+                                Callback = receiveData.b ?? receiveData.c,
+                                Path = context.Request.Path.Value,
+                            }), receiveData, business, webSocket));
                         }
                     }
                     catch (Exception ex)
