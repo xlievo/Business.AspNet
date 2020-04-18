@@ -196,13 +196,15 @@ this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
 ```
 
 ## About Routing mode
-Support POST, GET methods
+Support POST and GET methods at the same time
 
 a: **[Built-in]** "http://localhost:5000/MyBusiness?c=&t=&d="
 
 b: **[Classical]** "http://localhost:5000/MyBusiness/MyLogic"
 
 Refer to the document description  
+**Try copying "routes" on a document to browser access?**
+
 ![image](images/aspnet00r.png)
 
 ## About Apache ab as Document benchmark tool
