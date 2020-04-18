@@ -195,10 +195,19 @@ this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
 });
 ```
 
+## About Routing mode
+Support POST, GET methods
+
+a: **[Built-in]** http://localhost:5000/API/v2?c=&t=&d=  
+b: **[Classical]** http://localhost:5000/API/v2/jjjTest001jjj
+
+Refer to the document description  
+![image](images/aspnet00r.png)
+
 ## About Apache ab as Document benchmark tool
 All document benchmarks access localhost, Exclude network factors
 
-**install**
+**install**  
 Windows: No installation required!
 macOS: ~  
 Alpine: apk add apache2-utils  
