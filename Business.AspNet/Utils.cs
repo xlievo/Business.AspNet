@@ -484,14 +484,15 @@ namespace Business.AspNet
     /// <summary>
     /// A class for an MVC controller with view support.
     /// </summary>
-    [Use]
-    //Internal object do not write logs
-    [Logger(canWrite: false)]
+    //[Use]
+    ////Internal object do not write logs
+    //[Logger(canWrite: false)]
+    //[Ignore(IgnoreMode.Arg)]
     [RequestSizeLimit(long.MaxValue)]
     //int.MaxValue bug https://github.com/aspnet/AspNetCore/issues/13719
     //[RequestFormLimits(KeyLengthLimit = 1_009_100_000, ValueCountLimit = 1_009_100_000, ValueLengthLimit = 1_009_100_000, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
     [RequestFormLimits(KeyLengthLimit = int.MaxValue, ValueCountLimit = int.MaxValue, ValueLengthLimit = int.MaxValue, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
-    public class BusinessController : Controller
+    public class Context : Controller
     {
         /// <summary>
         /// Call
@@ -596,6 +597,7 @@ namespace Business.AspNet
                         //the data of this request, allow null.
                         parameters,
                         //the incoming use object
+                        //new UseEntry(this.HttpContext), //context
                         new UseEntry(this, "context", "httpFile"), //context
                         new UseEntry(token, "session")) :
                     // Framework routing mode
@@ -603,6 +605,7 @@ namespace Business.AspNet
                         //the data of this request, allow null.
                         cmd.HasArgSingle ? new object[] { d } : d.TryJsonDeserializeStringArray(),
                         //the incoming use object
+                        //new UseEntry(this.HttpContext), //context
                         new UseEntry(this, "context", "httpFile"), //context
                         new UseEntry(token, "session"));
 
@@ -618,10 +621,15 @@ namespace Business.AspNet
         internal static BootstrapAll<BusinessBase> bootstrap;
         internal static BusinessBase businessFirst;
 
+        ///// <summary>
+        ///// "context", "socket", "httpFile" 
+        ///// </summary>
+        //internal static readonly string[] contextParameterNames = new string[] { "context", "socket", "httpFile" };
+
         /// <summary>
-        /// "context", "socket", "httpFile" 
+        /// "Context", "HttpFile", "WebSocket" 
         /// </summary>
-        internal static readonly string[] contextParameterNames = new string[] { "context", "socket", "httpFile" };
+        internal static readonly Type[] contextParameterTypes = new Type[] {  typeof(Context), typeof(HttpFile), typeof(WebSocket), typeof(HttpContext) };
 
         internal static string httpAddress = null;
 
@@ -795,9 +803,14 @@ namespace Business.AspNet
             Console.WriteLine($"Addresses: {string.Join(" ", Environment.Addresses)}");
 
             bootstrap = bootstrap ?? Bootstrap.CreateAll<BusinessBase>();
-            bootstrap.UseType(contextParameterNames)
-                .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterNames)
-                .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterNames);
+            bootstrap
+                .UseType(contextParameterTypes)
+                .UseType("httpFile")
+                //.UseType(contextParameterNames)
+                .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
+                //.IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterNames)
+                .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
+            //.LoggerSet(new LoggerAttribute(canWrite: false), contextParameterNames);
 
             if (null == bootstrap.Config.UseDoc)
             {
@@ -835,7 +848,7 @@ namespace Business.AspNet
                     routes.MapRoute(
                     name: item.Key,
                     template: $"{item.Key}/{{*path}}",
-                    defaults: new { controller = "Business", action = "Call" });
+                    defaults: new { controller = "Context", action = "Call" });
                 }
             });
 
@@ -973,7 +986,7 @@ namespace Business.AspNet
             //the group of this request.
             BusinessWebSocketGroup, //fixed grouping
                                     //the incoming use object
-                                    //new UseEntry(receive.WebSocket, "context"), //context
+                                    //new UseEntry(receive.HttpContext, "context"), //context
             new UseEntry(receive.WebSocket, "socket"), //webSocket
             new UseEntry(receive.Token, "session"));
 
@@ -987,8 +1000,10 @@ namespace Business.AspNet
 
                     var data = result2.ResultCreateToDataBytes().ToBytes();
 
-                    await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
-                    //await SocketSendAsync(data, receive.Context.Connection.Id);
+                    if (WebSocketState.Open == receive.WebSocket?.State)
+                    {
+                        await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
+                    }
                 }
             }
         }
@@ -1028,11 +1043,6 @@ namespace Business.AspNet
                     return;
                 }
 
-                //                WebSockets.TryAdd(id, webSocket);
-                //#if DEBUG
-                //                Console.WriteLine($"Add:{id} Connections:{WebSockets.Count}");
-                //#endif
-
                 var buffer = new byte[SocketReceiveBufferSize];
                 WebSocketReceiveResult socketResult = null;
 
@@ -1051,17 +1061,6 @@ namespace Business.AspNet
                         else
                         {
                             //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
-
-                            //var token = await receive.Business.GetToken(receive.Context, new Token //token
-                            //{
-                            //    Origin = Token.OriginValue.WebSocket,
-                            //    Key = receive.Token,
-                            //    //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
-                            //    Remote = string.Format("{0}:{1}", receive.Context.Connection.RemoteIpAddress.MapToIPv4().ToString(), receive.Context.Connection.RemotePort),
-                            //    Callback = b,
-                            //    Path = receive.Context.Request.Path.Value,
-                            //});
-
                             Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => c2.Exception?.Console()), new WebSocketReceive(await business.GetToken(context, new Token //token
                             {
                                 Origin = Token.OriginValue.WebSocket,
@@ -1105,10 +1104,6 @@ namespace Business.AspNet
             }
             finally
             {
-                //                WebSockets.TryRemove(id, out _);
-                //#if DEBUG
-                //                Console.WriteLine($"Remove:{id} Connectionss:{WebSockets.Count}");
-                //#endif
                 await acceptBusiness.WebSocketDispose(context, webSocket);
             }
         }

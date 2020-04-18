@@ -154,6 +154,20 @@ b: [WebSocketReceive] is receiving a packet from a WebSocket connection and retu
 
 c: [WebSocketDispose] is disconnecting a WebSocket connection to facilitate your own connection management, or do nothing?
 
+## About the communication layer
+The following three communication layer objects will be injected into your logical methods as parameters, It can be null.
+
+a: [Business.AspNet.Context] Current controller, valid only for HTTP communication
+
+b: [Business.Core.Annotations.HttpFile] The file object currently requested to be uploaded, valid only for HTTP communication  
+Valid when this parameter is named "httpFile"
+
+c: [System.Net.WebSockets.WebSocket] Current websocket object, Valid only for websocket communication
+
+In addition to parameter injection, there is a static object that you can use [Business.AspNet.Utils.Environment]  
+[Environment.AppSettings] An object of the appsettings.json configuration file [Appsettings] node  
+[Environment.HttpClientFactory] An HTTP factory, convenient for you to communicate with the outside world
+
 ## Do you think it's over? Did not!
 ~~You also need to understand call wrapping and return wrapping~~
 

@@ -2,6 +2,7 @@
 using Business.Core;
 using Business.Core.Annotations;
 using Business.Core.Result;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -44,8 +45,10 @@ namespace WebAPI
              "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T07:24\",99.0234,777,false]")]
         [Testing("test, important logic, do not delete!!!",
              "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T08:24\",99.0234,777,false]")]
-        public virtual async Task<dynamic> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true)
+        public virtual async Task<dynamic> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true, Context context = null)
         {
+            context?.Response.Headers.TryAdd("sss", "qqq");
+
             var ss = System.Text.Encoding.UTF8.GetBytes("a1");
             dynamic args = new System.Dynamic.ExpandoObject();
             args.token = session;
@@ -66,12 +69,8 @@ namespace WebAPI
         }
 
         [Command("abc", Group = Utils.BusinessWebSocketGroup)]
-        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, dynamic socket, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
+        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
         {
-            WebSocket _socket = socket;
-
-            //await socket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, null, CancellationToken.None);
-            //return this.ResultCreate();
             return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
         }
     }

@@ -4,7 +4,7 @@
         <name>WebAPI</name>
     </assembly>
     <members>
-        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.Core.Annotations.HttpFile,System.Decimal,System.Int32,System.Boolean)">
+        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.Core.Annotations.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context)">
             <summary>
             test doc Test001
             and Test001
