@@ -155,7 +155,7 @@ b: **[WebSocketReceive]** is receiving a packet from a WebSocket connection and 
 c: **[WebSocketDispose]** is disconnecting a WebSocket connection to facilitate your own connection management, or do nothing?
 
 ## About the communication layer
-The following three communication layer objects will be injected into your logical methods as parameters, It can be null.
+The following three communication layer objects will be injected into your logical methods as parameters
 
 a: **[Business.AspNet.Context]** Current controller, valid only for HTTP communication
 
@@ -170,7 +170,6 @@ c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only fo
 
 ## About [Logger]
 Register log callback in business class constructor  
-Log callback doc splitting single callback and batch callback
 
 **single**
 ```C#
