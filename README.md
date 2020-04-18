@@ -195,10 +195,20 @@ this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
 });
 ```
 
-## Do you think it's over? Did not!
-~~You also need to understand call wrapping and return wrapping~~
+## About Apache ab as Document benchmark tool
+All document benchmarks access localhost, Exclude network factors
+
+**install**
+Windows: No installation required!
+macOS: ~  
+Alpine: apk add apache2-utils  
+CentOS/RHEL: yum -y install httpd-tools  
+Ubuntu: apt-get install apache2-utils
 
 ![image](images/aspnet00x.png)
+
+## Do you think it's over? Did not!
+~~You also need to understand call wrapping and return wrapping~~
 
 ***
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
