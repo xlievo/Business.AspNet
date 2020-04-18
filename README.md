@@ -159,7 +159,7 @@ The following three communication layer objects will be injected into your logic
 
 a: **[Business.AspNet.Context]** Current controller, valid only for HTTP communication
 
-b: **[Business.Core.Annotations.HttpFile]** The file object currently requested to be uploaded, valid only for HTTP communication  
+b: **[Business.Core.Annotations.HttpFile]** The file object currently requested to be uploaded, valid only for HTTP communication.  
 Valid when this parameter is named "httpFile"
 
 c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only for websocket communication
@@ -168,7 +168,7 @@ c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only fo
 [Environment.AppSettings] An object of the appsettings.json configuration file [Appsettings] node  
 [Environment.HttpClientFactory] An HTTP factory, convenient for you to communicate with the outside world
 
-## About [Logger]
+## About logger
 Register log callback in business class constructor  
 
 **single**
