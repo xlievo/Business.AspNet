@@ -200,7 +200,7 @@ Support POST and GET methods at the same time
 
 a: **[Built-in]** "http://localhost:5000/MyBusiness?c=&t=&d="
 
-b: **[Classical]** "http://localhost:5000/MyBusiness/MyLogic"
+b: **[Classic]** "http://localhost:5000/MyBusiness/MyLogic"
 
 Refer to the document description  
 **Try copying "routes" on a document to browser access?**
