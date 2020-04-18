@@ -168,6 +168,34 @@ c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only fo
 [Environment.AppSettings] An object of the appsettings.json configuration file [Appsettings] node  
 [Environment.HttpClientFactory] An HTTP factory, convenient for you to communicate with the outside world
 
+## About [Logger]
+Register log callback in business class constructor  
+Log callback doc splitting single callback and batch callback
+
+**single**
+```C#
+this.Logger = new Logger(async (Logger.LoggerData log) =>
+{
+    Console.WriteLine(log.ToString());
+});
+```
+**batch**  
+In the production environment, batch logging can reduce the occupation of thread pool and the request to log server  
+```C#
+this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
+{
+    foreach (var item in log)
+    {
+        Console.WriteLine(log.ToString());
+    }
+}
+, new Logger.BatchOptions
+{
+    Interval = TimeSpan.FromSeconds(6), //Return the accumulated log within 6 seconds
+    MaxNumber = 2000 //It also returns when 2000 logs are accumulated
+});
+```
+
 ## Do you think it's over? Did not!
 ~~You also need to understand call wrapping and return wrapping~~
 
