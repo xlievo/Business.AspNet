@@ -219,6 +219,21 @@ Ubuntu: apt-get install apache2-utils
 
 ![image](images/aspnet00x.png)
 
+## How to extend the communication layer
+
+a: **First, you must locate the calling business class**  
+```C#
+Utils.bootstrap.BusinessList.TryGetValue(businessName, out BusinessBase business);
+```
+b: **Call the Command.AsyncCall method of the business class**  
+```C#
+var result = await business.Command.AsyncCall(
+    "cmd",//Business method or alias
+    new object[] { },//Method parameters, excluding injection parameters
+    "group",//Business grouping
+    new UseEntry(new Token { }));//Parameter object to be injected
+``` 
+
 ## Do you think it's over? Did not!
 ~~You also need to understand call wrapping and return wrapping~~
 
