@@ -2,6 +2,7 @@
 using Business.Core;
 using Business.Core.Annotations;
 using Business.Core.Auth;
+using Business.Core.Result;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -12,6 +13,144 @@ using WebAPI.Annotations;
 
 namespace WebAPI
 {
+    /// <summary>
+    /// result
+    /// </summary>
+    /// <typeparam name="Type"></typeparam>
+    public struct MyResultObject<Type> : IResult<Type>
+    {
+        /// <summary>
+        /// Activator.CreateInstance
+        /// </summary>
+        /// <param name="dataType"></param>
+        /// <param name="data"></param>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        /// <param name="genericDefinition"></param>
+        /// <param name="checkData"></param>
+        public MyResultObject(System.Type dataType, Type data, int state = 1, string message = null, System.Type genericDefinition = null, bool checkData = true)
+        {
+            this.DataType = dataType;
+            this.Data = data;
+            this.State = state;
+            this.Message = message;
+            this.HasData = checkData ? !Equals(null, data) : false;
+            this.Callback = default;
+
+            this.GenericDefinition = genericDefinition;
+        }
+
+        /// <summary>
+        /// MessagePack.MessagePackSerializer.Serialize(this)
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        public MyResultObject(Type data, int state = 1, string message = null)
+        {
+            this.Data = data;
+            this.State = state;
+            this.Message = message;
+            this.HasData = !Equals(null, data);
+
+            this.Callback = null;
+            this.DataType = null;
+            this.GenericDefinition = null;
+        }
+
+        /// <summary>
+        /// The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("SS")]
+        public int State { get; set; }
+
+        /// <summary>
+        /// Success can be null
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("MM")]
+        public string Message { get; set; }
+
+        /// <summary>
+        /// Specific dynamic data objects
+        /// </summary>
+        dynamic IResult.Data { get => Data; }
+
+        /// <summary>
+        /// Specific Byte/Json data objects
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("DD")]
+        public Type Data { get; set; }
+
+        /// <summary>
+        /// Whether there is value
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("HH")]
+        public bool HasData { get; set; }
+
+        /// <summary>
+        /// Gets the token of this result, used for callback
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        [System.Text.Json.Serialization.JsonPropertyName("BB")]
+        public string Callback { get; set; }
+
+        /// <summary>
+        /// Data type
+        /// </summary>
+        [MessagePack.IgnoreMember]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public System.Type DataType { get; set; }
+
+        /// <summary>
+        /// Result object generic definition
+        /// </summary>
+        [MessagePack.IgnoreMember]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public System.Type GenericDefinition { get; }
+
+        /// <summary>
+        /// Json format
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => Help.JsonSerialize(this);
+
+        /// <summary>
+        /// Json format Data
+        /// </summary>
+        /// <returns></returns>
+        public string ToDataString() => Help.JsonSerialize(this.Data);
+
+        /// <summary>
+        /// ProtoBuf format
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ToBytes() => MessagePack.MessagePackSerializer.Serialize(this);
+
+        /// <summary>
+        /// ProtoBuf format Data
+        /// </summary>
+        /// <returns></returns>
+        public byte[] ToDataBytes() => MessagePack.MessagePackSerializer.Serialize(this.Data);
+    }
+
+    public class MyJsonArgAttribute : JsonArgAttribute
+    {
+        public MyJsonArgAttribute(int state = -12, string message = null) : base(state, message)
+        {
+            this.Description = "MyJson parsing";
+
+            options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                AllowTrailingCommas = true,
+                IgnoreNullValues = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            options.Converters.Add(new Help.DateTimeConverter());
+            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        }
+    }
+
     [TokenCheck]
     [Use]
     [Logger(canWrite: false)]
@@ -40,7 +179,8 @@ namespace WebAPI
         public string Account { get; set; }
     }
 
-    public abstract class BusinessBase : Business.AspNet.BusinessBase
+    [MyJsonArg(Group = Utils.BusinessJsonGroup)]//Override base class annotation
+    public abstract class BusinessBase : Business.AspNet.BusinessBase<MyResultObject<object>>//Override base class ResultObject
     {
         /// <summary>
         /// Log client

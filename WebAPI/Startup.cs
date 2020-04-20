@@ -49,7 +49,8 @@ namespace WebAPI
 
             app.UseCors("any");
 
-            app.UseBusiness(Business.Core.Bootstrap.CreateAll<Business.AspNet.BusinessBase>()
+            //Override base class ResultObject
+            app.UseBusiness<MyResultObject<object>>(Business.Core.Bootstrap.CreateAll<IBusiness>()
                 .UseDoc(new Business.Core.Document.Config
                 {
                     Debug = true,

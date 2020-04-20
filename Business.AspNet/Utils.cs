@@ -165,7 +165,7 @@ namespace Business.AspNet
 
     readonly struct WebSocketReceive
     {
-        public WebSocketReceive(IToken token, IReceiveData data, BusinessBase business, WebSocket webSocket)
+        public WebSocketReceive(IToken token, IReceiveData data, IBusiness business, WebSocket webSocket)
         {
             Token = token;
             Data = data;
@@ -178,7 +178,7 @@ namespace Business.AspNet
 
         public IReceiveData Data { get; }
 
-        public BusinessBase Business { get; }
+        public IBusiness Business { get; }
 
         //public HttpContext Context { get; }
 
@@ -429,15 +429,35 @@ namespace Business.AspNet
 
     /// <summary>
     /// Business base class for ASP.Net Core
+    /// </summary>
+    public interface IBusiness : Core.IBusiness
+    {
+        ValueTask<IToken> GetToken(HttpContext context, Token token);
+
+        ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket);
+
+        ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
+
+        ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket);
+    }
+
+    /// <summary>
+    /// Business base class for ASP.Net Core
     /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
+    public abstract class BusinessBase : BusinessBase<ResultObject<object>> { }
+
+    /// <summary>
+    /// Business base class for ASP.Net Core
+    /// </summary>
+    /// <typeparam name="Result"></typeparam>
     [Command(Group = Utils.BusinessJsonGroup)]
     [JsonArg(Group = Utils.BusinessJsonGroup)]
     [Command(Group = Utils.BusinessWebSocketGroup)]
     [MessagePack(Group = Utils.BusinessWebSocketGroup)]
     [Logger(Group = Utils.BusinessJsonGroup)]
     [Logger(Group = Utils.BusinessWebSocketGroup, ValueType = Logger.ValueType.Out)]
-    public abstract class BusinessBase : BusinessBase<ResultObject<object>>
+    public abstract class BusinessBase<Result> : Core.BusinessBase<Result>, IBusiness where Result : IResult
     {
         /// <summary>
         /// Default constructor
@@ -507,7 +527,7 @@ namespace Business.AspNet
 
             var g = Utils.BusinessJsonGroup;//fixed grouping
             var path = this.Request.Path.Value.TrimStart('/');
-            if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out BusinessBase business)) { return this.NotFound(); }
+            if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business)) { return this.NotFound(); }
 
             string c = null;
             string t = null;
@@ -618,8 +638,8 @@ namespace Business.AspNet
     /// </summary>
     public static class Utils
     {
-        internal static BootstrapAll<BusinessBase> bootstrap;
-        internal static BusinessBase businessFirst;
+        internal static BootstrapAll<IBusiness> bootstrap;
+        internal static IBusiness businessFirst;
 
         ///// <summary>
         ///// "context", "socket", "httpFile" 
@@ -629,7 +649,7 @@ namespace Business.AspNet
         /// <summary>
         /// "Context", "HttpFile", "WebSocket" 
         /// </summary>
-        internal static readonly Type[] contextParameterTypes = new Type[] {  typeof(Context), typeof(HttpFile), typeof(WebSocket), typeof(HttpContext) };
+        internal static readonly Type[] contextParameterTypes = new Type[] { typeof(Context), typeof(HttpFile), typeof(WebSocket), typeof(HttpContext) };
 
         internal static string httpAddress = null;
 
@@ -654,7 +674,7 @@ namespace Business.AspNet
         /// <summary>
         /// result type
         /// </summary>
-        public static readonly Type ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
+        public static Type ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
 
         /// <summary>
         /// Host environment instance
@@ -769,7 +789,19 @@ namespace Business.AspNet
         /// <param name="bootstrap"></param>
         /// <param name="docDir"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseBusiness(this IApplicationBuilder app, BootstrapAll<BusinessBase> bootstrap = null, string docDir = "wwwroot")
+        public static IApplicationBuilder UseBusiness(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot") => UseBusiness<ResultObject<object>>(app, bootstrap, docDir);
+
+        /// <summary>
+        /// Configure Business.Core in the startup class configure method
+        /// <para>Injection context parameter name: "context", "socket", "httpFile"</para>
+        /// <para>Injection token parameter name:"session"</para>
+        /// </summary>
+        /// <typeparam name="Result"></typeparam>
+        /// <param name="app"></param>
+        /// <param name="bootstrap"></param>
+        /// <param name="docDir"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseBusiness<Result>(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot") where Result : IResult
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
 
@@ -802,7 +834,10 @@ namespace Business.AspNet
             Console.WriteLine($"Static Directory: {staticDir}");
             Console.WriteLine($"Addresses: {string.Join(" ", Environment.Addresses)}");
 
-            bootstrap = bootstrap ?? Bootstrap.CreateAll<BusinessBase>();
+            ResultType = typeof(Result).GetGenericTypeDefinition();
+
+            bootstrap = bootstrap ?? Bootstrap.CreateAll<IBusiness>();
+
             bootstrap
                 .UseType(contextParameterTypes)
                 .UseType("httpFile")
@@ -1054,7 +1089,7 @@ namespace Business.AspNet
                     {
                         var receiveData = await acceptBusiness.WebSocketReceive(context, webSocket, buffer);
 
-                        if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out BusinessBase business))
+                        if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out IBusiness business))
                         {
                             await webSocket.SendAsync(new ArraySegment<byte>(ResultType.ErrorBusiness(receiveData.a).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                         }
