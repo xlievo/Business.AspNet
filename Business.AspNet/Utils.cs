@@ -801,7 +801,7 @@ namespace Business.AspNet
         /// <param name="bootstrap"></param>
         /// <param name="docDir"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseBusiness<Result>(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot") where Result : IResult
+        public static IApplicationBuilder UseBusiness<Result>(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot") where Result : IResult<object>
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
 
