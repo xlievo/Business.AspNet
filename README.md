@@ -134,6 +134,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
 }
 ```
 ## Step 3: Start the project in a self hosted way and navigate to http://localhost:5000/doc/index.html
+![image](images/aspnet00x.png)
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!  
 Of course, the best practice is to recommend that you inherit Business.AspNet.BusinessBase with a custom base class to uniformly handle logs and tokens
@@ -217,8 +218,6 @@ macOS: ~
 Alpine: apk add apache2-utils  
 CentOS/RHEL: yum -y install httpd-tools  
 Ubuntu: apt-get install apache2-utils
-
-![image](images/aspnet00x.png)
 
 ## How to extend the communication layer
 
