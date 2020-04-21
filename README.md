@@ -27,7 +27,7 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     app.UseCors("any");//API static documents need cross domain support
 	
     //If you want to configure documents
-    app.UseBusiness(Business.Core.Bootstrap.CreateAll<BusinessBase>()
+    app.UseBusiness(Business.Core.Bootstrap.CreateAll<IBusiness>()
         .UseDoc(new Business.Core.Document.Config
         {
             Debug = true,
