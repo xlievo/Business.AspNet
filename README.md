@@ -134,10 +134,11 @@ public class MyBusiness : Business.AspNet.BusinessBase
 }
 ```
 ## Step 3: Start the project in a self hosted way and navigate to http://localhost:5000/doc/index.html
-![image](images/aspnet00x.png)
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!  
 Of course, the best practice is to recommend that you inherit Business.AspNet.BusinessBase with a custom base class to uniformly handle logs and tokens
+
+![image](images/aspnet00x.png)
 
 Now, you can use HTTP and WebSocket to call the same interface, and have a document that can be debugged.   
 **Try clicking the Debug button on the document?**
