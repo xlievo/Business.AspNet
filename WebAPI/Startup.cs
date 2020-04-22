@@ -49,15 +49,16 @@ namespace WebAPI
 
             app.UseCors("any");
 
-            //Override base class ResultObject
-            app.UseBusiness<MyResultObject<object>>(Business.Core.Bootstrap.CreateAll<IBusiness>()
+            app.CreateBusiness()
                 .UseDoc(new Business.Core.Document.Config
                 {
                     Debug = true,
                     Benchmark = true,
                     Navigtion = true,
                     Testing = true,
-                }));
+                })
+                //.UseResultType(typeof(MyResultObject<>))//Use your ResultObject
+                .Build();
         }
     }
 }

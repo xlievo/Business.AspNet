@@ -299,25 +299,6 @@ namespace Business.AspNet
         }
     }
 
-    /// <summary>
-    /// Json group
-    /// </summary>
-    public abstract class JsonGroupAttribute : ArgumentAttribute
-    {
-        /// <summary>
-        /// Json group
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="message"></param>
-        public JsonGroupAttribute(int state, string message) : base(state, message)
-        {
-            this.CanNull = false;
-            this.Description = "Json group";
-            this.Group = Utils.BusinessJsonGroup;
-            //this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition;
-        }
-    }
-
     #endregion
 
     struct Logs
@@ -432,12 +413,38 @@ namespace Business.AspNet
     /// </summary>
     public interface IBusiness : Core.IBusiness
     {
+        /// <summary>
+        /// Get the requested token
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
         ValueTask<IToken> GetToken(HttpContext context, Token token);
 
+        /// <summary>
+        /// Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
+        /// <para>checked and return a token</para>
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="webSocket"></param>
+        /// <returns></returns>
         ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket);
 
+        /// <summary>
+        /// Receive a websocket packet, return IReceiveData object
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="webSocket"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
         ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
 
+        /// <summary>
+        /// WebSocket dispose
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="webSocket"></param>
+        /// <returns></returns>
         ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket);
     }
 
@@ -445,19 +452,13 @@ namespace Business.AspNet
     /// Business base class for ASP.Net Core
     /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
-    public abstract class BusinessBase : BusinessBase<ResultObject<object>> { }
-
-    /// <summary>
-    /// Business base class for ASP.Net Core
-    /// </summary>
-    /// <typeparam name="Result"></typeparam>
     [Command(Group = Utils.BusinessJsonGroup)]
     [JsonArg(Group = Utils.BusinessJsonGroup)]
     [Command(Group = Utils.BusinessWebSocketGroup)]
     [MessagePack(Group = Utils.BusinessWebSocketGroup)]
     [Logger(Group = Utils.BusinessJsonGroup)]
     [Logger(Group = Utils.BusinessWebSocketGroup, ValueType = Logger.ValueType.Out)]
-    public abstract class BusinessBase<Result> : Core.BusinessBase<Result>, IBusiness where Result : IResult
+    public abstract class BusinessBase : Core.BusinessBase, IBusiness
     {
         /// <summary>
         /// Default constructor
@@ -618,7 +619,7 @@ namespace Business.AspNet
                         parameters,
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
-                        new UseEntry(this, "context", "httpFile"), //context
+                        new UseEntry(this, "httpFile"), //context
                         new UseEntry(token, "session")) :
                     // Framework routing mode
                     await cmd.AsyncCall(
@@ -626,7 +627,7 @@ namespace Business.AspNet
                         cmd.HasArgSingle ? new object[] { d } : d.TryJsonDeserializeStringArray(),
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
-                        new UseEntry(this, "context", "httpFile"), //context
+                        new UseEntry(this, "httpFile"), //context
                         new UseEntry(token, "session"));
 
             return result;
@@ -780,28 +781,15 @@ namespace Business.AspNet
         /// <returns></returns>
         public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Callctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
-        /// <summary>
-        /// Configure Business.Core in the startup class configure method
-        /// <para>Injection context parameter name: "context", "socket", "httpFile"</para>
-        /// <para>Injection token parameter name:"session"</para>
-        /// </summary>
-        /// <param name="app"></param>
-        /// <param name="bootstrap"></param>
-        /// <param name="docDir"></param>
-        /// <returns></returns>
-        public static IApplicationBuilder UseBusiness(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot") => UseBusiness<ResultObject<object>>(app, bootstrap, docDir);
 
         /// <summary>
         /// Configure Business.Core in the startup class configure method
-        /// <para>Injection context parameter name: "context", "socket", "httpFile"</para>
-        /// <para>Injection token parameter name:"session"</para>
+        /// <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>
         /// </summary>
-        /// <typeparam name="Result"></typeparam>
         /// <param name="app"></param>
-        /// <param name="bootstrap"></param>
         /// <param name="docDir"></param>
         /// <returns></returns>
-        public static IApplicationBuilder UseBusiness<Result>(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot") where Result : IResult<object>
+        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, string docDir = "wwwroot")
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
 
@@ -834,118 +822,282 @@ namespace Business.AspNet
             Console.WriteLine($"Static Directory: {staticDir}");
             Console.WriteLine($"Addresses: {string.Join(" ", Environment.Addresses)}");
 
-            ResultType = typeof(Result).GetGenericTypeDefinition();
+            bootstrap = Bootstrap.CreateAll<IBusiness>();
 
-            bootstrap = bootstrap ?? Bootstrap.CreateAll<IBusiness>();
+            bootstrap.Config.ResultType = typeof(ResultObject<object>).GetGenericTypeDefinition();
 
             bootstrap
-                .UseType(contextParameterTypes)
-                .UseType("httpFile")
-                //.UseType(contextParameterNames)
-                .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
-                //.IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterNames)
-                .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
-            //.LoggerSet(new LoggerAttribute(canWrite: false), contextParameterNames);
+                    .UseType(contextParameterTypes)
+                    .UseType("httpFile")
+                    //.UseType(contextParameterNames)
+                    .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
+                    //.IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterNames)
+                    .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
+                    //.LoggerSet(new LoggerAttribute(canWrite: false), contextParameterNames);
 
-            if (null == bootstrap.Config.UseDoc)
+            bootstrap.Config.BuildBefore = strap =>
             {
-                bootstrap.UseDoc(staticDir, new Config { Debug = true, Benchmark = true, Group = BusinessJsonGroup });
-            }
-
-            if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.OutDir))
-            {
-                bootstrap.Config.UseDoc.OutDir = staticDir;
-            }
-            if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Group))
-            {
-                bootstrap.Config.UseDoc.Config.Group = BusinessJsonGroup;
-            }
-            //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
-            //{
-            //    if (0 < Environment.Addresses.Length)
-            //    {
-            //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
-            //    }
-            //}
-
-            bootstrap.Build();
-            Utils.bootstrap = bootstrap;
-            businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
-
-            //writ url to page
-            DocUI.Write(staticDir);
-
-            //add route
-            app.UseMvc(routes =>
-            {
-                foreach (var item in Configer.BusinessList)
+                if (null == strap.Config.UseDoc)
                 {
-                    routes.MapRoute(
-                    name: item.Key,
-                    template: $"{item.Key}/{{*path}}",
-                    defaults: new { controller = "Context", action = "Call" });
+                    strap.UseDoc(staticDir, new Config { Debug = true, Benchmark = true, Group = BusinessJsonGroup });
                 }
-            });
 
-            // 3.x
-            //services.AddControllers()
-
-            //app.UseEndpoints(endpoints =>
-            //{
-            //    foreach (var item in Business.Core.Configer.BusinessList)
-            //    {
-            //        endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Business", action = "Call" });
-            //    }
-            //});
-
-            #region AcceptWebSocket
-
-            var webSocketcfg = Environment.AppSettings.GetSection("WebSocket");
-            SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
-            SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
-            //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
-            //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
-
-            var webSocketOptions = new WebSocketOptions()
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(SocketKeepAliveInterval),
-                ReceiveBufferSize = SocketReceiveBufferSize
+                if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.OutDir))
+                {
+                    strap.Config.UseDoc.OutDir = staticDir;
+                }
+                if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Config.Group))
+                {
+                    strap.Config.UseDoc.Config.Group = BusinessJsonGroup;
+                }
             };
 
-            //foreach (var item in allowedOrigins)
-            //{
-            //    webSocketOptions.AllowedOrigins.Add(item.Value);
-            //}
-
-            app.UseWebSockets(webSocketOptions);
-
-            app.Use(async (context, next) =>
+            bootstrap.Config.BuildAfter = strap =>
             {
-                if (context.WebSockets.IsWebSocketRequest)
+                //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
+                //{
+                //    if (0 < Environment.Addresses.Length)
+                //    {
+                //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
+                //    }
+                //}
+
+                ResultType = strap.Config.ResultType;
+
+                businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
+
+                //writ url to page
+                DocUI.Write(staticDir);
+
+                //add route
+                app.UseMvc(routes =>
                 {
-                    using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                    foreach (var item in Configer.BusinessList)
                     {
-                        await Keep(context, webSocket);
+                        routes.MapRoute(
+                        name: item.Key,
+                        template: $"{item.Key}/{{*path}}",
+                        defaults: new { controller = "Context", action = "Call" });
                     }
-                }
-                else
+                });
+
+                // 3.x
+                //services.AddControllers()
+
+                //app.UseEndpoints(endpoints =>
+                //{
+                //    foreach (var item in Business.Core.Configer.BusinessList)
+                //    {
+                //        endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Business", action = "Call" });
+                //    }
+                //});
+
+                #region AcceptWebSocket
+
+                var webSocketcfg = Environment.AppSettings.GetSection("WebSocket");
+                SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
+                SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
+                //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
+                //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
+
+                var webSocketOptions = new WebSocketOptions()
                 {
-                    await next();
-                }
-            });
+                    KeepAliveInterval = TimeSpan.FromSeconds(SocketKeepAliveInterval),
+                    ReceiveBufferSize = SocketReceiveBufferSize
+                };
 
-            //Task.Factory.StartNew(() =>
-            //{
-            //    foreach (var item in WebSocketQueue.GetConsumingEnumerable())
-            //    {
-            //        Task.Run(async () => await WebSocketCall(item).ContinueWith(c => c.Exception?.Console()));
-            //    }
-            //}, TaskCreationOptions.LongRunning);
+                //foreach (var item in allowedOrigins)
+                //{
+                //    webSocketOptions.AllowedOrigins.Add(item.Value);
+                //}
 
-            #endregion
+                app.UseWebSockets(webSocketOptions);
 
-            return app;
+                app.Use(async (context, next) =>
+                {
+                    if (context.WebSockets.IsWebSocketRequest)
+                    {
+                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                        {
+                            await Keep(context, webSocket);
+                        }
+                    }
+                    else
+                    {
+                        await next();
+                    }
+                });
+
+                //Task.Factory.StartNew(() =>
+                //{
+                //    foreach (var item in WebSocketQueue.GetConsumingEnumerable())
+                //    {
+                //        Task.Run(async () => await WebSocketCall(item).ContinueWith(c => c.Exception?.Console()));
+                //    }
+                //}, TaskCreationOptions.LongRunning);
+
+                #endregion
+
+                //return app;
+            };
+
+            return bootstrap;
         }
+
+        ///// <summary>
+        ///// Configure Business.Core in the startup class configure method
+        ///// <para>Injection context parameter name: "context", "socket", "httpFile"</para>
+        ///// <para>Injection token parameter name:"session"</para>
+        ///// </summary>
+        ///// <param name="app"></param>
+        ///// <param name="bootstrap"></param>
+        ///// <param name="docDir"></param>
+        ///// <returns></returns>
+        //public static IApplicationBuilder UseBusiness(this IApplicationBuilder app, BootstrapAll<IBusiness> bootstrap = null, string docDir = "wwwroot")
+        //{
+        //    if (null == app) { throw new ArgumentNullException(nameof(app)); }
+
+        //    app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto });
+
+        //    var addresses = app.ServerFeatures.Get<IServerAddressesFeature>().Addresses.Select(c =>
+        //    {
+        //        var address = c;
+        //        var address2 = address.ToLower();
+        //        if (address2.StartsWith("http://+:") || address2.StartsWith("http://*:") || address2.StartsWith("https://+:") || address2.StartsWith("https://*:"))
+        //        {
+        //            address = address.Replace("*", "localhost").Replace("+", "localhost");
+        //        }
+        //        if (null == httpAddress && address2.StartsWith("http://"))
+        //        {
+        //            httpAddress = address;
+        //        }
+        //        return address;
+        //    }).ToArray();
+
+        //    Environment = new Environment(addresses, app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings"), new ServiceCollection()
+        //        .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+        //        {
+        //            AllowAutoRedirect = false,
+        //            UseDefaultCredentials = true,
+        //        }).Services
+        //        .BuildServiceProvider().GetService<IHttpClientFactory>());
+
+        //    var staticDir = app.UseStaticDir(docDir);
+        //    Console.WriteLine($"Static Directory: {staticDir}");
+        //    Console.WriteLine($"Addresses: {string.Join(" ", Environment.Addresses)}");
+
+        //    ResultType = (bootstrap.Config.ResultType ?? typeof(ResultObject<object>)).GetGenericTypeDefinition();
+
+        //    bootstrap = bootstrap ?? Bootstrap.CreateAll<IBusiness>();
+
+        //    bootstrap
+        //        .UseType(contextParameterTypes)
+        //        .UseType("httpFile")
+        //        //.UseType(contextParameterNames)
+        //        .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
+        //        //.IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterNames)
+        //        .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
+        //    //.LoggerSet(new LoggerAttribute(canWrite: false), contextParameterNames);
+
+        //    if (null == bootstrap.Config.UseDoc)
+        //    {
+        //        bootstrap.UseDoc(staticDir, new Config { Debug = true, Benchmark = true, Group = BusinessJsonGroup });
+        //    }
+
+        //    if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.OutDir))
+        //    {
+        //        bootstrap.Config.UseDoc.OutDir = staticDir;
+        //    }
+        //    if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Group))
+        //    {
+        //        bootstrap.Config.UseDoc.Config.Group = BusinessJsonGroup;
+        //    }
+        //    //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
+        //    //{
+        //    //    if (0 < Environment.Addresses.Length)
+        //    //    {
+        //    //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
+        //    //    }
+        //    //}
+
+        //    bootstrap.Build();
+        //    Utils.bootstrap = bootstrap;
+        //    businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
+
+        //    //writ url to page
+        //    DocUI.Write(staticDir);
+
+        //    //add route
+        //    app.UseMvc(routes =>
+        //    {
+        //        foreach (var item in Configer.BusinessList)
+        //        {
+        //            routes.MapRoute(
+        //            name: item.Key,
+        //            template: $"{item.Key}/{{*path}}",
+        //            defaults: new { controller = "Context", action = "Call" });
+        //        }
+        //    });
+
+        //    // 3.x
+        //    //services.AddControllers()
+
+        //    //app.UseEndpoints(endpoints =>
+        //    //{
+        //    //    foreach (var item in Business.Core.Configer.BusinessList)
+        //    //    {
+        //    //        endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Business", action = "Call" });
+        //    //    }
+        //    //});
+
+        //    #region AcceptWebSocket
+
+        //    var webSocketcfg = Environment.AppSettings.GetSection("WebSocket");
+        //    SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
+        //    SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
+        //    //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
+        //    //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
+
+        //    var webSocketOptions = new WebSocketOptions()
+        //    {
+        //        KeepAliveInterval = TimeSpan.FromSeconds(SocketKeepAliveInterval),
+        //        ReceiveBufferSize = SocketReceiveBufferSize
+        //    };
+
+        //    //foreach (var item in allowedOrigins)
+        //    //{
+        //    //    webSocketOptions.AllowedOrigins.Add(item.Value);
+        //    //}
+
+        //    app.UseWebSockets(webSocketOptions);
+
+        //    app.Use(async (context, next) =>
+        //    {
+        //        if (context.WebSockets.IsWebSocketRequest)
+        //        {
+        //            using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
+        //            {
+        //                await Keep(context, webSocket);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            await next();
+        //        }
+        //    });
+
+        //    //Task.Factory.StartNew(() =>
+        //    //{
+        //    //    foreach (var item in WebSocketQueue.GetConsumingEnumerable())
+        //    //    {
+        //    //        Task.Run(async () => await WebSocketCall(item).ContinueWith(c => c.Exception?.Console()));
+        //    //    }
+        //    //}, TaskCreationOptions.LongRunning);
+
+        //    #endregion
+
+        //    return app;
+        //}
 
         static string UseStaticDir(this IApplicationBuilder app, string staticDir)
         {
@@ -1022,7 +1174,7 @@ namespace Business.AspNet
             BusinessWebSocketGroup, //fixed grouping
                                     //the incoming use object
                                     //new UseEntry(receive.HttpContext, "context"), //context
-            new UseEntry(receive.WebSocket, "socket"), //webSocket
+            new UseEntry(receive.WebSocket), //webSocket
             new UseEntry(receive.Token, "session"));
 
             // Socket set callback

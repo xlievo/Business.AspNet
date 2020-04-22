@@ -180,7 +180,7 @@ namespace WebAPI
     }
 
     [MyJsonArg(Group = Utils.BusinessJsonGroup)]//Override base class annotation
-    public abstract class BusinessBase : Business.AspNet.BusinessBase<MyResultObject<object>>//Override base class ResultObject
+    public abstract class BusinessBase : Business.AspNet.BusinessBase//Override base class ResultObject
     {
         /// <summary>
         /// Log client

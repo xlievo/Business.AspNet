@@ -22,17 +22,21 @@ public void ConfigureServices(IServiceCollection services)
 
 public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
-    //app.UseBusiness();
-	
     app.UseCors("any");//API static documents need cross domain support
 	
+    //app.CreateBusiness().Build();
+	
     //If you want to configure documents
-    app.UseBusiness(Business.Core.Bootstrap.CreateAll<IBusiness>()
+    app.CreateBusiness()
         .UseDoc(new Business.Core.Document.Config
         {
             Debug = true,
-            Benchmark = true
-        }));
+            Benchmark = true,
+            Navigtion = true,
+            Testing = true,
+        })
+        //.UseResultType(typeof(MyResultObject<>))//Use your ResultObject
+        .Build();
 }
 ```
 ## Step 2: Declare your business class, Create a new class and copy the following

@@ -23,6 +23,7 @@ namespace WebAPI
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
+                    //self hosted
                     .UseKestrel(options =>
                     {
                         options.AllowSynchronousIO = true;
