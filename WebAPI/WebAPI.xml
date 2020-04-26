@@ -4,7 +4,7 @@
         <name>WebAPI</name>
     </assembly>
     <members>
-        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.Core.Annotations.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context)">
+        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context)">
             <summary>
             test doc Test001
             and Test001
@@ -140,7 +140,7 @@
             </summary>
             <typeparam name="Type"></typeparam>
         </member>
-        <member name="M:WebAPI.MyResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.Type,System.Boolean)">
+        <member name="M:WebAPI.MyResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.Type,System.Boolean,System.Boolean)">
             <summary>
             Activator.CreateInstance
             </summary>
@@ -150,6 +150,7 @@
             <param name="message"></param>
             <param name="genericDefinition"></param>
             <param name="checkData"></param>
+            <param name="hasDataResult"></param>
         </member>
         <member name="M:WebAPI.MyResultObject`1.#ctor(`0,System.Int32,System.String)">
             <summary>
@@ -199,6 +200,11 @@
             Result object generic definition
             </summary>
         </member>
+        <member name="P:WebAPI.MyResultObject`1.HasDataResult">
+            <summary>
+            Return data or not
+            </summary>
+        </member>
         <member name="M:WebAPI.MyResultObject`1.ToString">
             <summary>
             Json format
@@ -218,6 +224,84 @@
             <returns></returns>
         </member>
         <member name="M:WebAPI.MyResultObject`1.ToDataBytes">
+            <summary>
+            ProtoBuf format Data
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI.ResultObject3`1.#ctor(System.Type,`0,System.Int32,System.String,System.Type,System.Boolean)">
+            <summary>
+            Activator.CreateInstance
+            </summary>
+            <param name="dataType"></param>
+            <param name="data"></param>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="genericDefinition"></param>
+            <param name="checkData"></param>
+        </member>
+        <member name="M:WebAPI.ResultObject3`1.#ctor(`0,System.Int32,System.String)">
+            <summary>
+            MessagePack.MessagePackSerializer.Serialize(this)
+            </summary>
+            <param name="data"></param>
+            <param name="state"></param>
+            <param name="message"></param>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.State">
+            <summary>
+            The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
+            </summary>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.Message">
+            <summary>
+            Success can be null
+            </summary>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.Data">
+            <summary>
+            Specific Byte/Json data objects
+            </summary>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.HasData">
+            <summary>
+            Whether there is value
+            </summary>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.Callback">
+            <summary>
+            Gets the token of this result, used for callback
+            </summary>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.DataType">
+            <summary>
+            Data type
+            </summary>
+        </member>
+        <member name="P:WebAPI.ResultObject3`1.GenericDefinition">
+            <summary>
+            Result object generic definition
+            </summary>
+        </member>
+        <member name="M:WebAPI.ResultObject3`1.ToString">
+            <summary>
+            Json format
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI.ResultObject3`1.ToDataString">
+            <summary>
+            Json format Data
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI.ResultObject3`1.ToBytes">
+            <summary>
+            ProtoBuf format
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI.ResultObject3`1.ToDataBytes">
             <summary>
             ProtoBuf format Data
             </summary>

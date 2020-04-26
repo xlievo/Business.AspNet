@@ -57,7 +57,7 @@ namespace WebAPI
                     Navigtion = true,
                     Testing = true,
                 })
-                //.UseResultType(typeof(MyResultObject<>))//Use your ResultObject
+                .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
                 .Build();
         }
     }

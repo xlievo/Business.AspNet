@@ -63,7 +63,7 @@ namespace WebAPI
                 return this.ResultCreate(-911, "dsddsa");
             }
 
-            var files = httpFile.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
+            var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
             return this.ResultCreate(new { session, arg, files });
         }

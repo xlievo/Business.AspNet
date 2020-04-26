@@ -28,7 +28,8 @@ namespace WebAPI
         /// <param name="message"></param>
         /// <param name="genericDefinition"></param>
         /// <param name="checkData"></param>
-        public MyResultObject(System.Type dataType, Type data, int state = 1, string message = null, System.Type genericDefinition = null, bool checkData = true)
+        /// <param name="hasDataResult"></param>
+        public MyResultObject(System.Type dataType, Type data, int state = 1, string message = null, System.Type genericDefinition = null, bool checkData = true, bool hasDataResult = false)
         {
             this.DataType = dataType;
             this.Data = data;
@@ -38,6 +39,7 @@ namespace WebAPI
             this.Callback = default;
 
             this.GenericDefinition = genericDefinition;
+            this.HasDataResult = hasDataResult;
         }
 
         /// <summary>
@@ -56,6 +58,7 @@ namespace WebAPI
             this.Callback = null;
             this.DataType = null;
             this.GenericDefinition = null;
+            this.HasDataResult = false;
         }
 
         /// <summary>
@@ -91,7 +94,7 @@ namespace WebAPI
         /// Gets the token of this result, used for callback
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
-        [System.Text.Json.Serialization.JsonPropertyName("BB")]
+        [System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
 
         /// <summary>
@@ -107,6 +110,13 @@ namespace WebAPI
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
         public System.Type GenericDefinition { get; }
+
+        /// <summary>
+        /// Return data or not
+        /// </summary>
+        [MessagePack.IgnoreMember]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool HasDataResult { get; }
 
         /// <summary>
         /// Json format
@@ -133,26 +143,7 @@ namespace WebAPI
         public byte[] ToDataBytes() => MessagePack.MessagePackSerializer.Serialize(this.Data);
     }
 
-    public class MyJsonArgAttribute : JsonArgAttribute
-    {
-        public MyJsonArgAttribute(int state = -12, string message = null) : base(state, message)
-        {
-            this.Description = "MyJson parsing";
-
-            options = new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                AllowTrailingCommas = true,
-                IgnoreNullValues = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            options.Converters.Add(new Help.DateTimeConverter());
-            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-        }
-    }
-
     [TokenCheck]
-    [Use]
     [Logger(canWrite: false)]
     public struct Token : IToken
     {
@@ -173,14 +164,32 @@ namespace WebAPI
     }
 
     [SessionCheck]
-    [Use(true, Token = true)]
+    [Use(typeof(Token))]
     public struct Session
     {
         public string Account { get; set; }
     }
 
-    [MyJsonArg(Group = Utils.BusinessJsonGroup)]//Override base class annotation
-    public abstract class BusinessBase : Business.AspNet.BusinessBase//Override base class ResultObject
+    public class MyJsonArgAttribute : JsonArgAttribute
+    {
+        public MyJsonArgAttribute(int state = -12, string message = null) : base(state, message)
+        {
+            this.Description = "MyJson parsing";
+
+            options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                AllowTrailingCommas = true,
+                IgnoreNullValues = true,
+                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            };
+            options.Converters.Add(new Help.DateTimeConverter());
+            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        }
+    }
+
+    [MyJsonArg(Group = Utils.BusinessJsonGroup)]
+    public abstract class BusinessBase : Business.AspNet.BusinessBase
     {
         /// <summary>
         /// Log client
