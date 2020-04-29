@@ -387,37 +387,138 @@ namespace Business.AspNet
     /// <summary>
     /// Environment
     /// </summary>
-    public readonly struct Environment
+    public struct Hosting
     {
-        /// <summary>
-        /// Environment
-        /// </summary>
-        /// <param name="addresses"></param>
-        /// <param name="appSettings"></param>
-        /// <param name="httpClientFactory"></param>
-        public Environment(string[] addresses, IConfigurationSection appSettings, IHttpClientFactory httpClientFactory)
-        {
-            Addresses = addresses;
-            AppSettings = appSettings;
-            HttpClientFactory = httpClientFactory;
-        }
+        public Microsoft.AspNetCore.Hosting.IHostingEnvironment Environment { get; internal set; }
 
         /// <summary>
         /// The urls the hosted application will listen on.
         /// </summary>
-        public string[] Addresses { get; }
+        public string[] Addresses { get; internal set; }
 
         /// <summary>
         /// Configuration file "AppSettings" node
         /// </summary>
-        public IConfigurationSection AppSettings { get; }
-
-        //public IHostingEnvironment ENV { get; set; }
+        public IConfigurationSection AppSettings { get; internal set; }
 
         /// <summary>
         /// HttpClient factory
         /// </summary>
-        public IHttpClientFactory HttpClientFactory { get; }
+        public IHttpClientFactory HttpClientFactory { get; internal set; }
+
+        /// <summary>
+        /// local log path
+        /// </summary>
+        public string LocalLogPath { get => System.IO.Path.Combine(System.IO.Path.DirectorySeparatorChar.ToString(), "data", $"{AppDomain.CurrentDomain.FriendlyName}.log.txt"); }
+
+        /// <summary>
+        /// result type
+        /// </summary>
+        public Type ResultType { get; internal set; }
+
+        /// <summary>
+        /// 120
+        /// </summary>
+        public int WebSocketKeepAliveInterval { get; set; }
+
+        /// <summary>
+        /// 4 * 1024;
+        /// </summary>
+        public int WebSocketReceiveBufferSize { get; set; }
+
+        /// <summary>
+        /// AllowedOrigins
+        /// </summary>
+        public IEnumerable<string> WebSocketAllowedOrigins { get; set; }
+
+        /// <summary>
+        /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.Form.
+        /// </summary>
+        public RequestFormLimits RequestFormLimits { get; set; }
+    }
+
+    public struct WebSocketConfig
+    {
+        /// <summary>
+        /// 120
+        /// </summary>
+        public int WebSocketKeepAliveInterval { get; set; }
+
+        /// <summary>
+        /// 4 * 1024;
+        /// </summary>
+        public int WebSocketReceiveBufferSize { get; set; }
+
+        /// <summary>
+        /// AllowedOrigins
+        /// </summary>
+        public IEnumerable<string> WebSocketAllowedOrigins { get; set; }
+    }
+
+    /// <summary>
+    /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.Form.
+    /// </summary>
+    public struct RequestFormLimits
+    {
+        /// <summary>
+        /// Gets the order value for determining the order of execution of filters. Filters execute in ascending numeric value of the Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute.Order property.
+        /// </summary>
+        public int Order { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsReusable { get; }
+
+        /// <summary>
+        /// Enables full request body buffering. Use this if multiple components need to read the raw stream. The default value is false.
+        /// </summary>
+        public bool BufferBody { get; set; }
+
+        /// <summary>
+        /// If Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute.BufferBody is enabled, this many bytes of the body will be buffered in memory. If this threshold is exceeded then the buffer will be moved to a temp file on disk instead. This also applies when buffering individual multipart section bodies.
+        /// </summary>
+        public int MemoryBufferThreshold { get; set; }
+
+        /// <summary>
+        /// If Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute.BufferBody is enabled, this is the limit for the total number of bytes that will be buffered. Forms that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public long BufferBodyLengthLimit { get; set; }
+
+        /// <summary>
+        /// A limit for the number of form entries to allow. Forms that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public int ValueCountLimit { get; set; }
+
+        /// <summary>
+        /// A limit on the length of individual keys. Forms containing keys that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public int KeyLengthLimit { get; set; }
+
+        /// <summary>
+        /// A limit on the length of individual form values. Forms containing values that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public int ValueLengthLimit { get; set; }
+
+        /// <summary>
+        /// A limit for the length of the boundary identifier. Forms with boundaries that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public int MultipartBoundaryLengthLimit { get; set; }
+
+        /// <summary>
+        /// A limit for the number of headers to allow in each multipart section. Headers with the same name will be combined. Form sections that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public int MultipartHeadersCountLimit { get; set; }
+
+        /// <summary>
+        /// A limit for the total length of the header keys and values in each multipart section. Form sections that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public int MultipartHeadersLengthLimit { get; set; }
+
+        /// <summary>
+        /// A limit for the length of each multipart body. Forms sections that exceed this limit will throw an System.IO.InvalidDataException when parsed.
+        /// </summary>
+        public long MultipartBodyLengthLimit { get; set; }
     }
 
     /// <summary>
@@ -737,19 +838,9 @@ namespace Business.AspNet
         //public const string BusinessUDPGroup = "u";
 
         /// <summary>
-        /// local log path
-        /// </summary>
-        public static readonly string LocalLogPath = System.IO.Path.Combine(System.IO.Path.DirectorySeparatorChar.ToString(), "data", $"{AppDomain.CurrentDomain.FriendlyName}.log.txt");
-
-        /// <summary>
-        /// result type
-        /// </summary>
-        public static Type ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
-
-        /// <summary>
         /// Host environment instance
         /// </summary>
-        public static Environment Environment;
+        public static Hosting Hosting = new Hosting { ResultType = typeof(ResultObject<>).GetGenericTypeDefinition(), WebSocketKeepAliveInterval = 120, WebSocketReceiveBufferSize = 4 * 1024 };
 
         ///// <summary>
         ///// Log client
@@ -760,9 +851,10 @@ namespace Business.AspNet
         {
             Console.WriteLine($"Date: {DateTime.Now}");
             Console.WriteLine(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
-            Console.WriteLine($"LocalLogPath: {LocalLogPath}");
+            Console.WriteLine($"LocalLogPath: {Hosting.LocalLogPath}");
+            Console.WriteLine($"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
 
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) => (e.ExceptionObject as Exception)?.ExceptionWrite(true, true, LocalLogPath);
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => (e.ExceptionObject as Exception)?.ExceptionWrite(true, true, Hosting.LocalLogPath);
             //ThreadPool.SetMinThreads(50, 50);
             //ThreadPool.GetMinThreads(out int workerThreads, out int completionPortThreads);
             //ThreadPool.GetMaxThreads(out int workerThreads2, out int completionPortThreads2);
@@ -777,7 +869,7 @@ namespace Business.AspNet
             //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
 
-        #region Call
+        #region HttpCall
 
         /// <summary>
         /// Called in POST "c,t,d" "application/x-www-form-urlencoded" format
@@ -786,22 +878,24 @@ namespace Business.AspNet
         /// <param name="c"></param>
         /// <param name="t"></param>
         /// <param name="d"></param>
+        /// <param name="uri"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Callctd(this HttpClient httpClient, string c, string t, string d) => await Call(httpClient, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
+        public static async ValueTask<string> HttpCallctd(this HttpClient httpClient, string c, string t, string d, string uri = null) => await HttpCall(httpClient, uri, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
         /// <summary>
         /// Called in POST "application/x-www-form-urlencoded" format
         /// </summary>
         /// <param name="httpClient"></param>
+        /// <param name="uri"></param>
         /// <param name="keyValues"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Call(this HttpClient httpClient, params KeyValuePair<string, string>[] keyValues)
+        public static async ValueTask<string> HttpCall(this HttpClient httpClient, string uri = null, params KeyValuePair<string, string>[] keyValues)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == keyValues) { throw new ArgumentNullException(nameof(keyValues)); }
 
             using (var content = new FormUrlEncodedContent(keyValues))
             {
-                return await httpClient.Call(content);
+                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri));
             }
         }
         /// <summary>
@@ -810,33 +904,66 @@ namespace Business.AspNet
         /// <param name="httpClient"></param>
         /// <param name="data"></param>
         /// <param name="mediaType"></param>
+        /// <param name="uri"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Call(this HttpClient httpClient, string data, string mediaType = "application/json")
+        public static async ValueTask<string> HttpCall(this HttpClient httpClient, string data, string mediaType = "application/json", string uri = null)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == data) { throw new ArgumentNullException(nameof(data)); }
 
             using (var content = new StringContent(data, System.Text.Encoding.UTF8, mediaType))
             {
-                return await httpClient.Call(content);
+                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri));
             }
         }
         /// <summary>
         /// HTTP call
         /// </summary>
-        /// <param name="httpClient">httpClient</param>
-        /// <param name="content">content</param>
-        /// <param name="method">Default POST</param>
+        /// <param name="httpClient"></param>
+        /// <param name="content"></param>
+        /// <param name="method"></param>
+        /// <param name="uri"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Call(this HttpClient httpClient, HttpContent content, HttpMethod method = null)
+        public static async ValueTask<string> HttpCall(this HttpClient httpClient, HttpContent content, HttpMethod method = null, Uri uri = null)
         {
             using (var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content })
-            using (var response = await httpClient.SendAsync(request))
             {
-                response.EnsureSuccessStatusCode();
-                return await response.Content.ReadAsStringAsync();
+                if (null != uri)
+                {
+                    request.RequestUri = uri;
+                }
+
+                using (var response = await httpClient.SendAsync(request))
+                {
+                    response.EnsureSuccessStatusCode();
+                    return await response.Content.ReadAsStringAsync();
+                }
             }
         }
+
+        #endregion
+
+        #region ResultCreate
+
+        /// <summary>
+        /// Used to create the IResult returns object
+        /// </summary>
+        /// <typeparam name="Data"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="message"></param>
+        /// <param name="state"></param>
+        /// <param name="resultTypeDefinition"></param>
+        /// <returns></returns>
+        public static IResult<Data> ResultCreate<Data>(Data data = default, string message = null, int state = 1, Type resultTypeDefinition = null) => (resultTypeDefinition ?? Hosting.ResultType).ResultCreate(data, message, state);
+
+        /// <summary>
+        /// Used to create the IResult returns object
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        /// <param name="resultTypeDefinition"></param>
+        /// <returns></returns>
+        public static IResult ResultCreate(int state = 1, string message = null, Type resultTypeDefinition = null) => (resultTypeDefinition ?? Hosting.ResultType).ResultCreate(state, message);
 
         #endregion
 
@@ -848,7 +975,7 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.Callctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
+        public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
 
         /// <summary>
@@ -879,17 +1006,27 @@ namespace Business.AspNet
                 return address;
             }).ToArray();
 
-            Environment = new Environment(addresses, app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings"), new ServiceCollection()
+            //Environment = new Environment(addresses, app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings"), new ServiceCollection()
+            //    .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+            //    {
+            //        AllowAutoRedirect = false,
+            //        UseDefaultCredentials = true,
+            //    }).Services
+            //    .BuildServiceProvider().GetService<IHttpClientFactory>());
+            Hosting.Addresses = addresses;
+            Hosting.AppSettings = app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings");
+            Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
+            Hosting.HttpClientFactory = new ServiceCollection()
                 .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
                 {
                     AllowAutoRedirect = false,
                     UseDefaultCredentials = true,
                 }).Services
-                .BuildServiceProvider().GetService<IHttpClientFactory>());
+                .BuildServiceProvider().GetService<IHttpClientFactory>();
 
             var staticDir = app.UseStaticDir(docDir);
             Console.WriteLine($"Static Directory: {staticDir}");
-            Console.WriteLine($"Addresses: {string.Join(" ", Environment.Addresses)}");
+            Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");
 
             bootstrap = Bootstrap.CreateAll<IBusiness>();
 
@@ -927,7 +1064,7 @@ namespace Business.AspNet
                 //    }
                 //}
 
-                ResultType = strap.Config.ResultType;
+                Hosting.ResultType = strap.Config.ResultType;
 
                 businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
 
@@ -959,22 +1096,30 @@ namespace Business.AspNet
 
                 #region AcceptWebSocket
 
-                var webSocketcfg = Environment.AppSettings.GetSection("WebSocket");
-                SocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", SocketKeepAliveInterval);
-                SocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", SocketReceiveBufferSize);
+                var webSocketcfg = Hosting.AppSettings.GetSection("WebSocket");
+                Hosting.WebSocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", Hosting.WebSocketKeepAliveInterval);
+                Hosting.WebSocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", Hosting.WebSocketReceiveBufferSize);
+                var webSocketAllowedOrigins = webSocketcfg.GetSection("AllowedOrigins").Get<string[]>();
+                if (null != webSocketAllowedOrigins)
+                {
+                    Hosting.WebSocketAllowedOrigins = webSocketAllowedOrigins;
+                }
                 //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
                 //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
 
                 var webSocketOptions = new WebSocketOptions()
                 {
-                    KeepAliveInterval = TimeSpan.FromSeconds(SocketKeepAliveInterval),
-                    ReceiveBufferSize = SocketReceiveBufferSize
+                    KeepAliveInterval = TimeSpan.FromSeconds(Hosting.WebSocketKeepAliveInterval),
+                    ReceiveBufferSize = Hosting.WebSocketReceiveBufferSize
                 };
 
-                //foreach (var item in allowedOrigins)
-                //{
-                //    webSocketOptions.AllowedOrigins.Add(item.Value);
-                //}
+                if (null != Hosting.WebSocketAllowedOrigins && Hosting.WebSocketAllowedOrigins.Any())
+                {
+                    foreach (var item in Hosting.WebSocketAllowedOrigins)
+                    {
+                        webSocketOptions.AllowedOrigins.Add(item);
+                    }
+                }
 
                 app.UseWebSockets(webSocketOptions);
 
@@ -1049,17 +1194,14 @@ namespace Business.AspNet
             return dir;
         }
 
+        public static BootstrapAll<IBusiness> UseWebSocket(this BootstrapAll<IBusiness> bootstrap, Func<WebSocketConfig, WebSocketConfig> webSocket)
+        {
+            var config = webSocket(new WebSocketConfig { WebSocketKeepAliveInterval = 120, WebSocketReceiveBufferSize = 4 * 1024 });
+
+            return bootstrap;
+        }
+
         #region WebSocket
-
-        /// <summary>
-        /// 120
-        /// </summary>
-        public static int SocketKeepAliveInterval = 120;
-
-        /// <summary>
-        /// 4096
-        /// </summary>
-        public static int SocketReceiveBufferSize = 4 * 1024;
 
         /// <summary>
         /// -1
@@ -1142,7 +1284,7 @@ namespace Business.AspNet
 
                 var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
-                var buffer = new byte[SocketReceiveBufferSize];
+                var buffer = new byte[Hosting.WebSocketReceiveBufferSize];
                 WebSocketReceiveResult socketResult = null;
 
                 do
@@ -1155,7 +1297,7 @@ namespace Business.AspNet
 
                         if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out IBusiness business))
                         {
-                            await webSocket.SendAsync(new ArraySegment<byte>(ResultType.ErrorBusiness(receiveData.a).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
+                            await webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.a).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                         }
                         else
                         {
@@ -1173,8 +1315,8 @@ namespace Business.AspNet
                     }
                     catch (Exception ex)
                     {
-                        Help.ExceptionWrite(ex, true, true, LocalLogPath);
-                        var result = ResultType.ResultCreate(0, Convert.ToString(ex));
+                        Help.ExceptionWrite(ex, true, true, Hosting.LocalLogPath);
+                        var result = Hosting.ResultType.ResultCreate(0, Convert.ToString(ex));
                         await webSocket.SendAsync(new ArraySegment<byte>(result.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                     }
 
@@ -1192,7 +1334,7 @@ namespace Business.AspNet
             }
             catch (Exception ex)
             {
-                Help.ExceptionWrite(ex, true, true, LocalLogPath);
+                Help.ExceptionWrite(ex, true, true, Hosting.LocalLogPath);
                 //var result = ResultType.ResultCreate(0, Convert.ToString(ex));
                 //await SocketSendAsync(result.ToBytes(), id);
                 if (webSocket.State == WebSocketState.Open)
@@ -1207,7 +1349,7 @@ namespace Business.AspNet
             }
         }
 
-        #region SendAsync
+        #region WebSocketSendAsync
 
         /// <summary>
         /// Send socket message
@@ -1216,7 +1358,7 @@ namespace Business.AspNet
         /// <param name="bytes"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, params string[] id) => await SocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, -1, id);
+        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, params string[] id) => await WebSocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, -1, id);
 
         /// <summary>
         /// Send socket message
@@ -1226,7 +1368,7 @@ namespace Business.AspNet
         /// <param name="sendMaxDegreeOfParallelism"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
+        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => await WebSocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
 
         /// <summary>
         /// Send socket message
@@ -1237,7 +1379,7 @@ namespace Business.AspNet
         /// <param name="sendMaxDegreeOfParallelism"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SocketSendAsync(webSockets, bytes, messageType, true, sendMaxDegreeOfParallelism, id);
+        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => await WebSocketSendAsync(webSockets, bytes, messageType, true, sendMaxDegreeOfParallelism, id);
 
         /// <summary>
         /// Send socket message
@@ -1249,7 +1391,7 @@ namespace Business.AspNet
         /// <param name="sendMaxDegreeOfParallelism"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask SocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
+        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
         {
             if (null == id || 0 == id.Length)
             {

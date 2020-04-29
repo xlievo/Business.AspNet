@@ -11,6 +11,7 @@ using Business.AspNet;
 using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
+using Business.Core.Utils;
 
 namespace WebAPI
 {
@@ -58,6 +59,13 @@ namespace WebAPI
                     Testing = true,
                 })
                 .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
+                .UseWebSocket(c =>
+                {
+                    c.WebSocketKeepAliveInterval = 100;
+                    c.WebSocketReceiveBufferSize = 4 * 1000;
+                    return c;
+                })
+                .Use(c => c)
                 .Build();
         }
     }

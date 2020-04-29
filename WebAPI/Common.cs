@@ -194,7 +194,7 @@ namespace WebAPI
         /// <summary>
         /// Log client
         /// </summary>
-        public readonly static HttpClient LogClient = Utils.Environment.HttpClientFactory.CreateClient("log");
+        public readonly static HttpClient LogClient = Utils.Hosting.HttpClientFactory.CreateClient("log");
 
         static BusinessBase()
         {
