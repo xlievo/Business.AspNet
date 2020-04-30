@@ -38,6 +38,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.WebSockets;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace Business.AspNet
 {
@@ -387,8 +388,11 @@ namespace Business.AspNet
     /// <summary>
     /// Environment
     /// </summary>
-    public struct Hosting
+    public class Hosting
     {
+        /// <summary>
+        /// Provides information about the web hosting environment an application is running in.
+        /// </summary>
         public Microsoft.AspNetCore.Hosting.IHostingEnvironment Environment { get; internal set; }
 
         /// <summary>
@@ -416,109 +420,30 @@ namespace Business.AspNet
         /// </summary>
         public Type ResultType { get; internal set; }
 
-        /// <summary>
-        /// 120
-        /// </summary>
-        public int WebSocketKeepAliveInterval { get; set; }
+        internal bool useWebSockets;
 
         /// <summary>
-        /// 4 * 1024;
+        /// Configuration options for the WebSocketMiddleware
         /// </summary>
-        public int WebSocketReceiveBufferSize { get; set; }
+        internal WebSocketOptions webSocketOptions;
 
+        internal RequestLimits RequestLimits { get; set; }
+    }
+
+    /// <summary>
+    /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.
+    /// </summary>
+    public class RequestLimits
+    {
         /// <summary>
-        /// AllowedOrigins
+        /// Sets the request body size limit to the specified size.
         /// </summary>
-        public IEnumerable<string> WebSocketAllowedOrigins { get; set; }
+        public long RequestSizeLimit { get; set; }
 
         /// <summary>
         /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.Form.
         /// </summary>
-        public RequestFormLimits RequestFormLimits { get; set; }
-    }
-
-    public struct WebSocketConfig
-    {
-        /// <summary>
-        /// 120
-        /// </summary>
-        public int WebSocketKeepAliveInterval { get; set; }
-
-        /// <summary>
-        /// 4 * 1024;
-        /// </summary>
-        public int WebSocketReceiveBufferSize { get; set; }
-
-        /// <summary>
-        /// AllowedOrigins
-        /// </summary>
-        public IEnumerable<string> WebSocketAllowedOrigins { get; set; }
-    }
-
-    /// <summary>
-    /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.Form.
-    /// </summary>
-    public struct RequestFormLimits
-    {
-        /// <summary>
-        /// Gets the order value for determining the order of execution of filters. Filters execute in ascending numeric value of the Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute.Order property.
-        /// </summary>
-        public int Order { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsReusable { get; }
-
-        /// <summary>
-        /// Enables full request body buffering. Use this if multiple components need to read the raw stream. The default value is false.
-        /// </summary>
-        public bool BufferBody { get; set; }
-
-        /// <summary>
-        /// If Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute.BufferBody is enabled, this many bytes of the body will be buffered in memory. If this threshold is exceeded then the buffer will be moved to a temp file on disk instead. This also applies when buffering individual multipart section bodies.
-        /// </summary>
-        public int MemoryBufferThreshold { get; set; }
-
-        /// <summary>
-        /// If Microsoft.AspNetCore.Mvc.RequestFormLimitsAttribute.BufferBody is enabled, this is the limit for the total number of bytes that will be buffered. Forms that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public long BufferBodyLengthLimit { get; set; }
-
-        /// <summary>
-        /// A limit for the number of form entries to allow. Forms that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public int ValueCountLimit { get; set; }
-
-        /// <summary>
-        /// A limit on the length of individual keys. Forms containing keys that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public int KeyLengthLimit { get; set; }
-
-        /// <summary>
-        /// A limit on the length of individual form values. Forms containing values that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public int ValueLengthLimit { get; set; }
-
-        /// <summary>
-        /// A limit for the length of the boundary identifier. Forms with boundaries that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public int MultipartBoundaryLengthLimit { get; set; }
-
-        /// <summary>
-        /// A limit for the number of headers to allow in each multipart section. Headers with the same name will be combined. Form sections that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public int MultipartHeadersCountLimit { get; set; }
-
-        /// <summary>
-        /// A limit for the total length of the header keys and values in each multipart section. Form sections that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public int MultipartHeadersLengthLimit { get; set; }
-
-        /// <summary>
-        /// A limit for the length of each multipart body. Forms sections that exceed this limit will throw an System.IO.InvalidDataException when parsed.
-        /// </summary>
-        public long MultipartBodyLengthLimit { get; set; }
+        public FormOptions FormOptions { get; set; }
     }
 
     /// <summary>
@@ -679,10 +604,10 @@ namespace Business.AspNet
     ////Internal object do not write logs
     //[Logger(canWrite: false)]
     //[Ignore(IgnoreMode.Arg)]
-    [RequestSizeLimit(long.MaxValue)]
+    //[RequestSizeLimit(long.MaxValue)]
     //int.MaxValue bug https://github.com/aspnet/AspNetCore/issues/13719
     //[RequestFormLimits(KeyLengthLimit = 1_009_100_000, ValueCountLimit = 1_009_100_000, ValueLengthLimit = 1_009_100_000, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
-    [RequestFormLimits(KeyLengthLimit = int.MaxValue, ValueCountLimit = int.MaxValue, ValueLengthLimit = int.MaxValue, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
+    //[RequestFormLimits(KeyLengthLimit = int.MaxValue, ValueCountLimit = int.MaxValue, ValueLengthLimit = int.MaxValue, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
     public class Context : Controller
     {
         /// <summary>
@@ -840,7 +765,20 @@ namespace Business.AspNet
         /// <summary>
         /// Host environment instance
         /// </summary>
-        public static Hosting Hosting = new Hosting { ResultType = typeof(ResultObject<>).GetGenericTypeDefinition(), WebSocketKeepAliveInterval = 120, WebSocketReceiveBufferSize = 4 * 1024 };
+        public readonly static Hosting Hosting = new Hosting
+        {
+            ResultType = typeof(ResultObject<>).GetGenericTypeDefinition(),
+            webSocketOptions = new WebSocketOptions
+            {
+                KeepAliveInterval = TimeSpan.FromSeconds(120),
+                ReceiveBufferSize = 4 * 1024
+            },
+            RequestLimits = new RequestLimits
+            {
+                RequestSizeLimit = long.MaxValue,//??
+                FormOptions = new FormOptions()
+            }
+        };
 
         ///// <summary>
         ///// Log client
@@ -1071,15 +1009,24 @@ namespace Business.AspNet
                 //writ url to page
                 DocUI.Write(staticDir);
 
+                var contextFactory = app.ApplicationServices.GetService<IHttpContextFactory>();
+                contextFactory.GetType().GetField("_formOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(contextFactory, Hosting.RequestLimits.FormOptions);
+
+                //app.ServerFeatures.Set(new RequestSizeLimitAttribute(long.MaxValue));
+
+                //var s = app.ServerFeatures.Get<IHttpMaxRequestBodySizeFeature>();
+                //var ss = app.ApplicationServices.GetService<IHttpMaxRequestBodySizeFeature>();
+                //HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = 100_000_000;
+
                 //add route
                 app.UseMvc(routes =>
                 {
                     foreach (var item in Configer.BusinessList)
                     {
                         routes.MapRoute(
-                    name: item.Key,
-                    template: $"{item.Key}/{{*path}}",
-                    defaults: new { controller = "Context", action = "Call" });
+                            name: item.Key,
+                            template: $"{item.Key}/{{*path}}",
+                            defaults: new { controller = "Context", action = "Call" });
                     }
                 });
 
@@ -1096,47 +1043,25 @@ namespace Business.AspNet
 
                 #region AcceptWebSocket
 
-                var webSocketcfg = Hosting.AppSettings.GetSection("WebSocket");
-                Hosting.WebSocketKeepAliveInterval = webSocketcfg.GetValue("KeepAliveInterval", Hosting.WebSocketKeepAliveInterval);
-                Hosting.WebSocketReceiveBufferSize = webSocketcfg.GetValue("ReceiveBufferSize", Hosting.WebSocketReceiveBufferSize);
-                var webSocketAllowedOrigins = webSocketcfg.GetSection("AllowedOrigins").Get<string[]>();
-                if (null != webSocketAllowedOrigins)
+                if (Hosting.useWebSockets)
                 {
-                    Hosting.WebSocketAllowedOrigins = webSocketAllowedOrigins;
-                }
-                //SocketMaxDegreeOfParallelism = webSocketcfg.GetValue("MaxDegreeOfParallelism", SocketMaxDegreeOfParallelism);
-                //var allowedOrigins = webSocketcfg.GetSection("AllowedOrigins").GetChildren();
+                    app.UseWebSockets(Hosting.webSocketOptions);
 
-                var webSocketOptions = new WebSocketOptions()
-                {
-                    KeepAliveInterval = TimeSpan.FromSeconds(Hosting.WebSocketKeepAliveInterval),
-                    ReceiveBufferSize = Hosting.WebSocketReceiveBufferSize
-                };
-
-                if (null != Hosting.WebSocketAllowedOrigins && Hosting.WebSocketAllowedOrigins.Any())
-                {
-                    foreach (var item in Hosting.WebSocketAllowedOrigins)
+                    app.Use(async (context, next) =>
                     {
-                        webSocketOptions.AllowedOrigins.Add(item);
-                    }
-                }
-
-                app.UseWebSockets(webSocketOptions);
-
-                app.Use(async (context, next) =>
-                {
-                    if (context.WebSockets.IsWebSocketRequest)
-                    {
-                        using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                        if (context.WebSockets.IsWebSocketRequest)
                         {
-                            await Keep(context, webSocket);
+                            using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                            {
+                                await Keep(context, webSocket);
+                            }
                         }
-                    }
-                    else
-                    {
-                        await next();
-                    }
-                });
+                        else
+                        {
+                            await next();
+                        }
+                    });
+                }
 
                 //Task.Factory.StartNew(() =>
                 //{
@@ -1194,9 +1119,69 @@ namespace Business.AspNet
             return dir;
         }
 
-        public static BootstrapAll<IBusiness> UseWebSocket(this BootstrapAll<IBusiness> bootstrap, Func<WebSocketConfig, WebSocketConfig> webSocket)
+        /// <summary>
+        /// Configuration greater than contract. "appsettings.json" "AppSettings": { "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }}
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseWebSockets(this BootstrapAll<IBusiness> bootstrap, Action<WebSocketOptions> options = null)
         {
-            var config = webSocket(new WebSocketConfig { WebSocketKeepAliveInterval = 120, WebSocketReceiveBufferSize = 4 * 1024 });
+            Hosting.useWebSockets = true;
+
+            options?.Invoke(Hosting.webSocketOptions);
+
+            //Configuration greater than contract
+            var cfg = Hosting.AppSettings.GetSection("WebSockets");
+
+            var keepAliveInterval = cfg.GetValue("KeepAliveInterval", Hosting.webSocketOptions.KeepAliveInterval.TotalSeconds);
+            Hosting.webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(keepAliveInterval);
+
+            Hosting.webSocketOptions.ReceiveBufferSize = cfg.GetValue("ReceiveBufferSize", Hosting.webSocketOptions.ReceiveBufferSize);
+
+            var webSocketAllowedOrigins = cfg.GetSection("AllowedOrigins").Get<string[]>();
+            if (null != webSocketAllowedOrigins)
+            {
+                foreach (var item in webSocketAllowedOrigins)
+                {
+                    Hosting.webSocketOptions.AllowedOrigins.Add(item);
+                }
+            }
+
+            return bootstrap;
+        }
+
+        /// <summary>
+        /// Configuration greater than contract. "appsettings.json" "AppSettings": { "Request": { "KeyLengthLimit": 2048, "ValueCountLimit": 1024 }}
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseRequests(this BootstrapAll<IBusiness> bootstrap, Action<RequestLimits> options = null)
+        {
+            options?.Invoke(Hosting.RequestLimits);
+
+            var cfg = Hosting.AppSettings.GetSection("Requests");
+
+            Hosting.RequestLimits.FormOptions.BufferBody = cfg.GetValue("BufferBody", Hosting.RequestLimits.FormOptions.BufferBody);
+
+            Hosting.RequestLimits.FormOptions.BufferBodyLengthLimit = cfg.GetValue("BufferBodyLengthLimit", Hosting.RequestLimits.FormOptions.BufferBodyLengthLimit);
+
+            Hosting.RequestLimits.FormOptions.KeyLengthLimit = cfg.GetValue("KeyLengthLimit", Hosting.RequestLimits.FormOptions.KeyLengthLimit);
+
+            Hosting.RequestLimits.FormOptions.MemoryBufferThreshold = cfg.GetValue("MemoryBufferThreshold", Hosting.RequestLimits.FormOptions.MemoryBufferThreshold);
+
+            Hosting.RequestLimits.FormOptions.MultipartBodyLengthLimit = cfg.GetValue("MultipartBodyLengthLimit", Hosting.RequestLimits.FormOptions.MultipartBodyLengthLimit);
+
+            Hosting.RequestLimits.FormOptions.MultipartBoundaryLengthLimit = cfg.GetValue("MultipartBoundaryLengthLimit", Hosting.RequestLimits.FormOptions.MultipartBoundaryLengthLimit);
+
+            Hosting.RequestLimits.FormOptions.MultipartHeadersCountLimit = cfg.GetValue("MultipartHeadersCountLimit", Hosting.RequestLimits.FormOptions.MultipartHeadersCountLimit);
+
+            Hosting.RequestLimits.FormOptions.MultipartHeadersLengthLimit = cfg.GetValue("MultipartHeadersLengthLimit", Hosting.RequestLimits.FormOptions.MultipartHeadersLengthLimit);
+
+            Hosting.RequestLimits.FormOptions.ValueCountLimit = cfg.GetValue("ValueCountLimit", Hosting.RequestLimits.FormOptions.ValueCountLimit);
+
+            Hosting.RequestLimits.FormOptions.ValueLengthLimit = cfg.GetValue("ValueLengthLimit", Hosting.RequestLimits.FormOptions.ValueLengthLimit);
 
             return bootstrap;
         }
@@ -1284,7 +1269,7 @@ namespace Business.AspNet
 
                 var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
-                var buffer = new byte[Hosting.WebSocketReceiveBufferSize];
+                var buffer = new byte[Hosting.webSocketOptions.ReceiveBufferSize];
                 WebSocketReceiveResult socketResult = null;
 
                 do

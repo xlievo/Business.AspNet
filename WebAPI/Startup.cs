@@ -12,6 +12,7 @@ using Microsoft.Net.Http.Headers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Business.Core.Utils;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace WebAPI
 {
@@ -27,8 +28,6 @@ namespace WebAPI
             });
 
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
-
-            //services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,13 +58,17 @@ namespace WebAPI
                     Testing = true,
                 })
                 .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
-                .UseWebSocket(c =>
+                .UseWebSockets(c =>
                 {
-                    c.WebSocketKeepAliveInterval = 100;
-                    c.WebSocketReceiveBufferSize = 4 * 1000;
-                    return c;
+                    c.KeepAliveInterval = TimeSpan.FromSeconds(100);
+                    c.ReceiveBufferSize = 4 * 1000;
                 })
-                .Use(c => c)
+                .UseRequests(c =>
+                {
+                    //c.FormOptions.KeyLengthLimit = int.MaxValue;
+                    //c.FormOptions.ValueCountLimit = int.MaxValue;
+                    //c.FormOptions.ValueLengthLimit = int.MaxValue;
+                })
                 .Build();
         }
     }

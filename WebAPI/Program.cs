@@ -26,11 +26,12 @@ namespace WebAPI
                     //self hosted
                     .UseKestrel(options =>
                     {
-                        options.AllowSynchronousIO = true;
+                        //options.AllowSynchronousIO = true;
                         options.Limits.MinRequestBodyDataRate = null;
                         options.Limits.MinResponseDataRate = null;
                         options.Limits.MaxConcurrentConnections = long.MaxValue;
                         options.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
+                        options.Limits.MaxRequestBodySize = long.MaxValue;
                     })
                     .UseStartup<Startup>();
                 });
