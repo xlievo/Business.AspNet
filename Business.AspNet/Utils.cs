@@ -39,6 +39,8 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Hosting.Server;
 
 namespace Business.AspNet
 {
@@ -401,9 +403,9 @@ namespace Business.AspNet
         public string[] Addresses { get; internal set; }
 
         /// <summary>
-        /// Configuration file "AppSettings" node
+        /// Configuration file "appsettings.json"
         /// </summary>
-        public IConfigurationSection AppSettings { get; internal set; }
+        public IConfiguration Config { get; internal set; }
 
         /// <summary>
         /// HttpClient factory
@@ -418,27 +420,31 @@ namespace Business.AspNet
         /// <summary>
         /// result type
         /// </summary>
-        public Type ResultType { get; internal set; }
+        public Type ResultType { get; internal set; } = typeof(ResultObject<>).GetGenericTypeDefinition();
 
         internal bool useWebSockets;
 
         /// <summary>
         /// Configuration options for the WebSocketMiddleware
         /// </summary>
-        internal WebSocketOptions webSocketOptions;
+        internal WebSocketOptions webSocketOptions = new WebSocketOptions
+        {
+            KeepAliveInterval = TimeSpan.FromSeconds(120),
+            ReceiveBufferSize = 4 * 1024
+        };
 
-        internal RequestLimits RequestLimits { get; set; }
+        internal Action<Server> useServer;
     }
 
     /// <summary>
-    /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.
+    /// Sets the specified limits to the Microsoft.AspNetCore.Http server.
     /// </summary>
-    public class RequestLimits
+    public class Server
     {
         /// <summary>
-        /// Sets the request body size limit to the specified size.
+        /// Provides programmatic configuration of Kestrel-specific features.
         /// </summary>
-        public long RequestSizeLimit { get; set; }
+        public KestrelServerOptions KestrelOptions { get; set; }
 
         /// <summary>
         /// Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.Form.
@@ -616,7 +622,7 @@ namespace Business.AspNet
         /// <returns></returns>
         [HttpGet]
         [HttpPost]
-        [EnableCors("any")]
+        //[EnableCors("any")]
         public virtual async ValueTask<dynamic> Call()
         {
             #region route fixed grouping
@@ -765,20 +771,7 @@ namespace Business.AspNet
         /// <summary>
         /// Host environment instance
         /// </summary>
-        public readonly static Hosting Hosting = new Hosting
-        {
-            ResultType = typeof(ResultObject<>).GetGenericTypeDefinition(),
-            webSocketOptions = new WebSocketOptions
-            {
-                KeepAliveInterval = TimeSpan.FromSeconds(120),
-                ReceiveBufferSize = 4 * 1024
-            },
-            RequestLimits = new RequestLimits
-            {
-                RequestSizeLimit = long.MaxValue,//??
-                FormOptions = new FormOptions()
-            }
-        };
+        public readonly static Hosting Hosting = new Hosting();
 
         ///// <summary>
         ///// Log client
@@ -915,7 +908,6 @@ namespace Business.AspNet
         /// <returns></returns>
         public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
-
         /// <summary>
         /// Configure Business.Core in the startup class configure method
         /// <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>
@@ -952,7 +944,7 @@ namespace Business.AspNet
             //    }).Services
             //    .BuildServiceProvider().GetService<IHttpClientFactory>());
             Hosting.Addresses = addresses;
-            Hosting.AppSettings = app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings");
+            Hosting.Config = app.ApplicationServices.GetService<IConfiguration>();
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
             Hosting.HttpClientFactory = new ServiceCollection()
                 .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
@@ -968,24 +960,25 @@ namespace Business.AspNet
 
             bootstrap = Bootstrap.CreateAll<IBusiness>();
 
-            bootstrap.Config.ResultType = typeof(ResultObject<object>).GetGenericTypeDefinition();
+            bootstrap.Config.ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
 
-            bootstrap
-                    .UseType(contextParameterTypes)
-                    .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
-                    .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
+            bootstrap.UseType(contextParameterTypes)
+                .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
+                .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
+
 
             bootstrap.Config.BuildBefore = strap =>
             {
                 if (null == strap.Config.UseDoc)
                 {
-                    strap.UseDoc(staticDir, new Config { Debug = true, Benchmark = true, Group = BusinessJsonGroup });
+                    strap.UseDoc(staticDir, c => { c.Group = BusinessJsonGroup; c.Debug = true; c.Benchmark = true; });
                 }
 
                 if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.OutDir))
                 {
                     strap.Config.UseDoc.OutDir = staticDir;
                 }
+
                 if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Config.Group))
                 {
                     strap.Config.UseDoc.Config.Group = BusinessJsonGroup;
@@ -1009,14 +1002,13 @@ namespace Business.AspNet
                 //writ url to page
                 DocUI.Write(staticDir);
 
-                var contextFactory = app.ApplicationServices.GetService<IHttpContextFactory>();
-                contextFactory.GetType().GetField("_formOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).SetValue(contextFactory, Hosting.RequestLimits.FormOptions);
+                if (null != Hosting.useServer)
+                {
+                    var contextFactory = app.ApplicationServices.GetService<IHttpContextFactory>();
+                    var kestrelServer = app.ApplicationServices.GetService<IServer>() as KestrelServer;
 
-                //app.ServerFeatures.Set(new RequestSizeLimitAttribute(long.MaxValue));
-
-                //var s = app.ServerFeatures.Get<IHttpMaxRequestBodySizeFeature>();
-                //var ss = app.ApplicationServices.GetService<IHttpMaxRequestBodySizeFeature>();
-                //HttpContext.Features.Get<IHttpMaxRequestBodySizeFeature>().MaxRequestBodySize = 100_000_000;
+                    Hosting.useServer(new Server { KestrelOptions = kestrelServer?.Options, FormOptions = contextFactory.GetType().GetField("_formOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(contextFactory) as FormOptions });
+                }
 
                 //add route
                 app.UseMvc(routes =>
@@ -1095,32 +1087,33 @@ namespace Business.AspNet
             var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
             //provider.Mappings[".yaml"] = "text/yaml";
             provider.Mappings[".doc"] = "application/json";
-            app.UseStaticFiles(new StaticFileOptions
+            var options = new FileServerOptions();
+            options.StaticFileOptions.FileProvider = new PhysicalFileProvider(dir);
+            options.StaticFileOptions.ContentTypeProvider = provider;
+            options.StaticFileOptions.OnPrepareResponse = c =>
             {
-                FileProvider = new PhysicalFileProvider(dir),
-                ContentTypeProvider = provider,
-                OnPrepareResponse = c =>
+                if (c.File.Exists && string.Equals(".doc", System.IO.Path.GetExtension(c.File.Name)))
                 {
-                    if (c.File.Exists && string.Equals(".doc", System.IO.Path.GetExtension(c.File.Name)))
-                    {
-                        //c.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=600"; //600
-                        c.Context.Response.Headers[HeaderNames.CacheControl] = "public, no-cache, no-store";
-                        c.Context.Response.Headers[HeaderNames.Pragma] = "no-cache";
-                        c.Context.Response.Headers[HeaderNames.Expires] = "-1";
-                        //c.Context.Response.Headers[HeaderNames.CacheControl] = Configuration["StaticFiles:Headers:Cache-Control"];
-                        //c.Context.Response.Headers[HeaderNames.Pragma] = Configuration["StaticFiles:Headers:Pragma"];
-                        //c.Context.Response.Headers[HeaderNames.Expires] = Configuration["StaticFiles:Headers:Expires"];
-                    }
-
-                    c.Context.Response.Headers[HeaderNames.AccessControlAllowOrigin] = "*";
+                    //c.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=600"; //600
+                    c.Context.Response.Headers[HeaderNames.CacheControl] = "public, no-cache, no-store";
+                    c.Context.Response.Headers[HeaderNames.Pragma] = "no-cache";
+                    c.Context.Response.Headers[HeaderNames.Expires] = "-1";
+                    //c.Context.Response.Headers[HeaderNames.CacheControl] = Configuration["StaticFiles:Headers:Cache-Control"];
+                    //c.Context.Response.Headers[HeaderNames.Pragma] = Configuration["StaticFiles:Headers:Pragma"];
+                    //c.Context.Response.Headers[HeaderNames.Expires] = Configuration["StaticFiles:Headers:Expires"];
                 }
-            });
+
+                c.Context.Response.Headers[HeaderNames.AccessControlAllowOrigin] = "*";
+            };
+
+            app.UseDefaultFiles().UseFileServer(options);
 
             return dir;
         }
 
         /// <summary>
-        /// Configuration greater than contract. "appsettings.json" "AppSettings": { "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }}
+        /// Configuration greater than contract.
+        /// <para>"appsettings.json" -> "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }</para>
         /// </summary>
         /// <param name="bootstrap"></param>
         /// <param name="options"></param>
@@ -1132,7 +1125,7 @@ namespace Business.AspNet
             options?.Invoke(Hosting.webSocketOptions);
 
             //Configuration greater than contract
-            var cfg = Hosting.AppSettings.GetSection("WebSockets");
+            var cfg = Hosting.Config.GetSection("WebSockets");
 
             var keepAliveInterval = cfg.GetValue("KeepAliveInterval", Hosting.webSocketOptions.KeepAliveInterval.TotalSeconds);
             Hosting.webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(keepAliveInterval);
@@ -1140,6 +1133,7 @@ namespace Business.AspNet
             Hosting.webSocketOptions.ReceiveBufferSize = cfg.GetValue("ReceiveBufferSize", Hosting.webSocketOptions.ReceiveBufferSize);
 
             var webSocketAllowedOrigins = cfg.GetSection("AllowedOrigins").Get<string[]>();
+
             if (null != webSocketAllowedOrigins)
             {
                 foreach (var item in webSocketAllowedOrigins)
@@ -1152,36 +1146,108 @@ namespace Business.AspNet
         }
 
         /// <summary>
-        /// Configuration greater than contract. "appsettings.json" "AppSettings": { "Request": { "KeyLengthLimit": 2048, "ValueCountLimit": 1024 }}
+        /// Configuration greater than contract.
+        /// <para>"appsettings.json" -> "FormOptions": { "KeyLengthLimit": 2048, "ValueCountLimit": 1024 }</para>
+        /// <para>"appsettings.json" -> "Kestrel": { "AllowSynchronousIO": true, "Limits": { "MinRequestBodyDataRate": null } }</para>
         /// </summary>
         /// <param name="bootstrap"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> UseRequests(this BootstrapAll<IBusiness> bootstrap, Action<RequestLimits> options = null)
+        public static BootstrapAll<IBusiness> UseServer(this BootstrapAll<IBusiness> bootstrap, Action<Server> options = null)
         {
-            options?.Invoke(Hosting.RequestLimits);
+            Hosting.useServer = c =>
+            {
+                options?.Invoke(c);
 
-            var cfg = Hosting.AppSettings.GetSection("Requests");
+                #region FormOptions
 
-            Hosting.RequestLimits.FormOptions.BufferBody = cfg.GetValue("BufferBody", Hosting.RequestLimits.FormOptions.BufferBody);
+                var cfgFormOptions = Hosting.Config.GetSection("FormOptions");
 
-            Hosting.RequestLimits.FormOptions.BufferBodyLengthLimit = cfg.GetValue("BufferBodyLengthLimit", Hosting.RequestLimits.FormOptions.BufferBodyLengthLimit);
+                c.FormOptions.BufferBody = cfgFormOptions.GetValue("BufferBody", c.FormOptions.BufferBody);
 
-            Hosting.RequestLimits.FormOptions.KeyLengthLimit = cfg.GetValue("KeyLengthLimit", Hosting.RequestLimits.FormOptions.KeyLengthLimit);
+                c.FormOptions.BufferBodyLengthLimit = cfgFormOptions.GetValue("BufferBodyLengthLimit", c.FormOptions.BufferBodyLengthLimit);
 
-            Hosting.RequestLimits.FormOptions.MemoryBufferThreshold = cfg.GetValue("MemoryBufferThreshold", Hosting.RequestLimits.FormOptions.MemoryBufferThreshold);
+                c.FormOptions.KeyLengthLimit = cfgFormOptions.GetValue("KeyLengthLimit", c.FormOptions.KeyLengthLimit);
 
-            Hosting.RequestLimits.FormOptions.MultipartBodyLengthLimit = cfg.GetValue("MultipartBodyLengthLimit", Hosting.RequestLimits.FormOptions.MultipartBodyLengthLimit);
+                c.FormOptions.MemoryBufferThreshold = cfgFormOptions.GetValue("MemoryBufferThreshold", c.FormOptions.MemoryBufferThreshold);
 
-            Hosting.RequestLimits.FormOptions.MultipartBoundaryLengthLimit = cfg.GetValue("MultipartBoundaryLengthLimit", Hosting.RequestLimits.FormOptions.MultipartBoundaryLengthLimit);
+                c.FormOptions.MultipartBodyLengthLimit = cfgFormOptions.GetValue("MultipartBodyLengthLimit", c.FormOptions.MultipartBodyLengthLimit);
 
-            Hosting.RequestLimits.FormOptions.MultipartHeadersCountLimit = cfg.GetValue("MultipartHeadersCountLimit", Hosting.RequestLimits.FormOptions.MultipartHeadersCountLimit);
+                c.FormOptions.MultipartBoundaryLengthLimit = cfgFormOptions.GetValue("MultipartBoundaryLengthLimit", c.FormOptions.MultipartBoundaryLengthLimit);
 
-            Hosting.RequestLimits.FormOptions.MultipartHeadersLengthLimit = cfg.GetValue("MultipartHeadersLengthLimit", Hosting.RequestLimits.FormOptions.MultipartHeadersLengthLimit);
+                c.FormOptions.MultipartHeadersCountLimit = cfgFormOptions.GetValue("MultipartHeadersCountLimit", c.FormOptions.MultipartHeadersCountLimit);
 
-            Hosting.RequestLimits.FormOptions.ValueCountLimit = cfg.GetValue("ValueCountLimit", Hosting.RequestLimits.FormOptions.ValueCountLimit);
+                c.FormOptions.MultipartHeadersLengthLimit = cfgFormOptions.GetValue("MultipartHeadersLengthLimit", c.FormOptions.MultipartHeadersLengthLimit);
 
-            Hosting.RequestLimits.FormOptions.ValueLengthLimit = cfg.GetValue("ValueLengthLimit", Hosting.RequestLimits.FormOptions.ValueLengthLimit);
+                c.FormOptions.ValueCountLimit = cfgFormOptions.GetValue("ValueCountLimit", c.FormOptions.ValueCountLimit);
+
+                c.FormOptions.ValueLengthLimit = cfgFormOptions.GetValue("ValueLengthLimit", c.FormOptions.ValueLengthLimit);
+
+                #endregion
+
+                //================================================//
+
+                #region Kestrel
+
+                var cfgKestrel = Hosting.Config.GetSection("Kestrel");
+
+                c.KestrelOptions.AllowSynchronousIO = cfgKestrel.GetValue("AllowSynchronousIO", c.KestrelOptions.AllowSynchronousIO);
+
+                //Method not found: 'Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal.SchedulingMode Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions.get_ApplicationSchedulingMode()'.
+                //c.KestrelOptions.ApplicationSchedulingMode = cfgKestrel.GetValue("ApplicationSchedulingMode", c.KestrelOptions.ApplicationSchedulingMode);
+
+                c.KestrelOptions.AddServerHeader = cfgKestrel.GetValue("AddServerHeader", c.KestrelOptions.AddServerHeader);
+
+                #region Limits
+
+                var cfgKestrelLimits = cfgKestrel.GetSection("Limits");
+
+                c.KestrelOptions.Limits.KeepAliveTimeout = cfgKestrelLimits.GetValue("KeepAliveTimeout", c.KestrelOptions.Limits.KeepAliveTimeout);
+
+                c.KestrelOptions.Limits.MaxConcurrentConnections = cfgKestrelLimits.GetValue("MaxConcurrentConnections", c.KestrelOptions.Limits.MaxConcurrentConnections);
+
+                c.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = cfgKestrelLimits.GetValue("MaxConcurrentUpgradedConnections", c.KestrelOptions.Limits.MaxConcurrentUpgradedConnections);
+
+                c.KestrelOptions.Limits.MaxRequestBodySize = cfgKestrelLimits.GetValue("MaxRequestBodySize", c.KestrelOptions.Limits.MaxRequestBodySize);
+
+                c.KestrelOptions.Limits.MaxRequestBufferSize = cfgKestrelLimits.GetValue("MaxRequestBufferSize", c.KestrelOptions.Limits.MaxRequestBufferSize);
+
+                c.KestrelOptions.Limits.MaxRequestHeaderCount = cfgKestrelLimits.GetValue("MaxRequestHeaderCount", c.KestrelOptions.Limits.MaxRequestHeaderCount);
+
+                c.KestrelOptions.Limits.MaxRequestHeadersTotalSize = cfgKestrelLimits.GetValue("MaxRequestHeadersTotalSize", c.KestrelOptions.Limits.MaxRequestHeadersTotalSize);
+
+                c.KestrelOptions.Limits.MaxRequestLineSize = cfgKestrelLimits.GetValue("MaxRequestLineSize", c.KestrelOptions.Limits.MaxRequestLineSize);
+
+                c.KestrelOptions.Limits.MaxResponseBufferSize = cfgKestrelLimits.GetValue("MaxResponseBufferSize", c.KestrelOptions.Limits.MaxResponseBufferSize);
+
+                c.KestrelOptions.Limits.MinRequestBodyDataRate = cfgKestrelLimits.GetValue("MinRequestBodyDataRate", c.KestrelOptions.Limits.MinRequestBodyDataRate);
+
+                c.KestrelOptions.Limits.MinResponseDataRate = cfgKestrelLimits.GetValue("MinResponseDataRate", c.KestrelOptions.Limits.MinResponseDataRate);
+
+                c.KestrelOptions.Limits.RequestHeadersTimeout = cfgKestrelLimits.GetValue("RequestHeadersTimeout", c.KestrelOptions.Limits.RequestHeadersTimeout);
+
+                #region Http2
+
+                var cfgKestrelLimitsHttp2 = cfgKestrelLimits.GetSection("Http2");
+
+                c.KestrelOptions.Limits.Http2.HeaderTableSize = cfgKestrelLimitsHttp2.GetValue("RequestHeadersTimeout", c.KestrelOptions.Limits.Http2.HeaderTableSize);
+
+                c.KestrelOptions.Limits.Http2.InitialConnectionWindowSize = cfgKestrelLimitsHttp2.GetValue("InitialConnectionWindowSize", c.KestrelOptions.Limits.Http2.InitialConnectionWindowSize);
+
+                c.KestrelOptions.Limits.Http2.InitialStreamWindowSize = cfgKestrelLimitsHttp2.GetValue("InitialStreamWindowSize", c.KestrelOptions.Limits.Http2.InitialStreamWindowSize);
+
+                c.KestrelOptions.Limits.Http2.MaxFrameSize = cfgKestrelLimitsHttp2.GetValue("MaxFrameSize", c.KestrelOptions.Limits.Http2.MaxFrameSize);
+
+                c.KestrelOptions.Limits.Http2.MaxRequestHeaderFieldSize = cfgKestrelLimitsHttp2.GetValue("MaxRequestHeaderFieldSize", c.KestrelOptions.Limits.Http2.MaxRequestHeaderFieldSize);
+
+                c.KestrelOptions.Limits.Http2.MaxStreamsPerConnection = cfgKestrelLimitsHttp2.GetValue("MaxStreamsPerConnection", c.KestrelOptions.Limits.Http2.MaxStreamsPerConnection);
+
+                #endregion
+
+                #endregion
+
+                #endregion
+            };
 
             return bootstrap;
         }

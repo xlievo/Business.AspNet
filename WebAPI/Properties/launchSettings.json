@@ -14,13 +14,13 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "launchUrl": "doc/index.html"
+      "launchUrl": "doc"
     },
     "WebAPI": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5000",
-      "launchUrl": "doc/index.html",
+      "launchUrl": "doc",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

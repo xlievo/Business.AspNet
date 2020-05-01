@@ -50,24 +50,34 @@ namespace WebAPI
             app.UseCors("any");
 
             app.CreateBusiness()
-                .UseDoc(new Business.Core.Document.Config
+                .UseDoc(options =>
                 {
-                    Debug = true,
-                    Benchmark = true,
-                    Navigtion = true,
-                    Testing = true,
+                    options.Debug = true;
+                    options.Benchmark = true;
+                    options.Navigtion = true;
+                    options.Testing = true;
                 })
                 .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
-                .UseWebSockets(c =>
+                .UseWebSockets(options =>
                 {
-                    c.KeepAliveInterval = TimeSpan.FromSeconds(100);
-                    c.ReceiveBufferSize = 4 * 1000;
+                    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+                    options.ReceiveBufferSize = 4 * 1024;
                 })
-                .UseRequests(c =>
+                .UseServer(server =>
                 {
-                    //c.FormOptions.KeyLengthLimit = int.MaxValue;
-                    //c.FormOptions.ValueCountLimit = int.MaxValue;
-                    //c.FormOptions.ValueLengthLimit = int.MaxValue;
+                    //kestrel
+                    server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
+                    server.KestrelOptions.Limits.MinResponseDataRate = null;
+                    server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
+                    server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
+                    server.KestrelOptions.Limits.MaxRequestBodySize = null;
+                    //form
+                    server.FormOptions.KeyLengthLimit = int.MaxValue;
+                    server.FormOptions.ValueCountLimit = int.MaxValue;
+                    server.FormOptions.ValueLengthLimit = int.MaxValue;
+                    server.FormOptions.MultipartHeadersLengthLimit = int.MaxValue;
+                    server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
+                    server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
                 })
                 .Build();
         }

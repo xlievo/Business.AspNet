@@ -208,8 +208,8 @@ namespace WebAPI
             {
                 //var result = await LogClient.Log(log);
 
-                Console.WriteLine(log.ToString());
-                //Help.Console(x.ToString());
+                //Console.WriteLine(log.ToString());
+                //Help.Console(log.ToString());
             });
         }
 

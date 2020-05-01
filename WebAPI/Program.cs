@@ -15,25 +15,14 @@ namespace WebAPI
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Start();
+            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder
-                    //self hosted
-                    .UseKestrel(options =>
-                    {
-                        //options.AllowSynchronousIO = true;
-                        options.Limits.MinRequestBodyDataRate = null;
-                        options.Limits.MinResponseDataRate = null;
-                        options.Limits.MaxConcurrentConnections = long.MaxValue;
-                        options.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
-                        options.Limits.MaxRequestBodySize = long.MaxValue;
-                    })
-                    .UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>();
                 });
     }
 }
