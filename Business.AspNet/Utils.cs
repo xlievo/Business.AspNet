@@ -913,9 +913,8 @@ namespace Business.AspNet
         /// <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>
         /// </summary>
         /// <param name="app"></param>
-        /// <param name="docDir"></param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, string docDir = "wwwroot")
+        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app)
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
 
@@ -954,8 +953,6 @@ namespace Business.AspNet
                 }).Services
                 .BuildServiceProvider().GetService<IHttpClientFactory>();
 
-            var staticDir = app.UseStaticDir(docDir);
-            Console.WriteLine($"Static Directory: {staticDir}");
             Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");
 
             bootstrap = Bootstrap.CreateAll<IBusiness>();
@@ -966,41 +963,45 @@ namespace Business.AspNet
                 .IgnoreSet(new Ignore(IgnoreMode.Arg), contextParameterTypes)
                 .LoggerSet(new LoggerAttribute(canWrite: false), contextParameterTypes);
 
-
             bootstrap.Config.BuildBefore = strap =>
             {
-                if (null == strap.Config.UseDoc)
+                if (null != strap.Config.UseDoc)
                 {
-                    strap.UseDoc(staticDir, c => { c.Group = BusinessJsonGroup; c.Debug = true; c.Benchmark = true; });
-                }
+                    strap.Config.UseDoc.OutDir = strap.Config.UseDoc.OutDir ?? "wwwroot";
 
-                if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.OutDir))
-                {
-                    strap.Config.UseDoc.OutDir = staticDir;
-                }
+                    var documentDir = app.UseStaticDir(strap.Config.UseDoc.OutDir);
+                    Console.WriteLine($"Document Directory: {documentDir}");
 
-                if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Config.Group))
-                {
-                    strap.Config.UseDoc.Config.Group = BusinessJsonGroup;
+                    strap.Config.UseDoc.OutDir = documentDir;
+
+                    if (null == strap.Config.UseDoc.Options)
+                    {
+                        strap.Config.UseDoc.Options = new Options { Group = BusinessJsonGroup, Debug = true, Benchmark = true };
+                    }
+ 
+                    if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Options.Group))
+                    {
+                        strap.Config.UseDoc.Options.Group = BusinessJsonGroup;
+                    }
+
+                    //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
+                    //{
+                    //    if (0 < Environment.Addresses.Length)
+                    //    {
+                    //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
+                    //    }
+                    //}
+
+                    //writ url to page
+                    DocUI.Write(documentDir);
                 }
             };
 
             bootstrap.Config.BuildAfter = strap =>
             {
-                //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
-                //{
-                //    if (0 < Environment.Addresses.Length)
-                //    {
-                //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
-                //    }
-                //}
-
                 Hosting.ResultType = strap.Config.ResultType;
 
                 businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
-
-                //writ url to page
-                DocUI.Write(staticDir);
 
                 if (null != Hosting.useServer)
                 {

@@ -50,12 +50,12 @@ namespace WebAPI
             app.UseCors("any");
 
             app.CreateBusiness()
-                .UseDoc(cfg =>
+                .UseDoc(options =>
                 {
-                    cfg.Debug = true;
-                    cfg.Benchmark = true;
-                    cfg.Navigtion = true;
-                    cfg.Testing = true;
+                    options.Debug = true;
+                    options.Benchmark = true;
+                    options.Navigtion = true;
+                    options.Testing = true;
                 })
                 .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
                 .UseWebSockets(options =>
