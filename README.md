@@ -24,9 +24,10 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
     app.UseCors("any");//API static documents need cross domain support
 	
-    //app.CreateBusiness().Build();
+    app.CreateBusiness().Build();
 	
-    //If you want to configure documents
+    //If you want to configure documents or other
+    /*
     app.CreateBusiness()
         .UseDoc(cfg =>
         {
@@ -35,8 +36,8 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
             cfg.Navigtion = true;
             cfg.Testing = true;
         })
-        //.UseResultType(typeof(MyResultObject<>))//Use your ResultObject
         .Build();
+    */
 }
 ```
 ## Step 2: Declare your business class, Create a new class and copy the following
@@ -237,7 +238,48 @@ var result = await business.Command.AsyncCall(
     new object[] { },//Method parameters, excluding injection parameters
     "group",//Business grouping
     new UseEntry(new Token { }));//Parameter object to be injected
-``` 
+```
+
+## Unified adjustment of asp.net server settings
+```C#
+app.CreateBusiness()
+    .UseServer(server =>
+    {
+        //kestrel
+        server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
+        server.KestrelOptions.Limits.MinResponseDataRate = null;
+        server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
+        server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
+        server.KestrelOptions.Limits.MaxRequestBodySize = null;
+        //form
+        server.FormOptions.KeyLengthLimit = int.MaxValue;
+        server.FormOptions.ValueCountLimit = int.MaxValue;
+        server.FormOptions.ValueLengthLimit = int.MaxValue;
+        server.FormOptions.MultipartHeadersLengthLimit = int.MaxValue;
+        server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
+        server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
+    })
+    .Build();
+```
+
+## WebSocket settings
+To enable WebSocket, UseWebSockets() must be used. It is closed by default  
+```C#
+app.CreateBusiness()
+    .UseWebSockets(options =>
+    {
+	    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+	    options.ReceiveBufferSize = 4 * 1024;
+    })
+    .Build();
+```
+
+## Use custom ResultObject<>
+```C#
+    app.CreateBusiness()
+        .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
+        .Build();
+```
 
 ## Do you think it's over? Did not!
 ~~You also need to understand call wrapping and return wrapping~~
