@@ -28,12 +28,12 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 	
     //If you want to configure documents
     app.CreateBusiness()
-        .UseDoc(new Business.Core.Document.Config
+        .UseDoc(cfg =>
         {
-            Debug = true,
-            Benchmark = true,
-            Navigtion = true,
-            Testing = true,
+            cfg.Debug = true;
+            cfg.Benchmark = true;
+            cfg.Navigtion = true;
+            cfg.Testing = true;
         })
         //.UseResultType(typeof(MyResultObject<>))//Use your ResultObject
         .Build();
@@ -137,7 +137,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
     }
 }
 ```
-## Step 3: Start the project in a self hosted way and navigate to http://localhost:5000/doc/index.html
+## Step 3: Start the project in a self hosted way and navigate to http://localhost:5000/doc
 
 It only needs 2 steps, less than 100 lines of code. With the minimum configuration, you can get the whole framework without any other operations!  
 Of course, the best practice is to recommend that you inherit Business.AspNet.BusinessBase with a custom base class to uniformly handle logs and tokens
