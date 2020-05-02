@@ -24,17 +24,17 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 {
     app.UseCors("any");//API static documents need cross domain support
 	
-    app.CreateBusiness().Build();
+    app.CreateBusiness().UseDoc().Build();
 	
     //If you want to configure documents or other
     /*
     app.CreateBusiness()
-        .UseDoc(cfg =>
+        .UseDoc(options =>
         {
-            cfg.Debug = true;
-            cfg.Benchmark = true;
-            cfg.Navigtion = true;
-            cfg.Testing = true;
+            options.Debug = true;
+            options.Benchmark = true;
+            options.Navigtion = true;
+            options.Testing = true;
         })
         .Build();
     */
