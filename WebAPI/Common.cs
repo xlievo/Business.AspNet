@@ -188,7 +188,7 @@ namespace WebAPI
         }
     }
 
-    [MyJsonArg(Group = Utils.BusinessJsonGroup)]
+    [MyJsonArg(Group = Utils.GroupJson)]
     public abstract class BusinessBase : Business.AspNet.BusinessBase
     {
         /// <summary>

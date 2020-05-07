@@ -295,23 +295,57 @@ namespace Business.AspNet
     }
 
     ///// <summary>
-    ///// Socket group
+    ///// WebSocket grouping
     ///// </summary>
-    //public abstract class SocketGroupAttribute : ArgumentAttribute
+    //public abstract class WebSocketGroupAttribute : ArgumentAttribute
     //{
     //    /// <summary>
     //    /// Socket group
     //    /// </summary>
     //    /// <param name="state"></param>
     //    /// <param name="message"></param>
-    //    public SocketGroupAttribute(int state, string message) : base(state, message)
+    //    public WebSocketGroupAttribute(int state, string message) : base(state, message)
     //    {
     //        this.CanNull = false;
-    //        this.Description = "Socket group";
+    //        this.Description = "WebSocket group";
     //        this.Group = Utils.BusinessWebSocketGroup;
     //        //this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition;
     //    }
     //}
+
+    /// <summary>
+    /// WebSocket command
+    /// </summary>
+    public class WebSocketCommandAttribute : CommandAttribute
+    {
+        /// <summary>
+        /// Command attribute on a method, for multiple sources to invoke the method
+        /// </summary>
+        /// <param name="onlyName"></param>
+        public WebSocketCommandAttribute(string onlyName = null) : base(onlyName) => base.Group = Utils.GroupWebSocket;
+
+        /// <summary>
+        /// Used for the command group
+        /// </summary>
+        public new string Group { get => base.Group; }
+    }
+
+    /// <summary>
+    /// Json command
+    /// </summary>
+    public class JsonCommandAttribute : CommandAttribute
+    {
+        /// <summary>
+        /// Command attribute on a method, for multiple sources to invoke the method
+        /// </summary>
+        /// <param name="onlyName"></param>
+        public JsonCommandAttribute(string onlyName = null) : base(onlyName) => base.Group = Utils.GroupJson;
+
+        /// <summary>
+        /// Used for the command group
+        /// </summary>
+        public new string Group { get => base.Group; }
+    }
 
     /// <summary>
     /// Simple asp.net HTTP request file
@@ -553,12 +587,12 @@ namespace Business.AspNet
     /// Business base class for ASP.Net Core
     /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
-    [Command(Group = Utils.BusinessJsonGroup)]
-    [JsonArg(Group = Utils.BusinessJsonGroup)]
-    [Command(Group = Utils.BusinessWebSocketGroup)]
-    [MessagePack(Group = Utils.BusinessWebSocketGroup)]
-    [Logger(Group = Utils.BusinessJsonGroup)]
-    [Logger(Group = Utils.BusinessWebSocketGroup, ValueType = Logger.ValueType.Out)]
+    [Command(Group = Utils.GroupJson)]
+    [JsonArg(Group = Utils.GroupJson)]
+    [Command(Group = Utils.GroupWebSocket)]
+    [MessagePack(Group = Utils.GroupWebSocket)]
+    [Logger(Group = Utils.GroupJson)]
+    [Logger(Group = Utils.GroupWebSocket, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : Core.BusinessBase, IBusiness
     {
         /// <summary>
@@ -627,7 +661,7 @@ namespace Business.AspNet
         {
             #region route fixed grouping
 
-            var g = Utils.BusinessJsonGroup;//fixed grouping
+            var g = Utils.GroupJson;//fixed grouping
             var path = this.Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business)) { return this.NotFound(); }
 
@@ -758,11 +792,11 @@ namespace Business.AspNet
         /// <summary>
         /// Default JSON format grouping
         /// </summary>
-        public const string BusinessJsonGroup = "j";
+        public const string GroupJson = "j";
         /// <summary>
         /// Default WebSocket format grouping
         /// </summary>
-        public const string BusinessWebSocketGroup = "w";
+        public const string GroupWebSocket = "w";
         ///// <summary>
         ///// Default binary format grouping
         ///// </summary>
@@ -771,7 +805,16 @@ namespace Business.AspNet
         /// <summary>
         /// Host environment instance
         /// </summary>
-        public readonly static Hosting Hosting = new Hosting();
+        public readonly static Hosting Hosting = new Hosting
+        {
+            HttpClientFactory = new ServiceCollection()
+                .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
+                {
+                    AllowAutoRedirect = false,
+                    UseDefaultCredentials = true,
+                }).Services
+                .BuildServiceProvider().GetService<IHttpClientFactory>()
+        };
 
         ///// <summary>
         ///// Log client
@@ -945,13 +988,6 @@ namespace Business.AspNet
             Hosting.Addresses = addresses;
             Hosting.Config = app.ApplicationServices.GetService<IConfiguration>();
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
-            Hosting.HttpClientFactory = new ServiceCollection()
-                .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
-                {
-                    AllowAutoRedirect = false,
-                    UseDefaultCredentials = true,
-                }).Services
-                .BuildServiceProvider().GetService<IHttpClientFactory>();
 
             Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");
 
@@ -976,12 +1012,12 @@ namespace Business.AspNet
 
                     if (null == strap.Config.UseDoc.Options)
                     {
-                        strap.Config.UseDoc.Options = new Options { Group = BusinessJsonGroup, Debug = true, Benchmark = true };
+                        strap.Config.UseDoc.Options = new Options { Group = GroupJson, Debug = true, Benchmark = true };
                     }
- 
+
                     if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Options.Group))
                     {
-                        strap.Config.UseDoc.Options.Group = BusinessJsonGroup;
+                        strap.Config.UseDoc.Options.Group = GroupJson;
                     }
 
                     //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
@@ -1275,9 +1311,9 @@ namespace Business.AspNet
             //the data of this request, allow null.
             new object[] { receive.Data.d },
             //the group of this request.
-            BusinessWebSocketGroup, //fixed grouping
-                                    //the incoming use object
-                                    //new UseEntry(receive.HttpContext, "context"), //context
+            GroupWebSocket, //fixed grouping
+                            //the incoming use object
+                            //new UseEntry(receive.HttpContext, "context"), //context
             new UseEntry(receive.WebSocket), //webSocket
             new UseEntry(receive.Token));
 

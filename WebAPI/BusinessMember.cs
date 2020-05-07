@@ -32,7 +32,8 @@ namespace WebAPI
         /// </returns>
         //[Doc(Group = "Module 1", Position = 1)]
         //[Command("AAA")]
-        [Command("jjjTest001jjj", Group = Utils.BusinessJsonGroup)]
+        //[Command("jjjTest001jjj", Group = Utils.GroupJson)]
+        [JsonCommand("jjjTest001jjj")]
         //[Command("wwwwwwwwwwww", Group = "j")]
         //[Command(Group = "zzz")]
         [Testing("test2",
@@ -69,7 +70,7 @@ namespace WebAPI
             return this.ResultCreate(new { session, arg, files });
         }
 
-        [Command("abc", Group = Utils.BusinessWebSocketGroup)]
+        [Command("abc", Group = Utils.GroupWebSocket)]
         public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
         {
             return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
