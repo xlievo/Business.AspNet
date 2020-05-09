@@ -839,6 +839,7 @@ namespace Business.AspNet
             MessagePack.MessagePackSerializer.DefaultOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
 
             AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+            Console.WriteLine("System.Net.Http.UseSocketsHttpHandler: false");
             //LogClient = Environment.HttpClientFactory.CreateClient("log");
             //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
@@ -906,6 +907,18 @@ namespace Business.AspNet
                 {
                     request.RequestUri = uri;
                 }
+
+                /* .net 5.0 Microsoft.Extensions.Http.Polly ?
+                using (var cts = new CancellationTokenSource())
+                {
+                    cts.CancelAfter(TimeSpan.FromSeconds(3));
+                    using (var response = await httpClient.SendAsync(request, cts.Token))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        return await response.Content.ReadAsStringAsync(cts.Token);
+                    }
+                }
+                */
 
                 using (var response = await httpClient.SendAsync(request))
                 {
@@ -1198,27 +1211,28 @@ namespace Business.AspNet
 
                 #region FormOptions
 
+                var formOptions = c.FormOptions;
                 var cfgFormOptions = Hosting.Config.GetSection("FormOptions");
 
-                c.FormOptions.BufferBody = cfgFormOptions.GetValue("BufferBody", c.FormOptions.BufferBody);
+                formOptions.BufferBody = cfgFormOptions.GetValue("BufferBody", formOptions.BufferBody);
 
-                c.FormOptions.BufferBodyLengthLimit = cfgFormOptions.GetValue("BufferBodyLengthLimit", c.FormOptions.BufferBodyLengthLimit);
+                formOptions.BufferBodyLengthLimit = cfgFormOptions.GetValue("BufferBodyLengthLimit", formOptions.BufferBodyLengthLimit);
 
-                c.FormOptions.KeyLengthLimit = cfgFormOptions.GetValue("KeyLengthLimit", c.FormOptions.KeyLengthLimit);
+                formOptions.KeyLengthLimit = cfgFormOptions.GetValue("KeyLengthLimit", formOptions.KeyLengthLimit);
 
-                c.FormOptions.MemoryBufferThreshold = cfgFormOptions.GetValue("MemoryBufferThreshold", c.FormOptions.MemoryBufferThreshold);
+                formOptions.MemoryBufferThreshold = cfgFormOptions.GetValue("MemoryBufferThreshold", formOptions.MemoryBufferThreshold);
 
-                c.FormOptions.MultipartBodyLengthLimit = cfgFormOptions.GetValue("MultipartBodyLengthLimit", c.FormOptions.MultipartBodyLengthLimit);
+                formOptions.MultipartBodyLengthLimit = cfgFormOptions.GetValue("MultipartBodyLengthLimit", formOptions.MultipartBodyLengthLimit);
 
-                c.FormOptions.MultipartBoundaryLengthLimit = cfgFormOptions.GetValue("MultipartBoundaryLengthLimit", c.FormOptions.MultipartBoundaryLengthLimit);
+                formOptions.MultipartBoundaryLengthLimit = cfgFormOptions.GetValue("MultipartBoundaryLengthLimit", formOptions.MultipartBoundaryLengthLimit);
 
-                c.FormOptions.MultipartHeadersCountLimit = cfgFormOptions.GetValue("MultipartHeadersCountLimit", c.FormOptions.MultipartHeadersCountLimit);
+                formOptions.MultipartHeadersCountLimit = cfgFormOptions.GetValue("MultipartHeadersCountLimit", formOptions.MultipartHeadersCountLimit);
 
-                c.FormOptions.MultipartHeadersLengthLimit = cfgFormOptions.GetValue("MultipartHeadersLengthLimit", c.FormOptions.MultipartHeadersLengthLimit);
+                formOptions.MultipartHeadersLengthLimit = cfgFormOptions.GetValue("MultipartHeadersLengthLimit", formOptions.MultipartHeadersLengthLimit);
 
-                c.FormOptions.ValueCountLimit = cfgFormOptions.GetValue("ValueCountLimit", c.FormOptions.ValueCountLimit);
+                formOptions.ValueCountLimit = cfgFormOptions.GetValue("ValueCountLimit", formOptions.ValueCountLimit);
 
-                c.FormOptions.ValueLengthLimit = cfgFormOptions.GetValue("ValueLengthLimit", c.FormOptions.ValueLengthLimit);
+                formOptions.ValueLengthLimit = cfgFormOptions.GetValue("ValueLengthLimit", formOptions.ValueLengthLimit);
 
                 #endregion
 
@@ -1226,62 +1240,67 @@ namespace Business.AspNet
 
                 #region Kestrel
 
-                var cfgKestrel = Hosting.Config.GetSection("Kestrel");
+                //IIS
+                if (null != c.KestrelOptions)
+                {
+                    var kestrelOptions = c.KestrelOptions;
+                    var cfgKestrel = Hosting.Config.GetSection("Kestrel");
 
-                c.KestrelOptions.AllowSynchronousIO = cfgKestrel.GetValue("AllowSynchronousIO", c.KestrelOptions.AllowSynchronousIO);
+                    kestrelOptions.AllowSynchronousIO = cfgKestrel.GetValue("AllowSynchronousIO", kestrelOptions.AllowSynchronousIO);
 
-                //Method not found: 'Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal.SchedulingMode Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions.get_ApplicationSchedulingMode()'.
-                //c.KestrelOptions.ApplicationSchedulingMode = cfgKestrel.GetValue("ApplicationSchedulingMode", c.KestrelOptions.ApplicationSchedulingMode);
+                    //Method not found: 'Microsoft.AspNetCore.Server.Kestrel.Transport.Abstractions.Internal.SchedulingMode Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerOptions.get_ApplicationSchedulingMode()'.
+                    //kestrelOptions.ApplicationSchedulingMode = cfgKestrel.GetValue("ApplicationSchedulingMode", kestrelOptions.ApplicationSchedulingMode);
 
-                c.KestrelOptions.AddServerHeader = cfgKestrel.GetValue("AddServerHeader", c.KestrelOptions.AddServerHeader);
+                    kestrelOptions.AddServerHeader = cfgKestrel.GetValue("AddServerHeader", kestrelOptions.AddServerHeader);
 
-                #region Limits
+                    #region Limits
 
-                var cfgKestrelLimits = cfgKestrel.GetSection("Limits");
+                    var cfgKestrelLimits = cfgKestrel.GetSection("Limits");
 
-                c.KestrelOptions.Limits.KeepAliveTimeout = cfgKestrelLimits.GetValue("KeepAliveTimeout", c.KestrelOptions.Limits.KeepAliveTimeout);
+                    kestrelOptions.Limits.KeepAliveTimeout = cfgKestrelLimits.GetValue("KeepAliveTimeout", kestrelOptions.Limits.KeepAliveTimeout);
 
-                c.KestrelOptions.Limits.MaxConcurrentConnections = cfgKestrelLimits.GetValue("MaxConcurrentConnections", c.KestrelOptions.Limits.MaxConcurrentConnections);
+                    kestrelOptions.Limits.MaxConcurrentConnections = cfgKestrelLimits.GetValue("MaxConcurrentConnections", kestrelOptions.Limits.MaxConcurrentConnections);
 
-                c.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = cfgKestrelLimits.GetValue("MaxConcurrentUpgradedConnections", c.KestrelOptions.Limits.MaxConcurrentUpgradedConnections);
+                    kestrelOptions.Limits.MaxConcurrentUpgradedConnections = cfgKestrelLimits.GetValue("MaxConcurrentUpgradedConnections", kestrelOptions.Limits.MaxConcurrentUpgradedConnections);
 
-                c.KestrelOptions.Limits.MaxRequestBodySize = cfgKestrelLimits.GetValue("MaxRequestBodySize", c.KestrelOptions.Limits.MaxRequestBodySize);
+                    kestrelOptions.Limits.MaxRequestBodySize = cfgKestrelLimits.GetValue("MaxRequestBodySize", kestrelOptions.Limits.MaxRequestBodySize);
 
-                c.KestrelOptions.Limits.MaxRequestBufferSize = cfgKestrelLimits.GetValue("MaxRequestBufferSize", c.KestrelOptions.Limits.MaxRequestBufferSize);
+                    kestrelOptions.Limits.MaxRequestBufferSize = cfgKestrelLimits.GetValue("MaxRequestBufferSize", kestrelOptions.Limits.MaxRequestBufferSize);
 
-                c.KestrelOptions.Limits.MaxRequestHeaderCount = cfgKestrelLimits.GetValue("MaxRequestHeaderCount", c.KestrelOptions.Limits.MaxRequestHeaderCount);
+                    kestrelOptions.Limits.MaxRequestHeaderCount = cfgKestrelLimits.GetValue("MaxRequestHeaderCount", kestrelOptions.Limits.MaxRequestHeaderCount);
 
-                c.KestrelOptions.Limits.MaxRequestHeadersTotalSize = cfgKestrelLimits.GetValue("MaxRequestHeadersTotalSize", c.KestrelOptions.Limits.MaxRequestHeadersTotalSize);
+                    kestrelOptions.Limits.MaxRequestHeadersTotalSize = cfgKestrelLimits.GetValue("MaxRequestHeadersTotalSize", kestrelOptions.Limits.MaxRequestHeadersTotalSize);
 
-                c.KestrelOptions.Limits.MaxRequestLineSize = cfgKestrelLimits.GetValue("MaxRequestLineSize", c.KestrelOptions.Limits.MaxRequestLineSize);
+                    kestrelOptions.Limits.MaxRequestLineSize = cfgKestrelLimits.GetValue("MaxRequestLineSize", kestrelOptions.Limits.MaxRequestLineSize);
 
-                c.KestrelOptions.Limits.MaxResponseBufferSize = cfgKestrelLimits.GetValue("MaxResponseBufferSize", c.KestrelOptions.Limits.MaxResponseBufferSize);
+                    kestrelOptions.Limits.MaxResponseBufferSize = cfgKestrelLimits.GetValue("MaxResponseBufferSize", kestrelOptions.Limits.MaxResponseBufferSize);
 
-                c.KestrelOptions.Limits.MinRequestBodyDataRate = cfgKestrelLimits.GetValue("MinRequestBodyDataRate", c.KestrelOptions.Limits.MinRequestBodyDataRate);
+                    kestrelOptions.Limits.MinRequestBodyDataRate = cfgKestrelLimits.GetValue("MinRequestBodyDataRate", kestrelOptions.Limits.MinRequestBodyDataRate);
 
-                c.KestrelOptions.Limits.MinResponseDataRate = cfgKestrelLimits.GetValue("MinResponseDataRate", c.KestrelOptions.Limits.MinResponseDataRate);
+                    kestrelOptions.Limits.MinResponseDataRate = cfgKestrelLimits.GetValue("MinResponseDataRate", kestrelOptions.Limits.MinResponseDataRate);
 
-                c.KestrelOptions.Limits.RequestHeadersTimeout = cfgKestrelLimits.GetValue("RequestHeadersTimeout", c.KestrelOptions.Limits.RequestHeadersTimeout);
+                    kestrelOptions.Limits.RequestHeadersTimeout = cfgKestrelLimits.GetValue("RequestHeadersTimeout", kestrelOptions.Limits.RequestHeadersTimeout);
 
-                #region Http2
+                    #region Http2
 
-                var cfgKestrelLimitsHttp2 = cfgKestrelLimits.GetSection("Http2");
+                    var cfgKestrelLimitsHttp2 = cfgKestrelLimits.GetSection("Http2");
 
-                c.KestrelOptions.Limits.Http2.HeaderTableSize = cfgKestrelLimitsHttp2.GetValue("RequestHeadersTimeout", c.KestrelOptions.Limits.Http2.HeaderTableSize);
+                    kestrelOptions.Limits.Http2.HeaderTableSize = cfgKestrelLimitsHttp2.GetValue("RequestHeadersTimeout", kestrelOptions.Limits.Http2.HeaderTableSize);
 
-                c.KestrelOptions.Limits.Http2.InitialConnectionWindowSize = cfgKestrelLimitsHttp2.GetValue("InitialConnectionWindowSize", c.KestrelOptions.Limits.Http2.InitialConnectionWindowSize);
+                    kestrelOptions.Limits.Http2.InitialConnectionWindowSize = cfgKestrelLimitsHttp2.GetValue("InitialConnectionWindowSize", kestrelOptions.Limits.Http2.InitialConnectionWindowSize);
 
-                c.KestrelOptions.Limits.Http2.InitialStreamWindowSize = cfgKestrelLimitsHttp2.GetValue("InitialStreamWindowSize", c.KestrelOptions.Limits.Http2.InitialStreamWindowSize);
+                    kestrelOptions.Limits.Http2.InitialStreamWindowSize = cfgKestrelLimitsHttp2.GetValue("InitialStreamWindowSize", kestrelOptions.Limits.Http2.InitialStreamWindowSize);
 
-                c.KestrelOptions.Limits.Http2.MaxFrameSize = cfgKestrelLimitsHttp2.GetValue("MaxFrameSize", c.KestrelOptions.Limits.Http2.MaxFrameSize);
+                    kestrelOptions.Limits.Http2.MaxFrameSize = cfgKestrelLimitsHttp2.GetValue("MaxFrameSize", kestrelOptions.Limits.Http2.MaxFrameSize);
 
-                c.KestrelOptions.Limits.Http2.MaxRequestHeaderFieldSize = cfgKestrelLimitsHttp2.GetValue("MaxRequestHeaderFieldSize", c.KestrelOptions.Limits.Http2.MaxRequestHeaderFieldSize);
+                    kestrelOptions.Limits.Http2.MaxRequestHeaderFieldSize = cfgKestrelLimitsHttp2.GetValue("MaxRequestHeaderFieldSize", kestrelOptions.Limits.Http2.MaxRequestHeaderFieldSize);
 
-                c.KestrelOptions.Limits.Http2.MaxStreamsPerConnection = cfgKestrelLimitsHttp2.GetValue("MaxStreamsPerConnection", c.KestrelOptions.Limits.Http2.MaxStreamsPerConnection);
+                    kestrelOptions.Limits.Http2.MaxStreamsPerConnection = cfgKestrelLimitsHttp2.GetValue("MaxStreamsPerConnection", kestrelOptions.Limits.Http2.MaxStreamsPerConnection);
 
-                #endregion
+                    #endregion
 
-                #endregion
+                    #endregion
+                }
 
                 #endregion
             };

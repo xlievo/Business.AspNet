@@ -65,12 +65,6 @@ namespace WebAPI
                 })
                 .UseServer(server =>
                 {
-                    //kestrel
-                    server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
-                    server.KestrelOptions.Limits.MinResponseDataRate = null;
-                    server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
-                    server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
-                    server.KestrelOptions.Limits.MaxRequestBodySize = null;
                     //form
                     server.FormOptions.KeyLengthLimit = int.MaxValue;
                     server.FormOptions.ValueCountLimit = int.MaxValue;
@@ -78,6 +72,17 @@ namespace WebAPI
                     server.FormOptions.MultipartHeadersLengthLimit = int.MaxValue;
                     server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
                     server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
+
+                    //IIS
+                    if (null != server.KestrelOptions)
+                    {
+                        //kestrel
+                        server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
+                        server.KestrelOptions.Limits.MinResponseDataRate = null;
+                        server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
+                        server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
+                        server.KestrelOptions.Limits.MaxRequestBodySize = null;
+                    }
                 })
                 .Build();
         }
