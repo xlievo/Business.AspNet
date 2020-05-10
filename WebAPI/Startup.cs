@@ -13,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http.Features;
+using Serilog;
 
 namespace WebAPI
 {
@@ -49,7 +50,32 @@ namespace WebAPI
 
             app.UseCors("any");
 
-            app.CreateBusiness()
+            Utils.Hosting.LocalLogPath = "/data/mylog.txt";
+
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Console()
+                .WriteTo.File(Utils.Hosting.LocalLogPath,
+                rollingInterval: RollingInterval.Day,
+                rollOnFileSizeLimit: true)
+                .CreateLogger();
+
+            app.CreateBusiness(log =>
+                {
+                    //all non business information
+                    switch (log.Type)
+                    {
+                        case LogData.LogType.Error:
+                            Log.Error(log.Message);
+                            break;
+                        case LogData.LogType.Exception:
+                            Log.Fatal(log.Message);
+                            break;
+                        case LogData.LogType.Info:
+                            Log.Information(log.Message);
+                            break;
+                    }
+                })
                 .UseDoc(options =>
                 {
                     options.Debug = true;
@@ -61,7 +87,7 @@ namespace WebAPI
                 .UseWebSockets(options =>
                 {
                     options.KeepAliveInterval = TimeSpan.FromSeconds(120);
-                    options.ReceiveBufferSize = 4 * 1024;
+                    options.ReceiveBufferSize = 1024 * 4;
                 })
                 .UseServer(server =>
                 {
@@ -73,8 +99,7 @@ namespace WebAPI
                     server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
                     server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
 
-                    //IIS
-                    if (null != server.KestrelOptions)
+                    if (null != server.KestrelOptions)//IIS
                     {
                         //kestrel
                         server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
