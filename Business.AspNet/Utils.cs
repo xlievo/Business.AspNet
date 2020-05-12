@@ -41,6 +41,7 @@ using System.Net.WebSockets;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.Extensions.Logging;
 
 namespace Business.AspNet
 {
@@ -861,7 +862,6 @@ namespace Business.AspNet
         static Utils()
         {
             Logo();
-
             //Hosting.Exception = ex => ex?.ExceptionWrite(true, true, Hosting.LocalLogPath);
 
             //Console.WriteLine($"Date: {DateTimeOffset.Now}");
@@ -885,22 +885,29 @@ namespace Business.AspNet
             //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
 
-        static void Logo()
+        static string Logo()
         {
-            Console.WriteLine("             ########");
-            Console.WriteLine("            ##########");
-            Console.WriteLine();
-            Console.WriteLine("             ########");
-            Console.WriteLine("            ##########");
-            Console.WriteLine("          ##############");
-            Console.WriteLine("         #######  #######");
-            Console.WriteLine("        ######      ######");
-            Console.WriteLine("        #####        #####");
-            Console.WriteLine("        ####          ####");
-            Console.WriteLine("        ####   ####   ####");
-            Console.WriteLine("        #####  ####  #####");
-            Console.WriteLine("         ################");
-            Console.WriteLine("          ##############");
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine();
+            sb.AppendLine("             ########");
+            sb.AppendLine("            ##########");
+            sb.AppendLine();
+            sb.AppendLine("             ########");
+            sb.AppendLine("            ##########");
+            sb.AppendLine("          ##############");
+            sb.AppendLine("         #######  #######");
+            sb.AppendLine("        ######      ######");
+            sb.AppendLine("        #####        #####");
+            sb.AppendLine("        ####          ####");
+            sb.AppendLine("        ####   ####   ####");
+            sb.AppendLine("        #####  ####  #####");
+            sb.AppendLine("         ################");
+            sb.AppendLine("          ##############");
+            var log = sb.ToString();
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine(log);
+            Console.ResetColor();
+            return log;
         }
 
         #region HttpCall
@@ -1062,13 +1069,6 @@ namespace Business.AspNet
                 return address;
             }).ToArray();
 
-            //Environment = new Environment(addresses, app.ApplicationServices.GetService<IConfiguration>().GetSection("AppSettings"), new ServiceCollection()
-            //    .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
-            //    {
-            //        AllowAutoRedirect = false,
-            //        UseDefaultCredentials = true,
-            //    }).Services
-            //    .BuildServiceProvider().GetService<IHttpClientFactory>());
             Hosting.Addresses = addresses;
             Hosting.Config = app.ApplicationServices.GetService<IConfiguration>();
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();

@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http.Features;
 using Serilog;
+using Serilog.Core;
 
 namespace WebAPI
 {

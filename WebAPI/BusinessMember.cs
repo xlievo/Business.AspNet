@@ -75,6 +75,11 @@ namespace WebAPI
         {
             return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
         }
+
+        public virtual async Task<string> Test005(string a, string b)
+        {
+            return "ok";
+        }
     }
 
     public struct Test001
