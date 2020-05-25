@@ -47,7 +47,7 @@ namespace WebAPI
              "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T07:24\",99.0234,777,false]")]
         [Testing("test, important logic, do not delete!!!",
              "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T08:24\",99.0234,777,false]")]
-        public virtual async Task<dynamic> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true, Context context = null)
+        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true, Context context = null)
         {
             context?.Response.Headers.TryAdd("sss", "qqq");
 
@@ -67,7 +67,8 @@ namespace WebAPI
 
             var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
-            return this.ResultCreate(new { session, arg, files });
+            return this.ResultCreate(arg);
+            //return this.ResultCreate(new { session, arg, files });
         }
 
         [Command("abc", Group = Utils.GroupWebSocket)]
@@ -76,16 +77,73 @@ namespace WebAPI
             return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
         }
 
-        public virtual async Task<string> Test005(string a, string b)
+        public virtual async Task<MyEnum> Test005(Test001 test001)
         {
-            return "ok";
+            return MyEnum.B;
+        }
+
+        public virtual async Task<IResult<MyEnum>> Test006(Test0011 test0011)
+        {
+            return this.ResultCreate(MyEnum.B);
+        }
+
+        public virtual async Task<List<MyEnum>> Test007(List<Test001> test001)
+        {
+            return new List<MyEnum> { MyEnum.B };
+        }
+
+        public virtual async Task<IResult<List<MyEnum>>> Test008(string a, string b)
+        {
+            return this.ResultCreate(new List<MyEnum> { MyEnum.B });
+        }
+
+        public virtual async Task<List<Test0011>> Test009(string a, string b)
+        {
+            return new List<Test0011> { new Test0011 { AAA = new List<string> { "sssss" } } };
+        }
+
+        public virtual async Task<IResult<Test004X>> Test010(Test004X test)
+        {
+            return this.ResultCreate(test);
+        }
+
+        public virtual async Task<List<string>> Test011(string a, string b)
+        {
+            return new List<string> { "sssss" };
+        }
+
+        /// <summary>
+        /// Test012Test012Test012Test012
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task Test012()
+        {
+            return;
+        }
+
+        /// <summary>
+        /// Test013Test013Test013Test013
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task<string> Test013()
+        {
+            return "ssss";
         }
     }
 
+    /// <summary>
+    /// Test001Test001Test001Test001
+    /// </summary>
     public struct Test001
     {
+        /// <summary>
+        /// aaaaaaaaaa
+        /// </summary>
         public string A { get; set; }
 
+        /// <summary>
+        /// bbbbbbbbbbbbbbbbbb
+        /// </summary>
         public string B { get; set; }
     }
 
@@ -217,6 +275,9 @@ namespace WebAPI
         }
     }
 
+    /// <summary>
+    /// Test0011Test0011Test0011Test0011Test0011
+    /// </summary>
     public class Test0011
     {
         /// <summary>
@@ -233,6 +294,110 @@ namespace WebAPI
         /// AAA@@@
         /// </summary>
         public List<string> AAA { get; set; }
+    }
+
+    public struct Test004X
+    {
+        /// <summary>
+        /// Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
+        /// </summary>
+        public string BBBB { get; set; }
+
+        /// <summary>
+        /// Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+        /// </summary>
+        public string BBB { get; set; }
+
+        /// <summary>
+        /// AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+        /// </summary>
+        public List<string> AAA { get; set; }
+
+        /// <summary>
+        /// AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+        /// <h5><code>CheckNull</code></h5><h5><code>CheckUrl</code></h5>
+        /// </summary>
+        [Alias("password")]
+        [CheckNull]
+        //[@CheckEmail]
+        [CheckUrl]
+        public string A { get; set; }
+
+        /// <summary>
+        /// BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+        /// </summary>
+        public string B { get; set; }
+
+        /// <summary>
+        /// Test0010 Test0010 Test0010 Test0010
+        /// </summary>
+        public Test0010 C { get; set; }
+
+        /// <summary>
+        /// DDD
+        /// </summary>
+        public decimal D { get; set; }
+
+        public bool E { get; set; }
+
+        /// <summary>
+        /// FF
+        /// </summary>
+        public DateTime F { get; set; }
+
+        /// <summary>
+        /// MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum<br/><strong>A : 0</strong> MyEnum A<br/><strong>B : 2</strong><br/><strong>C : 4</strong> MyEnum C
+        /// </summary>
+        public MyEnum myEnum { get; set; }
+
+        public struct Test0010
+        {
+            /// <summary>
+            /// C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+            /// <h5><code>Test</code></h5>
+            /// </summary>
+            public string C1 { get; set; }
+
+            /// <summary>
+            /// C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+            /// </summary>
+            public string C2 { get; set; }
+
+            /// <summary>
+            /// C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+            /// </summary>
+            public List<Test0011> C3 { get; set; }
+
+            public struct Test0011
+            {
+                /// <summary>
+                /// C31C31C31C31C31C31
+                /// </summary>
+                public string C31 { get; set; }
+
+                /// <summary>
+                /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+                /// </summary>
+                public string C32 { get; set; }
+
+                /// <summary>
+                /// AAA@@@
+                /// </summary>
+                public List<string> AAA { get; set; }
+            }
+        }
+
+        /// <summary>
+        /// MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum<br/><strong>A : 0</strong> MyEnum A<br/><strong>B : 2</strong><br/><strong>C : 4</strong> MyEnum C
+        /// </summary>
+        public enum MyEnum
+        {
+            A = 0,
+
+            B = 2,
+
+            C = 4,
+        }
     }
 }
 

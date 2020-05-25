@@ -36,8 +36,10 @@ namespace WebAPI
             this.State = state;
             this.Message = message;
             this.HasData = checkData ? !Equals(null, data) : false;
-            this.Callback = default;
 
+            this.Callback = null;
+            this.Business = null;
+            this.Command = null;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
         }
@@ -56,6 +58,8 @@ namespace WebAPI
             this.HasData = !Equals(null, data);
 
             this.Callback = null;
+            this.Business = null;
+            this.Command = null;
             this.DataType = null;
             this.GenericDefinition = null;
             this.HasDataResult = false;
@@ -64,13 +68,13 @@ namespace WebAPI
         /// <summary>
         /// The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("SS")]
+        [System.Text.Json.Serialization.JsonPropertyName("S")]
         public int State { get; set; }
 
         /// <summary>
         /// Success can be null
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("MM")]
+        [System.Text.Json.Serialization.JsonPropertyName("M")]
         public string Message { get; set; }
 
         /// <summary>
@@ -81,21 +85,33 @@ namespace WebAPI
         /// <summary>
         /// Specific Byte/Json data objects
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("DD")]
+        [System.Text.Json.Serialization.JsonPropertyName("D")]
         public Type Data { get; set; }
 
         /// <summary>
         /// Whether there is value
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("HH")]
+        [System.Text.Json.Serialization.JsonPropertyName("H")]
         public bool HasData { get; set; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
-        [System.Text.Json.Serialization.JsonPropertyName("B")]
+        //[System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
+
+        /// <summary>
+        /// Business to call
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string Business { get; set; }
+
+        /// <summary>
+        /// Commands to call
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string Command { get; set; }
 
         /// <summary>
         /// Data type
@@ -244,7 +260,7 @@ namespace WebAPI
             return t.ToString();
         }
 
-        public sealed override ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
+        public sealed override ValueTask<IResult<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
 
         public sealed override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
         {

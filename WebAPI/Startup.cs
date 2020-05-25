@@ -61,21 +61,24 @@ namespace WebAPI
                 rollOnFileSizeLimit: true)
                 .CreateLogger();
 
-            app.CreateBusiness(log =>
+            app.CreateBusiness(logOptions =>
                 {
-                    //all non business information
-                    switch (log.Type)
+                    logOptions.Log = log =>
                     {
-                        case LogData.LogType.Error:
-                            Log.Error(log.Message);
-                            break;
-                        case LogData.LogType.Exception:
-                            Log.Fatal(log.Message);
-                            break;
-                        case LogData.LogType.Info:
-                            Log.Information(log.Message);
-                            break;
-                    }
+                        //all non business information
+                        switch (log.Type)
+                        {
+                            case LogOptions.LogType.Error:
+                                Log.Error(log.Message);
+                                break;
+                            case LogOptions.LogType.Exception:
+                                Log.Fatal(log.Message);
+                                break;
+                            case LogOptions.LogType.Info:
+                                Log.Information(log.Message);
+                                break;
+                        }
+                    };
                 })
                 .UseDoc(options =>
                 {
@@ -85,7 +88,7 @@ namespace WebAPI
                     options.Testing = true;
                 })
                 .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
-                .UseWebSockets(options =>
+                .UseWebSocket(options =>
                 {
                     options.KeepAliveInterval = TimeSpan.FromSeconds(120);
                     options.ReceiveBufferSize = 1024 * 4;
@@ -109,6 +112,12 @@ namespace WebAPI
                         server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
                         server.KestrelOptions.Limits.MaxRequestBodySize = null;
                     }
+                })
+                .UseRouteCTD(options =>
+                {
+                    options.C = "cc";
+                    options.T = "tt";
+                    options.D = "dd";
                 })
                 .Build();
         }

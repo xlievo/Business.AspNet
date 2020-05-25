@@ -42,6 +42,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.Extensions.Logging;
+using static Business.AspNet.LogOptions;
 
 namespace Business.AspNet
 {
@@ -70,8 +71,10 @@ namespace Business.AspNet
             this.State = state;
             this.Message = message;
             this.HasData = checkData ? !Equals(null, data) : false;
-            this.Callback = default;
 
+            this.Callback = null;
+            this.Business = null;
+            this.Command = null;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
         }
@@ -90,6 +93,8 @@ namespace Business.AspNet
             this.HasData = !Equals(null, data);
 
             this.Callback = null;
+            this.Business = null;
+            this.Command = null;
             this.DataType = null;
             this.GenericDefinition = null;
             this.HasDataResult = false;
@@ -128,8 +133,20 @@ namespace Business.AspNet
         /// Gets the token of this result, used for callback
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
-        [System.Text.Json.Serialization.JsonPropertyName("B")]
+        //[System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
+
+        /// <summary>
+        /// Business to call
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string Business { get; set; }
+
+        /// <summary>
+        /// Commands to call
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        public string Command { get; set; }
 
         /// <summary>
         /// Data type
@@ -179,10 +196,10 @@ namespace Business.AspNet
 
     readonly struct WebSocketReceive
     {
-        public WebSocketReceive(IToken token, IReceiveData data, IBusiness business, WebSocket webSocket)
+        public WebSocketReceive(IToken token, IResult<byte[]> result, IBusiness business, WebSocket webSocket)
         {
             Token = token;
-            Data = data;
+            Result = result;
             Business = business;
             //Context = context;
             WebSocket = webSocket;
@@ -190,7 +207,7 @@ namespace Business.AspNet
 
         public IToken Token { get; }
 
-        public IReceiveData Data { get; }
+        public IResult<byte[]> Result { get; }
 
         public IBusiness Business { get; }
 
@@ -199,6 +216,7 @@ namespace Business.AspNet
         public WebSocket WebSocket { get; }
     }
 
+    /*
     /// <summary>
     /// Business package
     /// </summary>
@@ -257,6 +275,7 @@ namespace Business.AspNet
         /// </summary>
         public string b { get; set; }
     }
+    */
 
     /// <summary>
     /// Deserialization of binary format
@@ -422,17 +441,26 @@ namespace Business.AspNet
         public string Index { get; set; }
     }
 
-    public readonly struct LogData
+    public class LogOptions
     {
-        public LogData(LogType type, string message)
+        public bool Logo { get; set; }
+
+        public bool StartupInfo { get; set; }
+
+        public Action<LogData> Log { get; set; }
+
+        public readonly struct LogData
         {
-            Type = type;
-            Message = message;
+            public LogData(LogType type, string message)
+            {
+                Type = type;
+                Message = message;
+            }
+
+            public LogType Type { get; }
+
+            public string Message { get; }
         }
-
-        public LogType Type { get; }
-
-        public string Message { get; }
 
         public enum LogType
         {
@@ -479,18 +507,43 @@ namespace Business.AspNet
 
         internal Action<LogData> log = c => Help.WriteLocal(c.Message, Utils.Hosting.LocalLogPath, console: true);
 
-        internal bool useWebSockets;
+        internal bool useWebSocket;
 
         /// <summary>
         /// Configuration options for the WebSocketMiddleware
         /// </summary>
-        internal WebSocketOptions webSocketOptions = new WebSocketOptions
+        internal readonly WebSocketOptions webSocketOptions = new WebSocketOptions
         {
             KeepAliveInterval = TimeSpan.FromSeconds(120),
             ReceiveBufferSize = 4 * 1024
         };
 
         internal Action<Server> useServer;
+
+        internal LogOptions logOptions;
+
+        internal readonly RouteCTD routeCTD = new RouteCTD();
+    }
+
+    /// <summary>
+    /// Custom route "c", "t", "d" parameter name.
+    /// </summary>
+    public class RouteCTD
+    {
+        /// <summary>
+        /// Default value "c". command
+        /// </summary>
+        public string C { get; set; } = "c";
+
+        /// <summary>
+        /// Default value "t". token
+        /// </summary>
+        public string T { get; set; } = "t";
+
+        /// <summary>
+        /// Default value "d". data
+        /// </summary>
+        public string D { get; set; } = "d";
     }
 
     /// <summary>
@@ -595,7 +648,7 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
+        ValueTask<IResult<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -648,7 +701,7 @@ namespace Business.AspNet
         /// <param name="buffer"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<IReceiveData> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => MessagePack.MessagePackSerializer.Deserialize<ReceiveData>(buffer);
+        public virtual async ValueTask<IResult<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => (IResult<byte[]>)MessagePack.MessagePackSerializer.Deserialize(this.Configer.ResultTypeDefinition.MakeGenericType(typeof(byte[])), buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -663,14 +716,6 @@ namespace Business.AspNet
     /// <summary>
     /// A class for an MVC controller with view support.
     /// </summary>
-    //[Use]
-    ////Internal object do not write logs
-    //[Logger(canWrite: false)]
-    //[Ignore(IgnoreMode.Arg)]
-    //[RequestSizeLimit(long.MaxValue)]
-    //int.MaxValue bug https://github.com/aspnet/AspNetCore/issues/13719
-    //[RequestFormLimits(KeyLengthLimit = 1_009_100_000, ValueCountLimit = 1_009_100_000, ValueLengthLimit = 1_009_100_000, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
-    //[RequestFormLimits(KeyLengthLimit = int.MaxValue, ValueCountLimit = int.MaxValue, ValueLengthLimit = int.MaxValue, MultipartHeadersLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue, MultipartBoundaryLengthLimit = int.MaxValue)]
     public class Context : Controller
     {
         /// <summary>
@@ -688,7 +733,7 @@ namespace Business.AspNet
             var path = this.Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business))
             {
-                Utils.Hosting.log?.Invoke(new LogData(LogData.LogType.Error, $"404 {this.Request.Path.Value}"));
+                Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
                 return this.NotFound();
             }
 
@@ -698,6 +743,7 @@ namespace Business.AspNet
             string value = null;
             //g = route.Group;
             IDictionary<string, string> parameters = null;
+            var ctd = Utils.Hosting.routeCTD;
 
             switch (this.Request.Method)
             {
@@ -707,9 +753,9 @@ namespace Business.AspNet
                         var v2 = (string)v.Value;
                         return !string.IsNullOrEmpty(v2) ? v2 : null;
                     });
-                    c = route.Command ?? (parameters.TryGetValue("c", out value) ? value : null);
-                    t = parameters.TryGetValue("t", out value) ? value : null;
-                    d = parameters.TryGetValue("d", out value) ? value : null;
+                    c = route.Command ?? (parameters.TryGetValue(ctd.C, out value) ? value : null);
+                    t = parameters.TryGetValue(ctd.T, out value) ? value : null;
+                    d = parameters.TryGetValue(ctd.D, out value) ? value : null;
                     break;
                 case "POST":
                     {
@@ -720,9 +766,9 @@ namespace Business.AspNet
                                 var v2 = (string)v.Value;
                                 return !string.IsNullOrEmpty(v2) ? v2 : null;
                             });
-                            c = route.Command ?? (parameters.TryGetValue("c", out value) ? value : null);
-                            t = parameters.TryGetValue("t", out value) ? value : null;
-                            d = parameters.TryGetValue("d", out value) ? value : null;
+                            c = route.Command ?? (parameters.TryGetValue(ctd.C, out value) ? value : null);
+                            t = parameters.TryGetValue(ctd.T, out value) ? value : null;
+                            d = parameters.TryGetValue(ctd.D, out value) ? value : null;
                         }
                         else
                         {
@@ -733,7 +779,7 @@ namespace Business.AspNet
                     break;
                 default:
                     {
-                        Utils.Hosting.log?.Invoke(new LogData(LogData.LogType.Error, $"404 {this.Request.Path.Value}"));
+                        Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
                         return this.NotFound();
                     }
             }
@@ -748,7 +794,7 @@ namespace Business.AspNet
                 if (default(DocUI.BenchmarkArg).Equals(arg))
                 {
                     var argNull = new ArgumentNullException(nameof(arg));
-                    Utils.Hosting.log?.Invoke(new LogData(LogData.LogType.Error, $"benchmark {argNull.Message}"));
+                    Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"benchmark {argNull.Message}"));
                     return argNull.Message;
                 }
                 //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
@@ -773,7 +819,7 @@ namespace Business.AspNet
             if (null == cmd)
             {
                 var errorCmd = Help.ErrorCmd(business, c);
-                Utils.Hosting.log?.Invoke(new LogData(LogData.LogType.Error, $"ErrorCmd {errorCmd}"));
+                Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"ErrorCmd {errorCmd}"));
                 return errorCmd;
             }
 
@@ -802,6 +848,8 @@ namespace Business.AspNet
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
                         new UseEntry(token));
+
+            //var dd = result.ToBytes();
 
             return result;
         }
@@ -843,7 +891,7 @@ namespace Business.AspNet
         /// <summary>
         /// Host environment instance
         /// </summary>
-        public static Hosting Hosting = new Hosting
+        public static readonly Hosting Hosting = new Hosting
         {
             HttpClientFactory = new ServiceCollection()
                 .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
@@ -861,7 +909,6 @@ namespace Business.AspNet
 
         static Utils()
         {
-            Logo();
             //Hosting.Exception = ex => ex?.ExceptionWrite(true, true, Hosting.LocalLogPath);
 
             //Console.WriteLine($"Date: {DateTimeOffset.Now}");
@@ -920,23 +967,25 @@ namespace Business.AspNet
         /// <param name="t"></param>
         /// <param name="d"></param>
         /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async ValueTask<string> HttpCallctd(this HttpClient httpClient, string c, string t, string d, string uri = null) => await HttpCall(httpClient, uri, new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d));
+        public static async ValueTask<string> HttpCallctd(this HttpClient httpClient, string c, string t, string d, string uri = null, CancellationToken cancellationToken = default) => await HttpCall(httpClient, new KeyValuePair<string, string>[] { new KeyValuePair<string, string>("c", c), new KeyValuePair<string, string>("t", t), new KeyValuePair<string, string>("d", d) }, uri, cancellationToken);
         /// <summary>
         /// Called in POST "application/x-www-form-urlencoded" format
         /// </summary>
         /// <param name="httpClient"></param>
-        /// <param name="uri"></param>
         /// <param name="keyValues"></param>
+        /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async ValueTask<string> HttpCall(this HttpClient httpClient, string uri = null, params KeyValuePair<string, string>[] keyValues)
+        public static async ValueTask<string> HttpCall(this HttpClient httpClient, KeyValuePair<string, string>[] keyValues, string uri = null, CancellationToken cancellationToken = default)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == keyValues) { throw new ArgumentNullException(nameof(keyValues)); }
 
             using (var content = new FormUrlEncodedContent(keyValues))
             {
-                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri));
+                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri), cancellationToken: cancellationToken);
             }
         }
         /// <summary>
@@ -946,15 +995,16 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="mediaType"></param>
         /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async ValueTask<string> HttpCall(this HttpClient httpClient, string data, string mediaType = "application/json", string uri = null)
+        public static async ValueTask<string> HttpCall(this HttpClient httpClient, string data, string mediaType = "application/json", string uri = null, CancellationToken cancellationToken = default)
         {
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == data) { throw new ArgumentNullException(nameof(data)); }
 
             using (var content = new StringContent(data, System.Text.Encoding.UTF8, mediaType))
             {
-                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri));
+                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri), cancellationToken: cancellationToken);
             }
         }
         /// <summary>
@@ -964,8 +1014,9 @@ namespace Business.AspNet
         /// <param name="content"></param>
         /// <param name="method"></param>
         /// <param name="uri"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static async ValueTask<string> HttpCall(this HttpClient httpClient, HttpContent content, HttpMethod method = null, Uri uri = null)
+        public static async ValueTask<string> HttpCall(this HttpClient httpClient, HttpContent content, HttpMethod method = null, Uri uri = null, CancellationToken cancellationToken = default)
         {
             using (var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content })
             {
@@ -986,7 +1037,7 @@ namespace Business.AspNet
                 }
                 */
 
-                using (var response = await httpClient.SendAsync(request))
+                using (var response = await httpClient.SendAsync(request, cancellationToken))
                 {
                     response.EnsureSuccessStatusCode();
                     return await response.Content.ReadAsStringAsync();
@@ -1030,22 +1081,44 @@ namespace Business.AspNet
         /// <returns></returns>
         public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
 
+        static void StartupInfo(string message)
+        {
+            if (null == Hosting.log)
+            {
+                Console.WriteLine(message);
+            }
+            else
+            {
+                Hosting.log.Invoke(new LogData(LogType.Info, message));
+            }
+        }
+
         /// <summary>
         /// Configure Business.Core in the startup class configure method
         /// <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>
         /// </summary>
         /// <param name="app">provides the mechanisms to configure an application's request pipeline.</param>
-        /// <param name="log">Output all non business exceptions or errors in the application</param>
+        /// <param name="logOptions">Output all non business exceptions or errors in the application</param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, Action<LogData> log = null)
+        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, Action<LogOptions> logOptions = null)
         {
-            Hosting.log = log;
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.log?.Invoke(new LogData(LogData.LogType.Exception, Convert.ToString((e.ExceptionObject as Exception)?.ExceptionWrite())));
+            Hosting.logOptions = new LogOptions { StartupInfo = true, Logo = true };
+            logOptions?.Invoke(Hosting.logOptions);
+            Hosting.log = Hosting.logOptions.Log;// Log;
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString((e.ExceptionObject as Exception)?.ExceptionWrite())));
 
-            Hosting.log?.Invoke(new LogData(LogData.LogType.Info, $"Date: {DateTimeOffset.Now}"));
-            Hosting.log?.Invoke(new LogData(LogData.LogType.Info, System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription));
-            Hosting.log?.Invoke(new LogData(LogData.LogType.Info, $"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}"));
-            Hosting.log?.Invoke(new LogData(LogData.LogType.Info, $"LocalLogPath: {Hosting.LocalLogPath}"));
+            if (Hosting.logOptions.Logo)
+            {
+                Logo();
+            }
+
+            if (Hosting.logOptions.StartupInfo)
+            {
+                StartupInfo($"Date: {DateTimeOffset.Now}");
+                StartupInfo(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
+                StartupInfo($"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
+                StartupInfo($"LocalLogPath: {Hosting.LocalLogPath}");
+            }
 
             //AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
             //Console.WriteLine("System.Net.Http.UseSocketsHttpHandler: false");
@@ -1074,7 +1147,10 @@ namespace Business.AspNet
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
 
             //Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");
-            Hosting.log?.Invoke(new LogData(LogData.LogType.Info, $"Addresses: {string.Join(" ", Hosting.Addresses)}"));
+            if (Hosting.logOptions.StartupInfo)
+            {
+                StartupInfo($"Addresses: {string.Join(" ", Hosting.Addresses)}");
+            }
 
             bootstrap = Bootstrap.CreateAll<IBusiness>();
 
@@ -1092,7 +1168,10 @@ namespace Business.AspNet
 
                     var documentDir = app.UseStaticDir(strap.Config.UseDoc.OutDir);
                     //Console.WriteLine($"Document Directory: {documentDir}");
-                    Hosting.log?.Invoke(new LogData(LogData.LogType.Info, $"Document Directory: {documentDir}"));
+                    if (Hosting.logOptions.StartupInfo)
+                    {
+                        StartupInfo($"Document Directory: {documentDir}");
+                    }
 
                     strap.Config.UseDoc.OutDir = documentDir;
 
@@ -1139,9 +1218,9 @@ namespace Business.AspNet
                     foreach (var item in Configer.BusinessList)
                     {
                         routes.MapRoute(
-                            name: item.Key,
-                            template: $"{item.Key}/{{*path}}",
-                            defaults: new { controller = "Context", action = "Call" });
+                        name: item.Key,
+                        template: $"{item.Key}/{{*path}}",
+                        defaults: new { controller = "Context", action = "Call" });
                     }
                 });
 
@@ -1158,7 +1237,7 @@ namespace Business.AspNet
 
                 #region AcceptWebSocket
 
-                if (Hosting.useWebSockets)
+                if (Hosting.useWebSocket)
                 {
                     app.UseWebSockets(Hosting.webSocketOptions);
 
@@ -1210,7 +1289,6 @@ namespace Business.AspNet
 
             // Set up custom content types -associating file extension to MIME type
             var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
-            //provider.Mappings[".yaml"] = "text/yaml";
             provider.Mappings[".doc"] = "application/json";
             var options = new FileServerOptions();
             options.StaticFileOptions.FileProvider = new PhysicalFileProvider(dir);
@@ -1219,13 +1297,9 @@ namespace Business.AspNet
             {
                 if (c.File.Exists && string.Equals(".doc", System.IO.Path.GetExtension(c.File.Name)))
                 {
-                    //c.Context.Response.Headers[HeaderNames.CacheControl] = "public,max-age=600"; //600
                     c.Context.Response.Headers[HeaderNames.CacheControl] = "public, no-cache, no-store";
                     c.Context.Response.Headers[HeaderNames.Pragma] = "no-cache";
                     c.Context.Response.Headers[HeaderNames.Expires] = "-1";
-                    //c.Context.Response.Headers[HeaderNames.CacheControl] = Configuration["StaticFiles:Headers:Cache-Control"];
-                    //c.Context.Response.Headers[HeaderNames.Pragma] = Configuration["StaticFiles:Headers:Pragma"];
-                    //c.Context.Response.Headers[HeaderNames.Expires] = Configuration["StaticFiles:Headers:Expires"];
                 }
 
                 c.Context.Response.Headers[HeaderNames.AccessControlAllowOrigin] = "*";
@@ -1242,11 +1316,10 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="bootstrap"></param>
         /// <param name="options"></param>
-        /// <param name="exception"></param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> UseWebSockets(this BootstrapAll<IBusiness> bootstrap, Action<WebSocketOptions> options = null)
+        public static BootstrapAll<IBusiness> UseWebSocket(this BootstrapAll<IBusiness> bootstrap, Action<WebSocketOptions> options = null)
         {
-            Hosting.useWebSockets = true;
+            Hosting.useWebSocket = true;
 
             options?.Invoke(Hosting.webSocketOptions);
 
@@ -1384,6 +1457,18 @@ namespace Business.AspNet
             return bootstrap;
         }
 
+        /// <summary>
+        /// Custom route "c", "t", "d" parameter name.
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseRouteCTD(this BootstrapAll<IBusiness> bootstrap, Action<RouteCTD> options = null)
+        {
+            options?.Invoke(Hosting.routeCTD);
+            return bootstrap;
+        }
+
         #region WebSocket
 
         /// <summary>
@@ -1402,9 +1487,9 @@ namespace Business.AspNet
         {
             var result = await receive.Business.Command.AsyncCall(
             //the cmd of this request.
-            receive.Data.c,
+            receive.Result.Command,
             //the data of this request, allow null.
-            new object[] { receive.Data.d },
+            new object[] { receive.Result.Data },
             //the group of this request.
             GroupWebSocket, //fixed grouping
                             //the incoming use object
@@ -1418,7 +1503,7 @@ namespace Business.AspNet
                 if (typeof(IResult).IsAssignableFrom(result.GetType()))
                 {
                     var result2 = result as IResult;
-                    result2.Callback = receive.Token.Callback;
+                    result2.Callback = receive.Result.Callback;
 
                     var data = result2.ResultCreateToDataBytes().ToBytes();
 
@@ -1478,27 +1563,27 @@ namespace Business.AspNet
                     {
                         var receiveData = await acceptBusiness.WebSocketReceive(context, webSocket, buffer);
 
-                        if (string.IsNullOrWhiteSpace(receiveData.a) || !bootstrap.BusinessList.TryGetValue(receiveData.a, out IBusiness business))
+                        if (string.IsNullOrWhiteSpace(receiveData.Business) || !bootstrap.BusinessList.TryGetValue(receiveData.Business, out IBusiness business))
                         {
-                            await webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.a).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
+                            await webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.Business).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                         }
                         else
                         {
                             //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
-                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => Hosting.log?.Invoke(new LogData(LogData.LogType.Exception, Convert.ToString(c2.Exception)))), new WebSocketReceive(await business.GetToken(context, new Token //token
+                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(c2.Exception)))), new WebSocketReceive(await business.GetToken(context, new Token //token
                             {
                                 Origin = Token.OriginValue.WebSocket,
                                 Key = token,
                                 //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
                                 Remote = remote,
-                                Callback = receiveData.b ?? receiveData.c,
+                                Callback = receiveData.Callback ?? receiveData.Command,
                                 Path = context.Request.Path.Value,
                             }), receiveData, business, webSocket));
                         }
                     }
                     catch (Exception ex)
                     {
-                        Hosting.log?.Invoke(new LogData(LogData.LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                        Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
                         var result = Hosting.ResultType.ResultCreate(0, Convert.ToString(ex));
                         await webSocket.SendAsync(new ArraySegment<byte>(result.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
                     }
@@ -1517,7 +1602,7 @@ namespace Business.AspNet
             }
             catch (Exception ex)
             {
-                Hosting.log?.Invoke(new LogData(LogData.LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
                 //var result = ResultType.ResultCreate(0, Convert.ToString(ex));
                 //await SocketSendAsync(result.ToBytes(), id);
                 if (webSocket.State == WebSocketState.Open)
