@@ -17,7 +17,7 @@ namespace WebAPI
     /// result
     /// </summary>
     /// <typeparam name="Type"></typeparam>
-    public struct MyResultObject<Type> : IResult<Type>
+    public struct MyResultObject<Type> : IResultSocket<Type>
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -260,7 +260,7 @@ namespace WebAPI
             return t.ToString();
         }
 
-        public sealed override ValueTask<IResult<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
+        public sealed override ValueTask<IResultSocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
 
         public sealed override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
         {

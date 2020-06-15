@@ -23,7 +23,6 @@ using Business.Core.Utils;
 using Business.Core.Document;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -41,7 +40,6 @@ using System.Net.WebSockets;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.Extensions.Logging;
 using static Business.AspNet.LogOptions;
 
 namespace Business.AspNet
@@ -49,10 +47,27 @@ namespace Business.AspNet
     #region Socket Support
 
     /// <summary>
+    /// IResultSocket
+    /// </summary>
+    /// <typeparam name="Type"></typeparam>
+    public interface IResultSocket<Type> : IResult<Type>
+    {
+        /// <summary>
+        /// Business to call
+        /// </summary>
+        string Business { get; set; }
+
+        /// <summary>
+        /// Command to call
+        /// </summary>
+        string Command { get; set; }
+    }
+
+    /// <summary>
     /// result
     /// </summary>
     /// <typeparam name="Type"></typeparam>
-    public struct ResultObject<Type> : IResult<Type>
+    public struct ResultObject<Type> : IResultSocket<Type>
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -70,7 +85,7 @@ namespace Business.AspNet
             this.Data = data;
             this.State = state;
             this.Message = message;
-            this.HasData = checkData ? !Equals(null, data) : false;
+            this.HasData = checkData && !Equals(null, data);
 
             this.Callback = null;
             this.Business = null;
@@ -196,7 +211,7 @@ namespace Business.AspNet
 
     readonly struct WebSocketReceive
     {
-        public WebSocketReceive(IToken token, IResult<byte[]> result, IBusiness business, WebSocket webSocket)
+        public WebSocketReceive(IToken token, IResultSocket<byte[]> result, IBusiness business, WebSocket webSocket)
         {
             Token = token;
             Result = result;
@@ -207,7 +222,7 @@ namespace Business.AspNet
 
         public IToken Token { get; }
 
-        public IResult<byte[]> Result { get; }
+        public IResultSocket<byte[]> Result { get; }
 
         public IBusiness Business { get; }
 
@@ -375,7 +390,7 @@ namespace Business.AspNet
     public class HttpFile : Dictionary<string, IFormFile>
     {
         /// <summary>
-        /// GetFile
+        /// GetFileAsync
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -402,11 +417,17 @@ namespace Business.AspNet
         /// <param name="message"></param>
         public HttpFileAttribute(int state = 830, string message = null) : base(state, message) { }
 
+        /// <summary>
+        /// Proces
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public override async ValueTask<IResult> Proces<Type>(dynamic value)
         {
             Context context = value;
 
-            if (!context.Request.HasFormContentType || Equals(null, context))
+            if (Equals(null, context) || !context.Request.HasFormContentType)
             {
                 return this.ResultCreate<Type>(default);
             }
@@ -441,31 +462,69 @@ namespace Business.AspNet
         public string Index { get; set; }
     }
 
+    /// <summary>
+    /// LogOptions
+    /// </summary>
     public class LogOptions
     {
+        /// <summary>
+        /// Logo
+        /// </summary>
         public bool Logo { get; set; }
 
+        /// <summary>
+        /// StartupInfo
+        /// </summary>
         public bool StartupInfo { get; set; }
 
+        /// <summary>
+        /// Log
+        /// </summary>
         public Action<LogData> Log { get; set; }
 
+        /// <summary>
+        /// LogData
+        /// </summary>
         public readonly struct LogData
         {
+            /// <summary>
+            /// LogData
+            /// </summary>
+            /// <param name="type"></param>
+            /// <param name="message"></param>
             public LogData(LogType type, string message)
             {
                 Type = type;
                 Message = message;
             }
 
+            /// <summary>
+            /// Type
+            /// </summary>
             public LogType Type { get; }
 
+            /// <summary>
+            /// Message
+            /// </summary>
             public string Message { get; }
         }
 
+        /// <summary>
+        /// LogType
+        /// </summary>
         public enum LogType
         {
+            /// <summary>
+            /// Error
+            /// </summary>
             Error = -1,
+            /// <summary>
+            /// Exception
+            /// </summary>
             Exception = 0,
+            /// <summary>
+            /// Info
+            /// </summary>
             Info = 1,
         }
     }
@@ -648,7 +707,7 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        ValueTask<IResult<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
+        ValueTask<IResultSocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -701,7 +760,7 @@ namespace Business.AspNet
         /// <param name="buffer"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<IResult<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => (IResult<byte[]>)MessagePack.MessagePackSerializer.Deserialize(this.Configer.ResultTypeDefinition.MakeGenericType(typeof(byte[])), buffer);
+        public virtual async ValueTask<IResultSocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => (IResultSocket<byte[]>)MessagePack.MessagePackSerializer.Deserialize(this.Configer.ResultTypeDefinition.MakeGenericType(typeof(byte[])), buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -736,7 +795,7 @@ namespace Business.AspNet
                 Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
                 return this.NotFound();
             }
-
+            
             string c = null;
             string t = null;
             string d = null;
@@ -843,7 +902,7 @@ namespace Business.AspNet
                     // Framework routing mode
                     await cmd.AsyncCall(
                         //the data of this request, allow null.
-                        cmd.HasArgSingle ? new object[] { d } : d.TryJsonDeserializeStringArray(),
+                        cmd.HasArgSingle ? new object[] { d } : cmd.GetParametersObjects(d.TryJsonDeserialize(cmd.ParametersType, Configer.JsonOptions)),
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
@@ -1194,7 +1253,7 @@ namespace Business.AspNet
                     //}
 
                     //writ url to page
-                    DocUI.Write(documentDir);
+                    DocUI.Write(documentDir, docFileName: Configer.documentFileName);
                 }
             };
 
@@ -1288,14 +1347,15 @@ namespace Business.AspNet
             }
 
             // Set up custom content types -associating file extension to MIME type
-            var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
-            provider.Mappings[".doc"] = "application/json";
+            //var provider = new Microsoft.AspNetCore.StaticFiles.FileExtensionContentTypeProvider();
+            //provider.Mappings[".doc"] = "application/json";
             var options = new FileServerOptions();
             options.StaticFileOptions.FileProvider = new PhysicalFileProvider(dir);
-            options.StaticFileOptions.ContentTypeProvider = provider;
+            //options.StaticFileOptions.ContentTypeProvider = provider;
             options.StaticFileOptions.OnPrepareResponse = c =>
             {
-                if (c.File.Exists && string.Equals(".doc", System.IO.Path.GetExtension(c.File.Name)))
+                //if (c.File.Exists && string.Equals(".doc", System.IO.Path.GetExtension(c.File.Name)))
+                if (c.File.Exists && Configer.documentFileName.Equals(c.File.Name))
                 {
                     c.Context.Response.Headers[HeaderNames.CacheControl] = "public, no-cache, no-store";
                     c.Context.Response.Headers[HeaderNames.Pragma] = "no-cache";
@@ -1483,17 +1543,45 @@ namespace Business.AspNet
 
         //static readonly System.Collections.Concurrent.BlockingCollection<WebSocketReceive> WebSocketQueue = new System.Collections.Concurrent.BlockingCollection<WebSocketReceive>();
 
-        static async ValueTask WebSocketCall(WebSocketReceive receive)
+        static async Task WebSocketCall(WebSocketReceive receive)
         {
-            var result = await receive.Business.Command.AsyncCall(
-            //the cmd of this request.
-            receive.Result.Command,
+            var cmd = receive.Business.Command.GetCommand(receive.Result.Command, GroupWebSocket);
+
+            object[] parameters;
+
+            if (!cmd.HasArgSingle)
+            {
+                var parametersObject = MessagePack.MessagePackSerializer.Deserialize(cmd.ParametersType, receive.Result.Data);
+
+                parameters = cmd.GetParametersObjects(parametersObject);
+
+                //parameters = MessagePack.MessagePackSerializer.Deserialize<object[]>(receive.Result.Data);
+
+                //var i = 0;
+                //foreach (var arg in cmd.Meta.Args)
+                //{
+                //    if (arg.HasToken || arg.UseType) { continue; }
+                //    if (!arg.HasDefinition) { i++; continue; }
+
+                //    if (parameters.Length > i)
+                //    {
+                //        parameters[i] = MessagePack.MessagePackSerializer.Serialize(parameters[i]);
+                //    }
+
+                //    i++;
+                //}
+            }
+            else
+            {
+                parameters = new object[] { receive.Result.Data };
+            }
+
+            var result = await cmd.AsyncCall(
             //the data of this request, allow null.
-            new object[] { receive.Result.Data },
-            //the group of this request.
-            GroupWebSocket, //fixed grouping
-                            //the incoming use object
-                            //new UseEntry(receive.HttpContext, "context"), //context
+            //new object[] { receive.Result.Data },
+            parameters,
+            //the incoming use object
+            //new UseEntry(receive.HttpContext, "context"), //context
             new UseEntry(receive.WebSocket), //webSocket
             new UseEntry(receive.Token));
 
@@ -1570,7 +1658,14 @@ namespace Business.AspNet
                         else
                         {
                             //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
-                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).AsTask().ContinueWith(c2 => Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(c2.Exception)))), new WebSocketReceive(await business.GetToken(context, new Token //token
+                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).ContinueWith(c2 =>
+                            {
+                                if (null != c2.Exception)
+                                {
+                                    Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(c2.Exception)));
+                                }
+                            })
+                            , new WebSocketReceive(await business.GetToken(context, new Token //token
                             {
                                 Origin = Token.OriginValue.WebSocket,
                                 Key = token,

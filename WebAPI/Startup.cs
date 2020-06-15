@@ -115,9 +115,9 @@ namespace WebAPI
                 })
                 .UseRouteCTD(options =>
                 {
-                    options.C = "cc";
-                    options.T = "tt";
-                    options.D = "dd";
+                    options.C = "c";
+                    options.T = "t";
+                    options.D = "d";
                 })
                 .Build();
         }

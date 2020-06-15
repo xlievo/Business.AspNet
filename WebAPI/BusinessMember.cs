@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace WebAPI
@@ -15,6 +16,113 @@ namespace WebAPI
     [Info("API/v2")]
     public class BusinessMember : BusinessBase
     {
+        public class Test001_Arg
+        {
+            public class Test004
+            {
+                /// <summary>
+                /// Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
+                /// </summary>
+                public string BBBB { get; set; }
+
+                /// <summary>
+                /// Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+                /// </summary>
+                public string BBB { get; set; }
+
+                /// <summary>
+                /// AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+                /// </summary>
+                public List<string> AAA { get; set; }
+
+                /// <summary>
+                /// AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+                /// </summary>
+                public string A { get; set; }
+
+                /// <summary>
+                /// BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+                /// </summary>
+                public string B { get; set; }
+
+                /// <summary>
+                /// Test0010 Test0010 Test0010 Test0010
+                /// </summary>
+                public Test0010 C { get; set; }
+
+                /// <summary>
+                /// DDD
+                /// </summary>
+                public decimal D { get; set; }
+
+                public bool E { get; set; }
+
+                /// <summary>
+                /// FF
+                /// </summary>
+                public DateTime F { get; set; }
+
+                /// <summary>
+                /// MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+                /// </summary>
+                public MyEnum myEnum { get; set; }
+
+                public class Test0010
+                {
+                    /// <summary>
+                    /// C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+                    /// </summary>
+                    public string C1 { get; set; }
+
+                    /// <summary>
+                    /// C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+                    /// </summary>
+                    public string C2 { get; set; }
+
+                    /// <summary>
+                    /// C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+                    /// </summary>
+                    public List<Test0011> C3 { get; set; }
+
+                    public class Test0011
+                    {
+                        /// <summary>
+                        /// C31C31C31C31C31C31
+                        /// </summary>
+                        public string C31 { get; set; }
+
+                        /// <summary>
+                        /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+                        /// </summary>
+                        public string C32 { get; set; }
+
+                        /// <summary>
+                        /// AAA@@@
+                        /// </summary>
+                        public List<string> AAA { get; set; }
+                    }
+                }
+
+                /// <summary>
+                /// MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+                /// </summary>
+                public enum MyEnum
+                {
+                    /// <summary>
+                    /// MyEnum A
+                    /// </summary>
+                    A = 0,
+
+                    B = 2,
+
+                    /// <summary>
+                    /// MyEnum C
+                    /// </summary>
+                    C = 4,
+                }
+            }
+        }
+
         /// <summary>
         /// test doc Test001
         /// and Test001
@@ -33,21 +141,20 @@ namespace WebAPI
         //[Doc(Group = "Module 1", Position = 1)]
         //[Command("AAA")]
         //[Command("jjjTest001jjj", Group = Utils.GroupJson)]
-        [JsonCommand("jjjTest001jjj")]
+        //[JsonCommand("jjjTest001jjj")]
         //[Command("wwwwwwwwwwww", Group = "j")]
         //[Command(Group = "zzz")]
         [Testing("test2",
-             "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T04:24\",99.0234,777,false]",
-             "{\"AAA\":\"111\",\"BBB\":\"222\"}")]
+         "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":0},\"dateTime\":\"2019-12-02T04:24\"}")]
         [Testing("test3",
-             "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T05:24\",99.0234,777,false]")]
+        "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":2},\"dateTime\":\"2019-12-02T05:24\",\"mm\":99.0234,\"fff\":777,\"bbb\":false}")]
         [Testing("test4",
-             "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T06:24\",99.0234,777,false]")]
+        "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":4},\"dateTime\":\"2019-12-02T06:24\",\"mm\":99.0234,\"fff\":777,\"bbb\":false}")]
         [Testing("test5",
-             "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T07:24\",99.0234,777,false]")]
+        "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":2},\"dateTime\":\"2019-12-02T07:24\",\"mm\":99.0234,\"fff\":777,\"bbb\":false}")]
         [Testing("test, important logic, do not delete!!!",
-             "[{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":\"C\"},\"2019-12-02T08:24\",99.0234,777,false]")]
-        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)]int fff = 666, [Ignore(IgnoreMode.BusinessArg)]bool bbb = true, Context context = null)
+        "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":4},\"dateTime\":\"2019-12-02T08:24\",\"mm\":111.0123456,\"fff\":555,\"bbb\":true}")]
+        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
         {
             context?.Response.Headers.TryAdd("sss", "qqq");
 
@@ -67,12 +174,19 @@ namespace WebAPI
 
             var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
+            //await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
+            var data = new Business.AspNet.ResultObject<byte[]>(new byte[] { 0x05 });
+            data.Business = "BusinessBusinessBusiness";
+            data.Command = "CommandCommandCommand";
+
+            webSocket?.SendAsync(new ArraySegment<byte>(data.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
+
             return this.ResultCreate(arg);
             //return this.ResultCreate(new { session, arg, files });
         }
 
         [Command("abc", Group = Utils.GroupWebSocket)]
-        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null, [Ignore(IgnoreMode.BusinessArg)][Test2]decimal mm = 0.0234m)
+        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m)
         {
             return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
         }
@@ -388,7 +502,9 @@ namespace WebAPI
         }
 
         /// <summary>
-        /// MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum<br/><strong>A : 0</strong> MyEnum A<br/><strong>B : 2</strong><br/><strong>C : 4</strong> MyEnum C
+        /// MyEnum C
+        /// MyEnum C
+        /// MyEnum C
         /// </summary>
         public enum MyEnum
         {

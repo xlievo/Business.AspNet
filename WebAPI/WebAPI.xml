@@ -4,7 +4,97 @@
         <name>WebAPI</name>
     </assembly>
     <members>
-        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context)">
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.BBBB">
+            <summary>
+            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.BBB">
+            <summary>
+            Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.AAA">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.A">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.B">
+            <summary>
+            BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.C">
+            <summary>
+            Test0010 Test0010 Test0010 Test0010
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.D">
+            <summary>
+            DDD
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.F">
+            <summary>
+            FF
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.myEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.Test0010.C1">
+            <summary>
+            C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.Test0010.C2">
+            <summary>
+            C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.Test0010.C3">
+            <summary>
+            C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.Test0010.Test0011.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.Test0010.Test0011.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI.BusinessMember.Test001_Arg.Test004.Test0010.Test0011.AAA">
+            <summary>
+            AAA@@@
+            </summary>
+        </member>
+        <member name="T:WebAPI.BusinessMember.Test001_Arg.Test004.MyEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+            </summary>
+        </member>
+        <member name="F:WebAPI.BusinessMember.Test001_Arg.Test004.MyEnum.A">
+            <summary>
+            MyEnum A
+            </summary>
+        </member>
+        <member name="F:WebAPI.BusinessMember.Test001_Arg.Test004.MyEnum.C">
+            <summary>
+            MyEnum C
+            </summary>
+        </member>
+        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
             <summary>
             test doc Test001
             and Test001
@@ -245,7 +335,9 @@
         </member>
         <member name="T:WebAPI.Test004X.MyEnum">
             <summary>
-            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum<br/><strong>A : 0</strong> MyEnum A<br/><strong>B : 2</strong><br/><strong>C : 4</strong> MyEnum C
+            MyEnum C
+            MyEnum C
+            MyEnum C
             </summary>
         </member>
         <member name="T:WebAPI.MyResultObject`1">
