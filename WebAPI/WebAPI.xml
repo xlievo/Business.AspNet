@@ -99,7 +99,7 @@
             test doc Test001
             and Test001
             </summary>
-            <param name="token">A token sample222</param>
+            <param name="session">A token sample222</param>
             <param name="arg"></param>
             <param name="dateTime"></param>
             <param name="httpFile"></param>
@@ -110,6 +110,13 @@
             rrrrrr
             rrrrrr2
             </returns>
+        </member>
+        <member name="M:WebAPI.BusinessMember.Test010(WebAPI.Test004X)">
+            <summary>
+            Test010！
+            </summary>
+            <param name="test">Test004XTest004XTest004XTest004X</param>
+            <returns></returns>
         </member>
         <member name="M:WebAPI.BusinessMember.Test012">
             <summary>
@@ -444,6 +451,11 @@
             ProtoBuf format Data
             </summary>
             <returns></returns>
+        </member>
+        <member name="T:WebAPI.Session">
+            <summary>
+            SessionSessionSessionSessionSessionSession
+            </summary>
         </member>
         <member name="F:WebAPI.BusinessBase.LogClient">
             <summary>

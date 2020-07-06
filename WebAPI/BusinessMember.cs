@@ -127,7 +127,7 @@ namespace WebAPI
         /// test doc Test001
         /// and Test001
         /// </summary>
-        /// <param name="token">A token sample222</param>
+        /// <param name="session">A token sample222</param>
         /// <param name="arg"></param>
         /// <param name="dateTime"></param>
         /// <param name="httpFile"></param>
@@ -154,14 +154,14 @@ namespace WebAPI
         "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":2},\"dateTime\":\"2019-12-02T07:24\",\"mm\":99.0234,\"fff\":777,\"bbb\":false}")]
         [Testing("test, important logic, do not delete!!!",
         "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"ok\",\"C2\":\"😀😭\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":4},\"dateTime\":\"2019-12-02T08:24\",\"mm\":111.0123456,\"fff\":555,\"bbb\":true}")]
-        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
+        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 Arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
         {
             context?.Response.Headers.TryAdd("sss", "qqq");
 
             var ss = System.Text.Encoding.UTF8.GetBytes("a1");
             dynamic args = new System.Dynamic.ExpandoObject();
             args.token = session;
-            args.arg = arg;
+            args.arg = Arg;
             if (args.arg.B == "ex")
             {
                 throw new Exception("Method exception!");
@@ -175,13 +175,15 @@ namespace WebAPI
             var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
             //await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
-            var data = new Business.AspNet.ResultObject<byte[]>(new byte[] { 0x05 });
-            data.Business = "BusinessBusinessBusiness";
-            data.Command = "CommandCommandCommand";
+            var data = new Business.AspNet.ResultObject<byte[]>(new byte[] { 0x05 })
+            {
+                Business = "BusinessBusinessBusiness",
+                Command = "CommandCommandCommand"
+            };
 
             webSocket?.SendAsync(new ArraySegment<byte>(data.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
 
-            return this.ResultCreate(arg);
+            return this.ResultCreate(Arg);
             //return this.ResultCreate(new { session, arg, files });
         }
 
@@ -216,6 +218,11 @@ namespace WebAPI
             return new List<Test0011> { new Test0011 { AAA = new List<string> { "sssss" } } };
         }
 
+        /// <summary>
+        /// Test010！
+        /// </summary>
+        /// <param name="test">Test004XTest004XTest004XTest004X</param>
+        /// <returns></returns>
         public virtual async Task<IResult<Test004X>> Test010(Test004X test)
         {
             return this.ResultCreate(test);
@@ -242,6 +249,11 @@ namespace WebAPI
         public virtual async Task<string> Test013()
         {
             return "ssss";
+        }
+
+        public virtual async Task<List<string>> Test014(Dictionary<string, string> aaa)
+        {
+            return new List<string> { "sssss" };
         }
     }
 

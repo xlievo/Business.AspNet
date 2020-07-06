@@ -179,6 +179,9 @@ namespace WebAPI
         public Business.AspNet.Token.OriginValue Origin { get; set; }
     }
 
+    /// <summary>
+    /// SessionSessionSessionSessionSessionSession
+    /// </summary>
     [SessionCheck]
     [Use(typeof(Token))]
     public struct Session

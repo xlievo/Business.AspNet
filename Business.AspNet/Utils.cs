@@ -307,8 +307,13 @@ namespace Business.AspNet
         {
             this.CanNull = false;
             this.Description = "MessagePackArg Binary parsing";
-            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition;
+            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments) => !hasDefinition && !this.ArgMeta.Arg.HasCollection;
         }
+
+        /// <summary>
+        /// Check whether the defined value type is the default value, (top-level object commit), Default true
+        /// </summary>
+        public bool CheckValueType { get; set; } = true;
 
         /// <summary>
         /// processing method
@@ -320,6 +325,9 @@ namespace Business.AspNet
         {
             var result = CheckNull(this, value);
             if (!result.HasData) { return result; }
+
+            result = CheckDefinitionValueType(this, value, CheckValueType);
+            if (!Equals(null, result)) { return result; }
 
             try
             {
@@ -582,6 +590,18 @@ namespace Business.AspNet
         internal LogOptions logOptions;
 
         internal readonly RouteCTD routeCTD = new RouteCTD();
+
+        internal Func<Type, string, dynamic, object> multipleParameterDeserialize = (parametersType, group, data) =>
+        {
+            switch (group)
+            {
+                case Utils.GroupJson:
+                    return Help.TryJsonDeserialize(data, parametersType, Configer.JsonOptionsMultipleParameter);
+                case Utils.GroupWebSocket:
+                    return MessagePack.MessagePackSerializer.Deserialize(parametersType, data);
+                default: return null;
+            }
+        };
     }
 
     /// <summary>
@@ -795,7 +815,7 @@ namespace Business.AspNet
                 Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
                 return this.NotFound();
             }
-            
+
             string c = null;
             string t = null;
             string d = null;
@@ -902,7 +922,7 @@ namespace Business.AspNet
                     // Framework routing mode
                     await cmd.AsyncCall(
                         //the data of this request, allow null.
-                        cmd.HasArgSingle ? new object[] { d } : cmd.GetParametersObjects(d.TryJsonDeserialize(cmd.ParametersType, Configer.JsonOptions)),
+                        cmd.HasArgSingle ? new object[] { d } : cmd.GetParametersObjects(Utils.Hosting.multipleParameterDeserialize(cmd.ParametersType, g, d)),
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
@@ -1529,6 +1549,21 @@ namespace Business.AspNet
             return bootstrap;
         }
 
+        /// <summary>
+        /// Deserialize of multiple parameters submitted
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseMultipleParameterDeserialize(this BootstrapAll<IBusiness> bootstrap, Func<Type, string, dynamic, object> options = null)
+        {
+            if (null != options)
+            {
+                Hosting.multipleParameterDeserialize = options;
+            }
+            return bootstrap;
+        }
+
         #region WebSocket
 
         /// <summary>
@@ -1547,39 +1582,9 @@ namespace Business.AspNet
         {
             var cmd = receive.Business.Command.GetCommand(receive.Result.Command, GroupWebSocket);
 
-            object[] parameters;
-
-            if (!cmd.HasArgSingle)
-            {
-                var parametersObject = MessagePack.MessagePackSerializer.Deserialize(cmd.ParametersType, receive.Result.Data);
-
-                parameters = cmd.GetParametersObjects(parametersObject);
-
-                //parameters = MessagePack.MessagePackSerializer.Deserialize<object[]>(receive.Result.Data);
-
-                //var i = 0;
-                //foreach (var arg in cmd.Meta.Args)
-                //{
-                //    if (arg.HasToken || arg.UseType) { continue; }
-                //    if (!arg.HasDefinition) { i++; continue; }
-
-                //    if (parameters.Length > i)
-                //    {
-                //        parameters[i] = MessagePack.MessagePackSerializer.Serialize(parameters[i]);
-                //    }
-
-                //    i++;
-                //}
-            }
-            else
-            {
-                parameters = new object[] { receive.Result.Data };
-            }
-
             var result = await cmd.AsyncCall(
             //the data of this request, allow null.
-            //new object[] { receive.Result.Data },
-            parameters,
+            cmd.HasArgSingle ? new object[] { receive.Result.Data } : cmd.GetParametersObjects(Hosting.multipleParameterDeserialize(cmd.ParametersType, GroupWebSocket, receive.Result.Data)),
             //the incoming use object
             //new UseEntry(receive.HttpContext, "context"), //context
             new UseEntry(receive.WebSocket), //webSocket

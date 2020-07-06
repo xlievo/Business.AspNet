@@ -49,6 +49,10 @@ namespace WebAPI
             }
             */
 
+            //JsonOptions
+
+            var ddd = app.ApplicationServices.GetService(typeof(System.Text.Json.JsonSerializerOptions));
+
             app.UseCors("any");
 
             Utils.Hosting.LocalLogPath = "/data/mylog.txt";
@@ -111,6 +115,8 @@ namespace WebAPI
                         server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
                         server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
                         server.KestrelOptions.Limits.MaxRequestBodySize = null;
+
+                        //server.KestrelOptions.AllowSynchronousIO = true;
                     }
                 })
                 .UseRouteCTD(options =>
@@ -118,6 +124,13 @@ namespace WebAPI
                     options.C = "c";
                     options.T = "t";
                     options.D = "d";
+                })
+                .UseMultipleParameterDeserialize((parametersType, group, data) =>
+                group switch
+                {
+                    Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
+                    Utils.GroupWebSocket => MessagePack.MessagePackSerializer.Deserialize(parametersType, data),
+                    _ => null,
                 })
                 .Build();
         }
