@@ -53,7 +53,7 @@ namespace WebAPI
 
             //Document pages need to be accessed across domains
             app.UseCors("any");
-
+            
             //Override the original global log directory
             Utils.Hosting.LocalLogPath = "/data/mylog.txt";
 

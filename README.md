@@ -52,7 +52,6 @@ using System.Threading.Tasks;
 using System;
 
 [TokenCheck]//This is your token verification
-[Use]//Comments required for injection into parameters
 [Logger(canWrite: false)]//Do not output log
 public struct Token : IToken
 {
@@ -168,13 +167,12 @@ The following three communication layer objects will be injected into your logic
 a: **[Business.AspNet.Context]** Current controller, valid only for HTTP communication
 
 b: **[Business.Core.Annotations.HttpFile]** The file object currently requested to be uploaded, valid only for HTTP communication.  
-Valid when this parameter is named "httpFile"
 
 c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only for websocket communication
 
-**In addition to parameter injection, there is a static object that you can use [Business.AspNet.Utils.Environment]**  
-[Environment.AppSettings] An object of the appsettings.json configuration file [Appsettings] node  
-[Environment.HttpClientFactory] An HTTP factory, convenient for you to communicate with the outside world
+**In addition to parameter injection, there is a static object that you can use [Business.AspNet.Utils.Hosting]**  
+[Hosting.AppSettings] An object of the appsettings.json configuration file [Appsettings] node  
+[Hosting.HttpClientFactory] An HTTP factory, convenient for you to communicate with the outside world
 
 ## About logger
 Register log callback in business class constructor  
