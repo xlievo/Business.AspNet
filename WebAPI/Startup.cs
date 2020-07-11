@@ -24,11 +24,13 @@ namespace WebAPI
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //Document pages need to be accessed across domains
             services.AddCors(options =>
             {
                 options.AddPolicy("any", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             });
 
+            //Enable MVC
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
         }
 
@@ -42,21 +44,20 @@ namespace WebAPI
 
             /*
             location / {
-                proxy_pass http://github.com:80;
+                proxy_pass http://mystie.com:80;
                 proxy_set_header Host $host;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
             }
             */
 
-            //JsonOptions
-
-            var ddd = app.ApplicationServices.GetService(typeof(System.Text.Json.JsonSerializerOptions));
-
+            //Document pages need to be accessed across domains
             app.UseCors("any");
 
+            //Override the original global log directory
             Utils.Hosting.LocalLogPath = "/data/mylog.txt";
 
+            //Using third party log components
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .WriteTo.Console()
@@ -66,73 +67,73 @@ namespace WebAPI
                 .CreateLogger();
 
             app.CreateBusiness(logOptions =>
+            {
+                logOptions.Log = log =>
                 {
-                    logOptions.Log = log =>
+                    //all non business information
+                    switch (log.Type)
                     {
-                        //all non business information
-                        switch (log.Type)
-                        {
-                            case LogOptions.LogType.Error:
-                                Log.Error(log.Message);
-                                break;
-                            case LogOptions.LogType.Exception:
-                                Log.Fatal(log.Message);
-                                break;
-                            case LogOptions.LogType.Info:
-                                Log.Information(log.Message);
-                                break;
-                        }
-                    };
-                })
-                .UseDoc(options =>
-                {
-                    options.Debug = true;
-                    options.Benchmark = true;
-                    options.Navigtion = true;
-                    options.Testing = true;
-                })
-                .UseResultType(typeof(MyResultObject<>))//Use your ResultObject
-                .UseWebSocket(options =>
-                {
-                    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
-                    options.ReceiveBufferSize = 1024 * 4;
-                })
-                .UseServer(server =>
-                {
-                    //form
-                    server.FormOptions.KeyLengthLimit = int.MaxValue;
-                    server.FormOptions.ValueCountLimit = int.MaxValue;
-                    server.FormOptions.ValueLengthLimit = int.MaxValue;
-                    server.FormOptions.MultipartHeadersLengthLimit = int.MaxValue;
-                    server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
-                    server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
-
-                    if (null != server.KestrelOptions)//IIS
-                    {
-                        //kestrel
-                        server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
-                        server.KestrelOptions.Limits.MinResponseDataRate = null;
-                        server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
-                        server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
-                        server.KestrelOptions.Limits.MaxRequestBodySize = null;
-
-                        //server.KestrelOptions.AllowSynchronousIO = true;
+                        case LogOptions.LogType.Error:
+                            Log.Error(log.Message);
+                            break;
+                        case LogOptions.LogType.Exception:
+                            Log.Fatal(log.Message);
+                            break;
+                        case LogOptions.LogType.Info:
+                            Log.Information(log.Message);
+                            break;
                     }
-                })
-                .UseRouteCTD(options =>
+                };
+            })
+            .UseDoc(options =>
+            {
+                options.Debug = true;
+                options.Benchmark = true;
+                options.Navigtion = true;
+                options.Testing = true;
+            })
+            .UseResultType(typeof(MyResultObject<>))//use ResultObject
+            .UseWebSocket(options =>
+            {
+                options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+                options.ReceiveBufferSize = 1024 * 4;
+            })
+            .UseServer(server =>
+            {
+                //form
+                server.FormOptions.KeyLengthLimit = int.MaxValue;
+                server.FormOptions.ValueCountLimit = int.MaxValue;
+                server.FormOptions.ValueLengthLimit = int.MaxValue;
+                server.FormOptions.MultipartHeadersLengthLimit = int.MaxValue;
+                server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
+                server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
+
+                if (null != server.KestrelOptions)//IIS
                 {
-                    options.C = "c";
-                    options.T = "t";
-                    options.D = "d";
-                })
-                .UseMultipleParameterDeserialize((parametersType, group, data) =>
-                group switch
-                {
-                    Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
-                    Utils.GroupWebSocket => MessagePack.MessagePackSerializer.Deserialize(parametersType, data),
-                    _ => null,
-                })
-                .Build();
+                    //kestrel
+                    server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
+                    server.KestrelOptions.Limits.MinResponseDataRate = null;
+                    server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
+                    server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
+                    server.KestrelOptions.Limits.MaxRequestBodySize = null;
+
+                    //server.KestrelOptions.AllowSynchronousIO = true;
+                }
+            })
+            .UseRouteCTD(options =>
+            {
+                options.C = "c";
+                options.T = "t";
+                options.D = "d";
+            })
+            .UseMultipleParameterDeserialize((parametersType, group, data) =>
+            group switch
+            {
+                Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
+                Utils.GroupWebSocket => MessagePack.MessagePackSerializer.Deserialize(parametersType, data),
+                _ => null,
+            })
+            .Build();
         }
     }
 }

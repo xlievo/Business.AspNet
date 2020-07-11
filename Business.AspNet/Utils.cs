@@ -576,6 +576,27 @@ namespace Business.AspNet
 
         internal bool useWebSocket;
 
+        internal static readonly System.Collections.Concurrent.BlockingCollection<WebSocketData> webSocketSendQueue = new System.Collections.Concurrent.BlockingCollection<WebSocketData>();
+
+        internal readonly struct WebSocketData
+        {
+            public WebSocketData(WebSocket wwebSocket, ArraySegment<byte> data, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true)
+            {
+                WwebSocket = wwebSocket;
+                Data = data;
+                MessageType = messageType;
+                EndOfMessage = endOfMessage;
+            }
+
+            public WebSocket WwebSocket { get; }
+
+            public ArraySegment<byte> Data { get; }
+
+            public WebSocketMessageType MessageType { get; }
+
+            public bool EndOfMessage { get; }
+        }
+
         /// <summary>
         /// Configuration options for the WebSocketMiddleware
         /// </summary>
@@ -1334,6 +1355,24 @@ namespace Business.AspNet
                             await next();
                         }
                     });
+
+                    Task.Factory.StartNew(async () =>
+                    {
+                        foreach (var item in Hosting.webSocketSendQueue.GetConsumingEnumerable())
+                        {
+                            if (WebSocketState.Open == item.WwebSocket?.State)
+                            {
+                                try
+                                {
+                                    await item.WwebSocket?.SendAsync(item.Data, item.MessageType, item.EndOfMessage, CancellationToken.None);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                                }
+                            }
+                        }
+                    }, TaskCreationOptions.LongRunning);
                 }
 
                 //Task.Factory.StartNew(() =>
@@ -1576,8 +1615,6 @@ namespace Business.AspNet
         ///// </summary>
         //public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> WebSockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
 
-        //static readonly System.Collections.Concurrent.BlockingCollection<WebSocketReceive> WebSocketQueue = new System.Collections.Concurrent.BlockingCollection<WebSocketReceive>();
-
         static async Task WebSocketCall(WebSocketReceive receive)
         {
             var cmd = receive.Business.Command.GetCommand(receive.Result.Command, GroupWebSocket);
@@ -1598,12 +1635,7 @@ namespace Business.AspNet
                     var result2 = result as IResult;
                     result2.Callback = receive.Result.Callback;
 
-                    var data = result2.ResultCreateToDataBytes().ToBytes();
-
-                    if (WebSocketState.Open == receive.WebSocket?.State)
-                    {
-                        await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
-                    }
+                    Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(receive.WebSocket, new ArraySegment<byte>(result2.ResultCreateToDataBytes().ToBytes())));
                 }
             }
         }
@@ -1658,7 +1690,7 @@ namespace Business.AspNet
 
                         if (string.IsNullOrWhiteSpace(receiveData.Business) || !bootstrap.BusinessList.TryGetValue(receiveData.Business, out IBusiness business))
                         {
-                            await webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.Business).ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
+                            Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.Business).ToBytes())));
                         }
                         else
                         {
@@ -1685,7 +1717,7 @@ namespace Business.AspNet
                     {
                         Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
                         var result = Hosting.ResultType.ResultCreate(0, Convert.ToString(ex));
-                        await webSocket.SendAsync(new ArraySegment<byte>(result.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
+                        Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, new ArraySegment<byte>(result.ToBytes())));
                     }
 
                     if (webSocket.State != WebSocketState.Open)
@@ -1767,7 +1799,7 @@ namespace Business.AspNet
                 {
                     if (c.Value.State != WebSocketState.Open) { return; }
 
-                    await c.Value.SendAsync(new ArraySegment<byte>(bytes), messageType, endOfMessage, CancellationToken.None);
+                    Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(c.Value, new ArraySegment<byte>(bytes), messageType, endOfMessage));
                 });
             }
             else if (1 == id.Length)
@@ -1780,11 +1812,11 @@ namespace Business.AspNet
 
                 if (webSocket.State != WebSocketState.Open) { return; }
 
-                await webSocket.SendAsync(new ArraySegment<byte>(bytes), messageType, endOfMessage, CancellationToken.None);
+                Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, new ArraySegment<byte>(bytes), messageType, endOfMessage));
             }
             else
             {
-                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, async c =>
+                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, c =>
                 {
                     if (string.IsNullOrWhiteSpace(c)) { return; }
 
@@ -1792,7 +1824,7 @@ namespace Business.AspNet
 
                     if (webSocket.State != WebSocketState.Open) { return; }
 
-                    await webSocket.SendAsync(new ArraySegment<byte>(bytes), messageType, endOfMessage, CancellationToken.None);
+                    Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, new ArraySegment<byte>(bytes), messageType, endOfMessage));
                 });
             }
         }
