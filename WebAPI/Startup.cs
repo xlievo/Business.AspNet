@@ -108,16 +108,14 @@ namespace WebAPI
                 server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
                 server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
 
-                if (null != server.KestrelOptions)//IIS
+                //kestrel
+                if (null != server.KestrelOptions)
                 {
-                    //kestrel
                     server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
                     server.KestrelOptions.Limits.MinResponseDataRate = null;
                     server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
                     server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
                     server.KestrelOptions.Limits.MaxRequestBodySize = null;
-
-                    //server.KestrelOptions.AllowSynchronousIO = true;
                 }
             })
             .UseRouteCTD(options =>

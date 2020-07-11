@@ -243,12 +243,6 @@ var result = await business.Command.AsyncCall(
 app.CreateBusiness()
     .UseServer(server =>
     {
-        //kestrel
-        server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
-        server.KestrelOptions.Limits.MinResponseDataRate = null;
-        server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
-        server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
-        server.KestrelOptions.Limits.MaxRequestBodySize = null;
         //form
         server.FormOptions.KeyLengthLimit = int.MaxValue;
         server.FormOptions.ValueCountLimit = int.MaxValue;
@@ -256,6 +250,16 @@ app.CreateBusiness()
         server.FormOptions.MultipartHeadersLengthLimit = int.MaxValue;
         server.FormOptions.MultipartBodyLengthLimit = long.MaxValue;
         server.FormOptions.MultipartBoundaryLengthLimit = int.MaxValue;
+
+        //kestrel
+        if (null != server.KestrelOptions)
+        {
+            server.KestrelOptions.Limits.MinRequestBodyDataRate = null;
+            server.KestrelOptions.Limits.MinResponseDataRate = null;
+            server.KestrelOptions.Limits.MaxConcurrentConnections = long.MaxValue;
+            server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
+            server.KestrelOptions.Limits.MaxRequestBodySize = null;
+        }
     })
     .Build();
 ```
