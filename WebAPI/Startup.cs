@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -53,7 +53,7 @@ namespace WebAPI
 
             //Document pages need to be accessed across domains
             app.UseCors("any");
-            
+
             //Override the original global log directory
             Utils.Hosting.LocalLogPath = "/data/mylog.txt";
 

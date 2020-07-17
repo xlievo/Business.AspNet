@@ -181,7 +181,7 @@ namespace WebAPI
                 Command = "CommandCommandCommand"
             };
 
-            webSocket?.SendAsync(new ArraySegment<byte>(data.ToBytes()), WebSocketMessageType.Binary, true, CancellationToken.None);
+            webSocket.SendAsync( new ArraySegment<byte>(data.ToBytes()));
 
             return this.ResultCreate(Arg);
             //return this.ResultCreate(new { session, arg, files });
