@@ -35,7 +35,7 @@ namespace WebAPI
             this.Data = data;
             this.State = state;
             this.Message = message;
-            this.HasData = checkData ? !Equals(null, data) : false;
+            this.HasData = checkData && !Equals(null, data);
 
             this.Callback = null;
             this.Business = null;
@@ -69,12 +69,14 @@ namespace WebAPI
         /// The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("S")]
+        [Newtonsoft.Json.JsonProperty("S")]
         public int State { get; set; }
 
         /// <summary>
         /// Success can be null
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("M")]
+        [Newtonsoft.Json.JsonProperty("M")]
         public string Message { get; set; }
 
         /// <summary>
@@ -86,18 +88,21 @@ namespace WebAPI
         /// Specific Byte/Json data objects
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("D")]
+        [Newtonsoft.Json.JsonProperty("D")]
         public Type Data { get; set; }
 
         /// <summary>
         /// Whether there is value
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("H")]
+        [Newtonsoft.Json.JsonProperty("H")]
         public bool HasData { get; set; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         //[System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
 
@@ -105,12 +110,14 @@ namespace WebAPI
         /// Business to call
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string Business { get; set; }
 
         /// <summary>
         /// Commands to call
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string Command { get; set; }
 
         /// <summary>
@@ -118,6 +125,7 @@ namespace WebAPI
         /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public System.Type DataType { get; set; }
 
         /// <summary>
@@ -125,6 +133,7 @@ namespace WebAPI
         /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public System.Type GenericDefinition { get; }
 
         /// <summary>
@@ -132,6 +141,7 @@ namespace WebAPI
         /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public bool HasDataResult { get; }
 
         /// <summary>
@@ -164,18 +174,23 @@ namespace WebAPI
     public struct Token : IToken
     {
         [System.Text.Json.Serialization.JsonPropertyName("K")]
+        [Newtonsoft.Json.JsonProperty("K")]
         public string Key { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("R")]
+        [Newtonsoft.Json.JsonProperty("R")]
         public string Remote { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("P")]
+        [Newtonsoft.Json.JsonProperty("P")]
         public string Path { get; set; }
 
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string Callback { get; set; }
 
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public Business.AspNet.Token.OriginValue Origin { get; set; }
     }
 

@@ -119,12 +119,14 @@ namespace Business.AspNet
         /// The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("S")]
+        [Newtonsoft.Json.JsonProperty("S")]
         public int State { get; set; }
 
         /// <summary>
         /// Success can be null
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("M")]
+        [Newtonsoft.Json.JsonProperty("M")]
         public string Message { get; set; }
 
         /// <summary>
@@ -136,18 +138,21 @@ namespace Business.AspNet
         /// Specific Byte/Json data objects
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("D")]
+        [Newtonsoft.Json.JsonProperty("D")]
         public Type Data { get; set; }
 
         /// <summary>
         /// Whether there is value
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("H")]
+        [Newtonsoft.Json.JsonProperty("H")]
         public bool HasData { get; set; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         //[System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
 
@@ -155,12 +160,14 @@ namespace Business.AspNet
         /// Business to call
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string Business { get; set; }
 
         /// <summary>
         /// Commands to call
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public string Command { get; set; }
 
         /// <summary>
@@ -168,6 +175,7 @@ namespace Business.AspNet
         /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public System.Type DataType { get; set; }
 
         /// <summary>
@@ -175,6 +183,7 @@ namespace Business.AspNet
         /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public System.Type GenericDefinition { get; }
 
         /// <summary>
@@ -182,6 +191,7 @@ namespace Business.AspNet
         /// </summary>
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
         public bool HasDataResult { get; }
 
         /// <summary>
@@ -291,6 +301,12 @@ namespace Business.AspNet
         public string b { get; set; }
     }
     */
+
+    //[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
+    //public class WebSocketSendAttribute : GroupAttribute
+    //{
+        
+    //}
 
     /// <summary>
     /// Deserialization of binary format
@@ -623,6 +639,9 @@ namespace Business.AspNet
                 default: return null;
             }
         };
+
+        internal Action<System.Text.Json.JsonSerializerOptions> useJsonOptions;
+        internal Action<Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJson;
     }
 
     /// <summary>
@@ -1293,6 +1312,8 @@ namespace Business.AspNet
                     //    }
                     //}
 
+                    strap.Config.UseDoc.Options.CamelCase = UseJson(app);
+
                     //writ url to page
                     DocUI.Write(documentDir, docFileName: Configer.documentFileName);
                 }
@@ -1604,6 +1625,100 @@ namespace Business.AspNet
         }
 
         /// <summary>
+        /// Configures Microsoft.AspNetCore.Mvc.JsonOptions for the specified builder.
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="options">An System.Action to configure the Microsoft.AspNetCore.Mvc.JsonOptions.</param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseJsonOptions(this BootstrapAll<IBusiness> bootstrap, Action<System.Text.Json.JsonSerializerOptions> options = null)
+        {
+            if (null != options)
+            {
+                Hosting.useJsonOptions = options;
+            }
+            return bootstrap;
+        }
+        /// <summary>
+        /// UseNewtonsoftJson
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseNewtonsoftJson(this BootstrapAll<IBusiness> bootstrap, Action<Newtonsoft.Json.JsonSerializerSettings> options = null)
+        {
+            if (null != options)
+            {
+                Hosting.useNewtonsoftJson = options;
+            }
+            return bootstrap;
+        }
+
+        static Func<string, string> UseJson(IApplicationBuilder app)
+        {
+            Func<string, string> camelCase = null;
+            //JsonSerializerOptions 77/140
+            var jsonHelper = app.ApplicationServices.GetService<Microsoft.AspNetCore.Mvc.Rendering.IJsonHelper>();
+            var _htmlSafeJsonSerializerOptions = jsonHelper.GetType().GetField("_htmlSafeJsonSerializerOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (null != _htmlSafeJsonSerializerOptions)
+            {
+                var jsonSerializerOptions = _htmlSafeJsonSerializerOptions.GetValue(jsonHelper) as System.Text.Json.JsonSerializerOptions;
+                if (null != jsonSerializerOptions.PropertyNamingPolicy)
+                {
+                    jsonSerializerOptions.PropertyNamingPolicy = Help.JsonNamingPolicyCamelCase.Instance;
+                }
+                Hosting.useJsonOptions?.Invoke(jsonSerializerOptions);
+                camelCase = c => jsonSerializerOptions.PropertyNamingPolicy?.ConvertName(c);
+            }
+            else
+            {
+                //var _defaultSettingsJsonSerializer = jsonHelper.GetType().GetField("_defaultSettingsJsonSerializer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                //if (null != _defaultSettingsJsonSerializer)
+                //{
+                //    var jsonSerializerOptions = _defaultSettingsJsonSerializer.GetValue(jsonHelper) as Newtonsoft.Json.JsonSerializer;
+
+                //    Hosting.useNewtonsoftJson?.Invoke(jsonSerializerOptions);
+                //    jsonSerializerOptions.ContractResolver = null;
+                //    //_defaultSettingsJsonSerializer.SetValue(jsonHelper, jsonSerializerOptions);
+
+                //    var resolver = jsonSerializerOptions.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+                //    camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
+                //}
+                //ResolvedServices = Count = 79
+                var resolvedServices = app.ApplicationServices.GetType().GetProperty("ResolvedServices", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(app.ApplicationServices) as System.Collections.IDictionary;
+
+                foreach (System.Collections.DictionaryEntry item in resolvedServices)
+                {
+                    var type = item.Key.GetType().GetProperty("Type").GetValue(item.Key) as Type;
+
+                    if (type.FullName.StartsWith("Microsoft.Extensions.Options.IOptions`1[[Microsoft.AspNetCore.Mvc.MvcNewtonsoftJsonOptions, Microsoft.AspNetCore.Mvc.NewtonsoftJson"))
+                    {
+                        dynamic value = item.Value;
+                        Newtonsoft.Json.JsonSerializerSettings jsonSerializerOptions = value.Value.SerializerSettings;
+
+                        if (jsonSerializerOptions?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
+                        {
+                            resolver.NamingStrategy = CamelCaseNamingStrategy.Instance;
+                        }
+
+                        Hosting.useNewtonsoftJson?.Invoke(jsonSerializerOptions);
+                        resolver = jsonSerializerOptions?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+
+                        camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
+                    }
+                }
+            }
+
+            return camelCase;
+        }
+
+        class CamelCaseNamingStrategy : Newtonsoft.Json.Serialization.CamelCaseNamingStrategy
+        {
+            public static CamelCaseNamingStrategy Instance { get; } = new CamelCaseNamingStrategy();
+
+            protected override string ResolvePropertyName(string name) => Help.CamelCase(name);
+        }
+
+        /// <summary>
         /// WebSocket SendAsync
         /// </summary>
         /// <param name="webSocket"></param>
@@ -1644,33 +1759,7 @@ namespace Business.AspNet
                     var result2 = result as IResult;
                     result2.Callback = receive.Result.Callback ?? receive.Result.Command;
 
-                    //var data = result2.ResultCreateToDataBytes().ToBytes().GZip(System.IO.Compression.CompressionMode.Compress);
-
                     receive.WebSocket.SendAsync(new ArraySegment<byte>(result2.ResultCreateToDataBytes().ToBytes()));
-                }
-            }
-        }
-
-        /// <summary>
-        /// gzip to byte[]
-        /// </summary>
-        /// <param name="value"></param>
-        /// <param name="mode"></param>
-        /// <returns></returns>
-        public static async ValueTask<byte[]> GZip(this byte[] value, System.IO.Compression.CompressionMode mode = System.IO.Compression.CompressionMode.Compress)
-        {
-            if (null == value) { throw new System.ArgumentNullException(nameof(value)); }
-
-            using (var m = new System.IO.MemoryStream(value))
-            {
-                m.Seek(0, System.IO.SeekOrigin.Begin);
-                using (var g = new System.IO.Compression.GZipStream(m, mode, true))
-                {
-                    using (var m2 = new System.IO.MemoryStream())
-                    {
-                        await g.CopyToAsync(m2);
-                        return m2.ToArray();
-                    }
                 }
             }
         }

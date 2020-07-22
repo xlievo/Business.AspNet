@@ -32,6 +32,7 @@ namespace WebAPI
 
             //Enable MVC
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
+                //.AddJsonOptions(c => c.JsonSerializerOptions.PropertyNamingPolicy = null).AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -92,6 +93,14 @@ namespace WebAPI
                 options.Navigtion = true;
                 options.Testing = true;
             })
+            //.UseJsonOptions(options =>
+            //{
+            //    //options.PropertyNamingPolicy = null;
+            //})
+            //.UseNewtonsoftJson(options =>
+            //{
+            //    //options.ContractResolver = null;
+            //})
             .UseResultType(typeof(MyResultObject<>))//use ResultObject
             .UseWebSocket(options =>
             {
