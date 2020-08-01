@@ -46,28 +46,121 @@ namespace Business.AspNet
 {
     #region Socket Support
 
-    /// <summary>
-    /// IResultSocket
-    /// </summary>
-    /// <typeparam name="Type"></typeparam>
-    public interface IResultSocket<Type> : IResult<Type>
+    /*
+    public class BusinessInfoFormatter : MessagePack.Formatters.IMessagePackFormatter<IBusinessInfo>
+    {
+        public static readonly BusinessInfoFormatter Instance = new BusinessInfoFormatter();
+
+        public IBusinessInfo Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
+        {
+            if (!reader.TryReadArrayHeader(out _)) { return null; }
+            return new BusinessInfo { BusinessName = reader.ReadString(), Command = reader.ReadString() };
+        }
+
+        public void Serialize(ref MessagePackWriter writer, IBusinessInfo value, MessagePackSerializerOptions options)
+        {
+            if (null == value) { return; }
+            writer.WriteArrayHeader(2);
+            writer.Write(value.BusinessName);
+            writer.Write(value.Command);
+        }
+    }
+
+    public interface IBusinessInfo
     {
         /// <summary>
         /// Business to call
         /// </summary>
-        string Business { get; set; }
+        string BusinessName { get; }
 
         /// <summary>
         /// Command to call
         /// </summary>
-        string Command { get; set; }
+        string Command { get; }
+    }
+
+    */
+
+    /// <summary>
+    /// socket receive send
+    /// </summary>
+    public interface ISocket<Type>
+    {
+        /// <summary>
+        /// Business
+        /// </summary>
+        BusinessInfo Business { get; set; }
+
+        /// <summary>
+        /// Specific Byte/Json data objects
+        /// </summary>
+        Type Data { get; set; }
+
+        /// <summary>
+        /// Gets the token of this result, used for callback
+        /// </summary>
+        string Callback { get; set; }
+
+        /// <summary>
+        /// ProtoBuf,MessagePack or Other
+        /// </summary>
+        /// <returns></returns>
+        byte[] ToBytes();
+    }
+
+    /// <summary>
+    /// socket receive send
+    /// </summary>
+    public readonly struct BusinessInfo
+    {
+        /// <summary>
+        /// Null
+        /// </summary>
+        public readonly static BusinessInfo Null = default;
+
+        /// <summary>
+        /// socket receive send
+        /// </summary>
+        /// <param name="businessName"></param>
+        /// <param name="command"></param>
+        public BusinessInfo(string businessName, string command)
+        {
+            BusinessName = businessName;
+            Command = command;
+            key = (!string.IsNullOrWhiteSpace(businessName) || !string.IsNullOrWhiteSpace(command)) ? $"{businessName?.ToLower()}{command?.ToLower()}" : null;
+        }
+
+        /// <summary>
+        /// Business to call
+        /// </summary>
+        public string BusinessName { get; }
+
+        /// <summary>
+        /// Command to call
+        /// </summary>
+        public string Command { get; }
+
+        readonly string key;
+
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value; otherwise, false.</returns>
+        public override bool Equals(object obj) => GetHashCode().Equals(obj.GetHashCode());
+
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        public override int GetHashCode() => key.GetHashCode();
     }
 
     /// <summary>
     /// result
     /// </summary>
     /// <typeparam name="Type"></typeparam>
-    public struct ResultObject<Type> : IResultSocket<Type>
+    public struct ResultObject<Type> : IResult<Type>, ISocket<Type>
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -88,8 +181,7 @@ namespace Business.AspNet
             this.HasData = checkData && !Equals(null, data);
 
             this.Callback = null;
-            this.Business = null;
-            this.Command = null;
+            this.Business = default;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
         }
@@ -108,8 +200,7 @@ namespace Business.AspNet
             this.HasData = !Equals(null, data);
 
             this.Callback = null;
-            this.Business = null;
-            this.Command = null;
+            this.Business = default;
             this.DataType = null;
             this.GenericDefinition = null;
             this.HasDataResult = false;
@@ -153,22 +244,7 @@ namespace Business.AspNet
         /// </summary>
         [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        //[System.Text.Json.Serialization.JsonPropertyName("B")]
         public string Callback { get; set; }
-
-        /// <summary>
-        /// Business to call
-        /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        public string Business { get; set; }
-
-        /// <summary>
-        /// Commands to call
-        /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        public string Command { get; set; }
 
         /// <summary>
         /// Data type
@@ -195,6 +271,13 @@ namespace Business.AspNet
         public bool HasDataResult { get; }
 
         /// <summary>
+        /// Business info
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public BusinessInfo Business { get; set; }
+
+        /// <summary>
         /// Json format
         /// </summary>
         /// <returns></returns>
@@ -210,18 +293,50 @@ namespace Business.AspNet
         /// ProtoBuf format
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes() => MessagePack.MessagePackSerializer.Serialize(this);
+        public byte[] ToBytes() => this.MessagePackSerialize();
 
         /// <summary>
         /// ProtoBuf format Data
         /// </summary>
         /// <returns></returns>
-        public byte[] ToDataBytes() => MessagePack.MessagePackSerializer.Serialize(this.Data);
+        public byte[] ToDataBytes() => this.Data.MessagePackSerialize();
     }
+
+    ///// <summary>
+    ///// socket receive send
+    ///// </summary>
+    //public struct SocketObject : ISocket
+    //{
+    //    /// <summary>
+    //    /// Business to call
+    //    /// </summary>
+    //    public string Business { get; set; }
+
+    //    /// <summary>
+    //    /// Commands to call
+    //    /// </summary>
+    //    public string Command { get; set; }
+
+    //    /// <summary>
+    //    /// Specific Byte/Json data objects
+    //    /// </summary>
+    //    public byte[] Data { get; set; }
+
+    //    /// <summary>
+    //    /// Gets the token of this result, used for callback
+    //    /// </summary>
+    //    public string Callback { get; set; }
+
+    //    /// <summary>
+    //    /// ProtoBuf format
+    //    /// </summary>
+    //    /// <returns></returns>
+    //    public byte[] ToBytes() => this.MessagePackSerialize();
+    //}
 
     readonly struct WebSocketReceive
     {
-        public WebSocketReceive(IToken token, IResultSocket<byte[]> result, IBusiness business, WebSocket webSocket)
+        public WebSocketReceive(IToken token, ISocket<byte[]> result, IBusiness business, WebSocket webSocket)
         {
             Token = token;
             Result = result;
@@ -232,7 +347,7 @@ namespace Business.AspNet
 
         public IToken Token { get; }
 
-        public IResultSocket<byte[]> Result { get; }
+        public ISocket<byte[]> Result { get; }
 
         public IBusiness Business { get; }
 
@@ -241,72 +356,23 @@ namespace Business.AspNet
         public WebSocket WebSocket { get; }
     }
 
-    /*
     /// <summary>
-    /// Business package
+    /// Push
     /// </summary>
-    public interface IReceiveData
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    public class PushAttribute : GroupAttribute
     {
         /// <summary>
-        /// business
+        /// Push
         /// </summary>
-        string a { get; set; }
+        /// <param name="key"></param>
+        public PushAttribute(string key = null) => Key = key;
 
         /// <summary>
-        /// cmd
+        /// key
         /// </summary>
-        string c { get; set; }
-
-        //string t { get; set; }
-
-        /// <summary>
-        /// data
-        /// </summary>
-        byte[] d { get; set; }
-
-        /// <summary>
-        /// callback Default c
-        /// </summary>
-        string b { get; set; }
+        public string Key { get; }
     }
-
-    /// <summary>
-    /// Business package
-    /// </summary>
-    public struct ReceiveData : IReceiveData
-    {
-        /// <summary>
-        /// business
-        /// </summary>
-        public string a { get; set; }
-
-        /// <summary>
-        /// cmd
-        /// </summary>
-        public string c { get; set; }
-
-        ///// <summary>
-        ///// token
-        ///// </summary>
-        //public string t { get; set; }
-
-        /// <summary>
-        /// data
-        /// </summary>
-        public byte[] d { get; set; }
-
-        /// <summary>
-        /// callback Default c
-        /// </summary>
-        public string b { get; set; }
-    }
-    */
-
-    //[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
-    //public class WebSocketSendAttribute : GroupAttribute
-    //{
-        
-    //}
 
     /// <summary>
     /// Deserialization of binary format
@@ -642,6 +708,11 @@ namespace Business.AspNet
 
         internal Action<System.Text.Json.JsonSerializerOptions> useJsonOptions;
         internal Action<Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJson;
+
+        /// <summary>
+        /// Socket type
+        /// </summary>
+        internal Type socketType = typeof(ResultObject<byte[]>);
     }
 
     /// <summary>
@@ -767,7 +838,7 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        ValueTask<IResultSocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
+        ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -820,7 +891,7 @@ namespace Business.AspNet
         /// <param name="buffer"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<IResultSocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => (IResultSocket<byte[]>)MessagePack.MessagePackSerializer.Deserialize(this.Configer.ResultTypeDefinition.MakeGenericType(typeof(byte[])), buffer);
+        public virtual async ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => (ISocket<byte[]>)MessagePack.MessagePackSerializer.Deserialize(Utils.Hosting.socketType, buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -1042,7 +1113,7 @@ namespace Business.AspNet
             //Console.WriteLine($"Min {workerThreads}, {completionPortThreads}");
             //Console.WriteLine($"Max {workerThreads2}, {completionPortThreads2}");
 
-            MessagePack.MessagePackSerializer.DefaultOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
+            MessagePack.MessagePackSerializer.DefaultOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.ContractlessStandardResolver.Instance })).WithCompression(MessagePack.MessagePackCompression.Lz4Block);
 
             //AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
             //Console.WriteLine("System.Net.Http.UseSocketsHttpHandler: false");
@@ -1074,6 +1145,78 @@ namespace Business.AspNet
             Console.WriteLine(log);
             Console.ResetColor();
             return log;
+        }
+
+        /// <summary>
+        /// MessagePack serialize
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static byte[] MessagePackSerialize<Type>(this Type value, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Serialize(value, options);
+
+        /// <summary>
+        /// MessagePack serialize
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="type"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static byte[] MessagePackSerialize(this object value, Type type, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Serialize(type, value, options);
+
+        /// <summary>
+        /// MessagePack deserialize
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static Type MessagePackDeserialize<Type>(this byte[] value, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Deserialize<Type>(value, options);
+
+        /// <summary>
+        /// MessagePack deserialize
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="type"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static object MessagePackDeserialize(this byte[] value, Type type, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Deserialize(type, value, options);
+
+        /// <summary>
+        /// ISocket byte[]
+        /// </summary>
+        /// <param name="business"></param>
+        /// <param name="args"></param>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public static ISocket<byte[]> GetSocketObject(this IBusiness business, object[] args = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null)
+        {
+            var cmd = business.Command.GetCommand(method);
+
+            if (null == cmd)
+            {
+                return default;
+            }
+
+            object arg = null;
+
+            if (1 < args?.Length && !cmd.HasArgSingle)
+            {
+                arg = Activator.CreateInstance(cmd.ParametersType, args);
+            }
+            else if (0 < args?.Length && null != cmd.ParametersType)
+            {
+                arg = args[0];
+            }
+
+            var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
+
+            socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, (cmd.Meta.Attributes.FirstOrDefault(c => c is PushAttribute) as PushAttribute)?.Key ?? method);
+            socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
+            //socket.Callback = method;
+
+            return socket;
         }
 
         #region HttpCall
@@ -1317,12 +1460,13 @@ namespace Business.AspNet
                     //writ url to page
                     DocUI.Write(documentDir, docFileName: Configer.documentFileName);
                 }
+
+                Hosting.ResultType = strap.Config.ResultType;
+                Hosting.socketType = Hosting.ResultType.MakeGenericType(typeof(byte[]));
             };
 
             bootstrap.Config.BuildAfter = strap =>
             {
-                Hosting.ResultType = strap.Config.ResultType;
-
                 businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
 
                 if (null != Hosting.useServer)
@@ -1718,14 +1862,19 @@ namespace Business.AspNet
             protected override string ResolvePropertyName(string name) => Help.CamelCase(name);
         }
 
-        /// <summary>
-        /// WebSocket SendAsync
-        /// </summary>
-        /// <param name="webSocket"></param>
-        /// <param name="data"></param>
-        /// <param name="messageType"></param>
-        /// <param name="endOfMessage"></param>
-        public static void SendAsync(this WebSocket webSocket, ArraySegment<byte> data, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, data, messageType, endOfMessage));
+        ///// <summary>
+        ///// Use ISocket type object
+        ///// </summary>
+        ///// <typeparam name="Type"></typeparam>
+        ///// <param name="bootstrap"></param>
+        ///// <returns></returns>
+        //public static BootstrapAll<IBusiness> UseSocketType<Type>(this BootstrapAll<IBusiness> bootstrap)
+        //    where Type : ISocket, new()
+        //{
+        //    Hosting.socketType = typeof(Type);
+
+        //    return bootstrap;
+        //}
 
         #region WebSocket
 
@@ -1741,7 +1890,7 @@ namespace Business.AspNet
 
         static async Task WebSocketCall(WebSocketReceive receive)
         {
-            var cmd = receive.Business.Command.GetCommand(receive.Result.Command, GroupWebSocket);
+            var cmd = receive.Business.Command.GetCommand(receive.Result.Business.Command, GroupWebSocket);
 
             var result = await cmd.AsyncCall(
             //the data of this request, allow null.
@@ -1757,7 +1906,7 @@ namespace Business.AspNet
                 if (typeof(IResult).IsAssignableFrom(result.GetType()))
                 {
                     var result2 = result as IResult;
-                    result2.Callback = receive.Result.Callback ?? receive.Result.Command;
+                    result2.Callback = receive.Result.Callback ?? receive.Result.Business.Command;
 
                     receive.WebSocket.SendAsync(new ArraySegment<byte>(result2.ResultCreateToDataBytes().ToBytes()));
                 }
@@ -1812,9 +1961,9 @@ namespace Business.AspNet
                     {
                         var receiveData = await acceptBusiness.WebSocketReceive(context, webSocket, buffer);
 
-                        if (string.IsNullOrWhiteSpace(receiveData.Business) || !bootstrap.BusinessList.TryGetValue(receiveData.Business, out IBusiness business))
+                        if (string.IsNullOrWhiteSpace(receiveData.Business.BusinessName) || !bootstrap.BusinessList.TryGetValue(receiveData.Business.BusinessName, out IBusiness business))
                         {
-                            webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.Business).ToBytes()));
+                            webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.Business.BusinessName).ToBytes()));
                         }
                         else
                         {
@@ -1832,7 +1981,7 @@ namespace Business.AspNet
                                 Key = token,
                                 //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
                                 Remote = remote,
-                                Callback = receiveData.Callback ?? receiveData.Command,
+                                Callback = receiveData.Callback ?? receiveData.Business.Command,
                                 Path = context.Request.Path.Value,
                             }), receiveData, business, webSocket));
                         }
@@ -1882,7 +2031,7 @@ namespace Business.AspNet
         /// <param name="bytes"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, params string[] id) => await WebSocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, -1, id);
+        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, params string[] id) => await SendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, -1, id);
 
         /// <summary>
         /// Send socket message
@@ -1892,7 +2041,7 @@ namespace Business.AspNet
         /// <param name="sendMaxDegreeOfParallelism"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => await WebSocketSendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
+        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
 
         /// <summary>
         /// Send socket message
@@ -1903,7 +2052,7 @@ namespace Business.AspNet
         /// <param name="sendMaxDegreeOfParallelism"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => await WebSocketSendAsync(webSockets, bytes, messageType, true, sendMaxDegreeOfParallelism, id);
+        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SendAsync(webSockets, bytes, messageType, true, sendMaxDegreeOfParallelism, id);
 
         /// <summary>
         /// Send socket message
@@ -1915,8 +2064,10 @@ namespace Business.AspNet
         /// <param name="sendMaxDegreeOfParallelism"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static async ValueTask WebSocketSendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
+        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
         {
+            if (null == bytes) { return; }
+
             if (null == id || 0 == id.Length)
             {
                 Parallel.ForEach(webSockets, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, c =>
@@ -1952,6 +2103,15 @@ namespace Business.AspNet
                 });
             }
         }
+
+        /// <summary>
+        /// WebSocket SendAsync
+        /// </summary>
+        /// <param name="webSocket"></param>
+        /// <param name="data"></param>
+        /// <param name="messageType"></param>
+        /// <param name="endOfMessage"></param>
+        public static void SendAsync(this WebSocket webSocket, ArraySegment<byte> data, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, data, messageType, endOfMessage));
 
         #endregion
 

@@ -17,7 +17,7 @@ namespace WebAPI
     /// result
     /// </summary>
     /// <typeparam name="Type"></typeparam>
-    public struct MyResultObject<Type> : IResultSocket<Type>
+    public struct MyResultObject<Type> : IResult<Type>, ISocket<Type>
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -38,8 +38,7 @@ namespace WebAPI
             this.HasData = checkData && !Equals(null, data);
 
             this.Callback = null;
-            this.Business = null;
-            this.Command = null;
+            this.Business = default;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
         }
@@ -58,8 +57,7 @@ namespace WebAPI
             this.HasData = !Equals(null, data);
 
             this.Callback = null;
-            this.Business = null;
-            this.Command = null;
+            this.Business = default;
             this.DataType = null;
             this.GenericDefinition = null;
             this.HasDataResult = false;
@@ -107,20 +105,6 @@ namespace WebAPI
         public string Callback { get; set; }
 
         /// <summary>
-        /// Business to call
-        /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        public string Business { get; set; }
-
-        /// <summary>
-        /// Commands to call
-        /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        public string Command { get; set; }
-
-        /// <summary>
         /// Data type
         /// </summary>
         [MessagePack.IgnoreMember]
@@ -145,6 +129,13 @@ namespace WebAPI
         public bool HasDataResult { get; }
 
         /// <summary>
+        /// Business
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public BusinessInfo Business { get; set; }
+
+        /// <summary>
         /// Json format
         /// </summary>
         /// <returns></returns>
@@ -160,13 +151,13 @@ namespace WebAPI
         /// ProtoBuf format
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes() => MessagePack.MessagePackSerializer.Serialize(this);
+        public byte[] ToBytes() => this.MessagePackSerialize();
 
         /// <summary>
         /// ProtoBuf format Data
         /// </summary>
         /// <returns></returns>
-        public byte[] ToDataBytes() => MessagePack.MessagePackSerializer.Serialize(this.Data);
+        public byte[] ToDataBytes() => this.Data.MessagePackSerialize();
     }
 
     [TokenCheck]
@@ -271,14 +262,14 @@ namespace WebAPI
                 return null;//prevent
             }
 
-            WebSockets.TryAdd(context.Connection.Id, webSocket);
+            WebSockets.TryAdd(t, webSocket);
 #if DEBUG
             Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
 #endif
             return t.ToString();
         }
 
-        public sealed override ValueTask<IResultSocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
+        public sealed override ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
 
         public sealed override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
         {

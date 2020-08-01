@@ -16,6 +16,25 @@ namespace WebAPI
     [Info("API/v2")]
     public class BusinessMember : BusinessBase
     {
+        static readonly Timer timer = new System.Threading.Timer(new TimerCallback(async obj =>
+        {
+            await Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
+        }));
+
+        static BusinessMember()
+        {
+            //timer.Change(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+        }
+
+        public BusinessMember()
+        {
+
+            this.BindAfter += () =>
+            {
+                Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
+            };
+        }
+
         public class Test001_Arg
         {
             public class Test004
@@ -175,13 +194,10 @@ namespace WebAPI
             var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
             //await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
-            var data = new Business.AspNet.ResultObject<byte[]>(new byte[] { 0x05 })
-            {
-                Business = "BusinessBusinessBusiness",
-                Command = "CommandCommandCommand"
-            };
+            //var data = this.GetSocketObject(new object[] { arg, dateTime, mm, fff, bbb }).ToBytes();
+            var data = this.GetSocketObject(new object[] { new Test0011 { C31 = "aaaadd" }, 2233 }, "Test010").ToBytes();
 
-            webSocket.SendAsync( new ArraySegment<byte>(data.ToBytes()));
+            webSocket.SendAsync(new ArraySegment<byte>(data));
 
             return this.ResultCreate(arg);
             //return this.ResultCreate(new { session, arg, files });
@@ -219,13 +235,14 @@ namespace WebAPI
         }
 
         /// <summary>
-        /// Test010！
+        /// Test010!
         /// </summary>
         /// <param name="test">Test004XTest004XTest004XTest004X</param>
         /// <returns></returns>
-        public virtual async Task<IResult<Test004X>> Test010(Test004X test)
+        [Push]
+        public virtual async ValueTask Test010(Test0011 test, int b)
         {
-            return this.ResultCreate(test);
+            await WebSockets.SendAsync(this.GetSocketObject(new object[] { test, b })?.ToBytes());
         }
 
         public virtual async Task<List<string>> Test011(string a, string b)
