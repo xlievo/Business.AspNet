@@ -26,12 +26,26 @@ namespace WebAPI
             //timer.Change(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
         }
 
+        static readonly string guids = string.Join(",", Enumerable.Range(0, 100).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
+
         public BusinessMember()
         {
-
             this.BindAfter += () =>
             {
-                Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
+                //Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
+
+                //Task.Run(async () =>
+                //{
+                //    while (0 == WebSockets.Count)
+                //    {
+                //        await Task.Delay(TimeSpan.FromSeconds(1));
+                //    }
+
+                //    Parallel.For(0, 1000000, i =>
+                //    {
+                //        Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = guids }, 1123 });
+                //    });
+                //});
             };
         }
 
@@ -195,16 +209,18 @@ namespace WebAPI
 
             //await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
             //var data = this.GetSocketObject(new object[] { arg, dateTime, mm, fff, bbb }).ToBytes();
-            var data = this.GetSocketObject(new object[] { new Test0011 { C31 = "aaaadd" }, 2233 }, "Test010").ToBytes();
+            var data = this.GetSocketData(new object[] { new Test0011 { C31 = "aaaadd111111111111" }, 2233 }, "Test010").ToBytes();
 
-            webSocket.SendAsync(new ArraySegment<byte>(data));
+            await webSocket.SendAsync(new ArraySegment<byte>(data));
+
+            await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
 
             return this.ResultCreate(arg);
             //return this.ResultCreate(new { session, arg, files });
         }
 
         [Command("abc", Group = Utils.GroupWebSocket)]
-        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m)
+        public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null)
         {
             return this.ResultCreate(new { token, arg, State = token.Remote }, "aaaa!@#$");
         }
@@ -240,9 +256,9 @@ namespace WebAPI
         /// <param name="test">Test004XTest004XTest004XTest004X</param>
         /// <returns></returns>
         [Push]
-        public virtual async ValueTask Test010(Test0011 test, int b)
+        public virtual async Task Test010(Test0011 test, int b)
         {
-            await WebSockets.SendAsync(this.GetSocketObject(new object[] { test, b })?.ToBytes());
+            await WebSockets.SendAsync(this.GetSocketData(new object[] { test, b })?.ToBytes());
         }
 
         public virtual async Task<List<string>> Test011(string a, string b)

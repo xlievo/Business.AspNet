@@ -31,8 +31,8 @@ namespace WebAPI
             });
 
             //Enable MVC
-            services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
-                //.AddJsonOptions(c => c.JsonSerializerOptions.PropertyNamingPolicy = null).AddNewtonsoftJson();
+            services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
+                .AddNewtonsoftJson();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -99,13 +99,14 @@ namespace WebAPI
             //})
             //.UseNewtonsoftJson(options =>
             //{
-            //    //options.ContractResolver = null;
+            //    options.ContractResolver = null;
             //})
+            .UseMessagePack(options => options.WithCompression(MessagePack.MessagePackCompression.Lz4Block))
             .UseResultType(typeof(MyResultObject<>))//use ResultObject
             .UseWebSocket(options =>
             {
                 options.KeepAliveInterval = TimeSpan.FromSeconds(120);
-                options.ReceiveBufferSize = 1024 * 4;
+                options.ReceiveBufferSize = 1024 * 150;
             })
             .UseServer(server =>
             {
@@ -136,8 +137,9 @@ namespace WebAPI
             .UseMultipleParameterDeserialize((parametersType, group, data) =>
             group switch
             {
-                Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
-                Utils.GroupWebSocket => MessagePack.MessagePackSerializer.Deserialize(parametersType, data),
+                //Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
+                Utils.GroupJson => Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.NewtonsoftJsonOptions),
+                Utils.GroupWebSocket => Utils.MessagePackDeserialize(data, parametersType),
                 _ => null,
             })
             .Build();

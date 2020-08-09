@@ -195,21 +195,16 @@ namespace WebAPI
         public string Account { get; set; }
     }
 
-    public class MyJsonArgAttribute : JsonArgAttribute
+    public class MyJsonArgAttribute : NewtonsoftJsonArgAttribute
     {
         public MyJsonArgAttribute(int state = -12, string message = null) : base(state, message)
         {
             this.Description = "MyJson parsing";
+        }
 
-            options = new System.Text.Json.JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                AllowTrailingCommas = true,
-                IgnoreNullValues = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            options.Converters.Add(new Help.DateTimeConverter());
-            options.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        public override async ValueTask<IResult> Proces<Type>(dynamic value)
+        {
+            return await base.Proces<Type>(value as object);
         }
     }
 
@@ -257,7 +252,7 @@ namespace WebAPI
         public sealed override async ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket)
         {
             // checked and return a token
-            if (!context.Request.Headers.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
+            if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
             {
                 return null;//prevent
             }
