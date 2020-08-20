@@ -249,31 +249,47 @@ namespace WebAPI
         /// </summary>
         public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> WebSockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
 
-        public sealed override async ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket)
+        public sealed override async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context, WebSocket webSocket)
         {
             // checked and return a token
             if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
             {
-                return null;//prevent
+                return default;//prevent
+            }
+
+            if (string.IsNullOrWhiteSpace(t))
+            {
+                return default;//prevent
             }
 
             WebSockets.TryAdd(t, webSocket);
 #if DEBUG
             Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
 #endif
-            return t.ToString();
+            return new WebSocketAcceptReply(t);
         }
+
+//        public sealed override async ValueTask WebSocketAcceptCompleted(HttpContext context, WebSocket webSocket, string token)
+//        {
+//            WebSockets.TryAdd(token, webSocket);
+//#if DEBUG
+//            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
+//#endif
+//        }
 
         public sealed override ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
 
-        public sealed override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
+        public sealed async override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
         {
-            WebSockets.TryRemove(context.Connection.Id, out _);
+            if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
+            {
+                return;//prevent
+            }
+
+            WebSockets.TryRemove(t.ToString(), out _);
 #if DEBUG
             Console.WriteLine($"WebSockets Remove:{context.Connection.Id} Connectionss:{WebSockets.Count}");
 #endif
-
-            return base.WebSocketDispose(context, webSocket);
         }
     }
 }

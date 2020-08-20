@@ -357,6 +357,40 @@ namespace Business.AspNet
     }
 
     /// <summary>
+    /// WebSocketAcceptReply
+    /// </summary>
+    public readonly struct WebSocketAcceptReply
+    {
+        /// <summary>
+        /// WebSocketAcceptReply
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="message"></param>
+        /// <param name="closeStatus"></param>
+        public WebSocketAcceptReply(string token, string message = "ok", WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure)
+        {
+            Token = token;
+            Message = message;//ok, illegal
+            CloseStatus = closeStatus;
+        }
+
+        /// <summary>
+        /// Token
+        /// </summary>
+        public string Token { get; }
+
+        /// <summary>
+        /// Message
+        /// </summary>
+        public string Message { get; }
+
+        /// <summary>
+        /// CloseStatus
+        /// </summary>
+        public WebSocketCloseStatus CloseStatus { get; }
+    }
+
+    /// <summary>
     /// Push method
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
@@ -873,7 +907,7 @@ namespace Business.AspNet
         /// <param name="context"></param>
         /// <param name="webSocket"></param>
         /// <returns></returns>
-        ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket);
+        ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context, WebSocket webSocket);
 
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
@@ -925,7 +959,7 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<string> WebSocketAccept(HttpContext context, WebSocket webSocket) => string.Empty;
+        public virtual async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context, WebSocket webSocket) => new WebSocketAcceptReply(string.Empty);
 
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
@@ -2000,18 +2034,19 @@ namespace Business.AspNet
                 //{
                 //    token = await acceptBusiness.WebSocketAccept(context, webSocket);
                 //}
+                var reply = await acceptBusiness.WebSocketAccept(context, webSocket);
 
-                var token = await acceptBusiness.WebSocketAccept(context, webSocket);
-
-                if (null == token)
+                if (string.IsNullOrEmpty(reply.Token))
                 {
                     if (webSocket.State == WebSocketState.Open)
                     {
-                        await webSocket.CloseAsync(WebSocketCloseStatus.InvalidPayloadData, "(1007) The client or server is terminating the connection because it has received data inconsistent with the message type.", CancellationToken.None);
+                        await webSocket.CloseAsync(reply.CloseStatus, reply.Message, CancellationToken.None);
                     }
 
                     return;
                 }
+
+                await webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ResultCreate(reply.Message).ToBytes())); //accept ok! client checked
 
                 var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
@@ -2043,7 +2078,7 @@ namespace Business.AspNet
                             , new WebSocketReceive(await business.GetToken(context, new Token //token
                             {
                                 Origin = Token.OriginValue.WebSocket,
-                                Key = token,
+                                Key = reply.Token,
                                 //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
                                 Remote = remote,
                                 Callback = receiveData.Callback ?? receiveData.Business.Command,
@@ -2176,7 +2211,7 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="messageType"></param>
         /// <param name="endOfMessage"></param>
-        public static async ValueTask SendAsync(this WebSocket webSocket, ArraySegment<byte> data, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, data, messageType, endOfMessage));
+        public static async ValueTask<bool> SendAsync(this WebSocket webSocket, ArraySegment<byte> data = default, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, null == data.Array ? new ArraySegment<byte>(new byte[0]) : data, messageType, endOfMessage));
 
         #endregion
 

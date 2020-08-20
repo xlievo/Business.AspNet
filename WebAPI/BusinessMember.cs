@@ -23,30 +23,55 @@ namespace WebAPI
 
         static BusinessMember()
         {
-            //timer.Change(TimeSpan.FromSeconds(3), TimeSpan.FromSeconds(3));
+            timer.Change(TimeSpan.FromSeconds(3), TimeSpan.FromMilliseconds(10));
         }
 
-        static readonly string guids = string.Join(",", Enumerable.Range(0, 100).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
+        static readonly string guids = string.Join(",", Enumerable.Range(0, 200).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
 
         public BusinessMember()
         {
-            this.BindAfter += () =>
-            {
-                //Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
+            //this.BindAfter += () =>
+            //{
+            //    //Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
 
-                //Task.Run(async () =>
-                //{
-                //    while (0 == WebSockets.Count)
-                //    {
-                //        await Task.Delay(TimeSpan.FromSeconds(1));
-                //    }
+            //    Task.Run(async () =>
+            //    {
+            //        for (; ; )
+            //        {
+            //            try
+            //            {
+            //                while (0 == WebSockets.Count)
+            //                {
+            //                    await Task.Delay(TimeSpan.FromSeconds(1));
+            //                }
 
-                //    Parallel.For(0, 1000000, i =>
-                //    {
-                //        Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = guids }, 1123 });
-                //    });
-                //});
-            };
+            //                Parallel.For(0, 1000000, i =>
+            //                {
+            //                    if (0 == WebSockets.Count) { return; }
+
+            //                    Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = guids }, 1123 });
+            //                });
+
+            //                await Task.Delay(30000);
+
+            //                var first = WebSockets.FirstOrDefault();
+            //                var webSocket = first.Value;
+
+            //                if (webSocket?.State == WebSocketState.Open)
+            //                {
+            //                    await webSocket?.CloseAsync(WebSocketCloseStatus.Empty, string.Empty, default);
+
+            //                    WebSockets.TryRemove(first.Key, out _);
+            //                }
+            //            }
+            //            catch (Exception ex)
+            //            {
+            //                Console.WriteLine(ex);
+            //            }
+
+            //        }
+            //    });
+            //};
         }
 
         public class Test001_Arg
@@ -256,7 +281,7 @@ namespace WebAPI
         /// <param name="test">Test004XTest004XTest004XTest004X</param>
         /// <returns></returns>
         [Push]
-        public virtual async Task Test010(Test0011 test, int b)
+        public virtual async ValueTask Test010(Test0011 test, int b)
         {
             await WebSockets.SendAsync(this.GetSocketData(new object[] { test, b })?.ToBytes());
         }

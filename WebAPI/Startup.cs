@@ -106,7 +106,7 @@ namespace WebAPI
             .UseWebSocket(options =>
             {
                 options.KeepAliveInterval = TimeSpan.FromSeconds(120);
-                options.ReceiveBufferSize = 1024 * 150;
+                options.ReceiveBufferSize = 1024 * 500;
             })
             .UseServer(server =>
             {
