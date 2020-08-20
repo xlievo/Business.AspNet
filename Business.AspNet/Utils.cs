@@ -2040,7 +2040,7 @@ namespace Business.AspNet
                 {
                     if (webSocket.State == WebSocketState.Open)
                     {
-                        await webSocket.CloseAsync(reply.CloseStatus, reply.Message, CancellationToken.None);
+                        await webSocket.CloseAsync(0 == reply.CloseStatus ? WebSocketCloseStatus.NormalClosure : reply.CloseStatus, reply.Message, CancellationToken.None);
                     }
 
                     return;
