@@ -439,20 +439,23 @@ namespace Business.AspNet
         /// <typeparam name="Type"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override async ValueTask<IResult> Proces<Type>(dynamic value)
+        public override ValueTask<IResult> Proces<Type>(dynamic value)
         {
             var result = CheckNull(this, value);
-            if (!result.HasData) { return result; }
+            if (!result.HasData) { return new ValueTask<IResult>(result); }
 
             //Check whether the defined value type is the default value, (top-level object commit)
             result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return result; }
+            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
 
             try
             {
-                return this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonOptions));
+                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonOptions)));
             }
-            catch (Exception ex) { return this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"));
+            }
         }
     }
 
@@ -485,19 +488,22 @@ namespace Business.AspNet
         /// <typeparam name="Type"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override async ValueTask<IResult> Proces<Type>(dynamic value)
+        public override ValueTask<IResult> Proces<Type>(dynamic value)
         {
             var result = CheckNull(this, value);
-            if (!result.HasData) { return result; }
+            if (!result.HasData) { return new ValueTask<IResult>(result); }
 
             result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return result; }
+            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
 
             try
             {
-                return this.ResultCreate(Utils.MessagePackDeserialize<Type>(value));
+                return new ValueTask<IResult>(this.ResultCreate(Utils.MessagePackDeserialize<Type>(value)));
             }
-            catch (Exception ex) { return this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"); }
+            catch (Exception ex)
+            {
+                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"));
+            }
         }
     }
 
@@ -595,13 +601,13 @@ namespace Business.AspNet
         /// <typeparam name="Type"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override async ValueTask<IResult> Proces<Type>(dynamic value)
+        public override ValueTask<IResult> Proces<Type>(dynamic value)
         {
             Context context = value;
 
             if (Equals(null, context) || !context.Request.HasFormContentType)
             {
-                return this.ResultCreate<Type>(default);
+                return new ValueTask<IResult>(this.ResultCreate<Type>(default));
             }
 
             var httpFile = new HttpFile();
@@ -614,7 +620,7 @@ namespace Business.AspNet
                 }
             }
 
-            return this.ResultCreate(httpFile);
+            return new ValueTask<IResult>(this.ResultCreate(httpFile));
         }
     }
 
@@ -946,14 +952,19 @@ namespace Business.AspNet
         /// <summary>
         /// Default constructor
         /// </summary>
-        public BusinessBase() => this.Logger = new Logger(async (Logger.LoggerData x) => Help.Console(x.ToString()));
+        public BusinessBase() => this.Logger = new Logger((Logger.LoggerData x) =>
+        {
+            //Utils.Hosting.log?.Invoke(new LogData(LogType.Info, x.ToString()));
+            Help.Console(x.ToString());
+            return default;
+        });
 
         /// <summary>
         /// Get the requested token
         /// </summary>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<IToken> GetToken(HttpContext context, Token token) => token;
+        public virtual ValueTask<IToken> GetToken(HttpContext context, Token token) => new ValueTask<IToken>(Task.FromResult<IToken>(token));
 
         /// <summary>
         /// Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
@@ -962,7 +973,7 @@ namespace Business.AspNet
         /// <param name="context"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context) => new WebSocketAcceptReply(string.Empty);
+        public virtual ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context) => new ValueTask<WebSocketAcceptReply>(new WebSocketAcceptReply(string.Empty));
 
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
@@ -972,7 +983,7 @@ namespace Business.AspNet
         /// <param name="buffer"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => (ISocket<byte[]>)buffer.MessagePackDeserialize(Utils.Hosting.socketType);
+        public virtual ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => new ValueTask<ISocket<byte[]>>((ISocket<byte[]>)buffer.MessagePackDeserialize(Utils.Hosting.socketType));
 
         /// <summary>
         /// WebSocket dispose
@@ -981,7 +992,7 @@ namespace Business.AspNet
         /// <param name="token"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask WebSocketDispose(HttpContext context, string token) { }
+        public virtual ValueTask WebSocketDispose(HttpContext context, string token) => default;
     }
 
     /// <summary>

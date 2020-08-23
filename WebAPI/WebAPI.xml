@@ -464,10 +464,5 @@
             Log client
             </summary>
         </member>
-        <member name="F:WebAPI.BusinessBase.WebSockets">
-            <summary>
-            WebSocket dictionary
-            </summary>
-        </member>
     </members>
 </doc>

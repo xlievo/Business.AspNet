@@ -244,17 +244,12 @@ namespace WebAPI
 
         /********** Optional WebSocket: WebSocketAccept WebSocketReceive WebSocketDispose **********/
 
-        /// <summary>
-        /// WebSocket dictionary
-        /// </summary>
-        public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> WebSockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
-
         public sealed override async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context)
         {
             // checked and return a token
             if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t) || string.IsNullOrWhiteSpace(t))
             {
-                return new WebSocketAcceptReply(message: "illegal");//prevent
+                return default;//prevent
             }
 
             //Utils.WebSockets.TryAdd(t, webSocket);
@@ -264,27 +259,6 @@ namespace WebAPI
             return new WebSocketAcceptReply(t, "ok!!!");
         }
 
-        //        public sealed override async ValueTask WebSocketAcceptCompleted(HttpContext context, WebSocket webSocket, string token)
-        //        {
-        //            WebSockets.TryAdd(token, webSocket);
-        //#if DEBUG
-        //            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
-        //#endif
-        //        }
-
-        public sealed override ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
-
-        public sealed async override ValueTask WebSocketDispose(HttpContext context, string token)
-        {
-            if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
-            {
-                return;//prevent
-            }
-
-            //Utils.WebSockets.TryRemove(t.ToString(), out _);
-//#if DEBUG
-//            Console.WriteLine($"WebSockets Remove:{context.Connection.Id} Connectionss:{Utils.WebSockets.Count}");
-//#endif
-        }
+        
     }
 }
