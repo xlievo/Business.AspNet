@@ -357,7 +357,7 @@ namespace Business.AspNet
     }
 
     /// <summary>
-    /// WebSocketAcceptReply
+    /// WebSocketAcceptReply, ok, illegal
     /// </summary>
     public readonly struct WebSocketAcceptReply
     {
@@ -367,7 +367,7 @@ namespace Business.AspNet
         /// <param name="token"></param>
         /// <param name="message"></param>
         /// <param name="closeStatus"></param>
-        public WebSocketAcceptReply(string token, string message = "ok", WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure)
+        public WebSocketAcceptReply(string token = null, string message = "ok", WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure)
         {
             Token = token;
             Message = message;//ok, illegal
@@ -413,6 +413,11 @@ namespace Business.AspNet
     /// </summary>
     public class NewtonsoftJsonArgAttribute : JsonArgAttribute
     {
+        /// <summary>
+        /// NewtonsoftJsonArg
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
         public NewtonsoftJsonArgAttribute(int state = -12, string message = null) : base(state, message) { }
 
         /// <summary>
@@ -905,9 +910,8 @@ namespace Business.AspNet
         /// <para>checked and return a token</para>
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="webSocket"></param>
         /// <returns></returns>
-        ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context, WebSocket webSocket);
+        ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context);
 
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
@@ -922,9 +926,9 @@ namespace Business.AspNet
         /// WebSocket dispose
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="webSocket"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
-        ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket);
+        ValueTask WebSocketDispose(HttpContext context, string token);
     }
 
     /// <summary>
@@ -956,10 +960,9 @@ namespace Business.AspNet
         /// <para>checked and return a token</para>
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="webSocket"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context, WebSocket webSocket) => new WebSocketAcceptReply(string.Empty);
+        public virtual async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context) => new WebSocketAcceptReply(string.Empty);
 
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
@@ -975,10 +978,10 @@ namespace Business.AspNet
         /// WebSocket dispose
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="webSocket"></param>
+        /// <param name="token"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual async ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket) { }
+        public virtual async ValueTask WebSocketDispose(HttpContext context, string token) { }
     }
 
     /// <summary>
@@ -1263,42 +1266,51 @@ namespace Business.AspNet
         /// <returns></returns>
         public static object MessagePackDeserialize(this byte[] value, Type type, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Deserialize(type, value, options);
 
-        /// <summary>
-        /// ISocket byte[]
-        /// </summary>
-        /// <param name="business"></param>
-        /// <param name="args"></param>
-        /// <param name="method"></param>
-        /// <returns></returns>
-        public static ISocket<byte[]> GetSocketData(this IBusiness business, object[] args = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null)
-        {
-            var cmd = business.Command.GetCommand(method);
+        ///// <summary>
+        ///// Send webSocket object
+        ///// </summary>
+        ///// <param name="business"></param>
+        ///// <param name="args"></param>
+        ///// <param name="id"></param>
+        ///// <param name="method"></param>
+        //public static void SendAsync(this IBusiness business, object[] args = null, string[] id = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null) => SendAsync(business, WebSockets, args, id, method);
 
-            if (null == cmd)
-            {
-                return default;
-            }
+        ///// <summary>
+        ///// ISocket byte[]
+        ///// </summary>
+        ///// <param name="business"></param>
+        ///// <param name="args"></param>
+        ///// <param name="method"></param>
+        ///// <returns></returns>
+        //public static ISocket<byte[]> GetSocketData(this IBusiness business, object[] args = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null)
+        //{
+        //    var cmd = business.Command.GetCommand(method);
 
-            object arg = null;
+        //    if (null == cmd)
+        //    {
+        //        return default;
+        //    }
 
-            if (1 < args?.Length && !cmd.HasArgSingle)
-            {
-                arg = Activator.CreateInstance(cmd.ParametersType, args);
-            }
-            else if (0 < args?.Length && null != cmd.ParametersType)
-            {
-                arg = args[0];
-            }
+        //    object arg = null;
 
-            var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
+        //    if (1 < args?.Length && !cmd.HasArgSingle)
+        //    {
+        //        arg = Activator.CreateInstance(cmd.ParametersType, args);
+        //    }
+        //    else if (0 < args?.Length && null != cmd.ParametersType)
+        //    {
+        //        arg = args[0];
+        //    }
 
-            //socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, (cmd.Meta.Attributes.FirstOrDefault(c => c is PushAttribute) as PushAttribute)?.Key ?? method);
-            socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, method);
-            socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
-            //socket.Callback = method;
+        //    var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
 
-            return socket;
-        }
+        //    //socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, (cmd.Meta.Attributes.FirstOrDefault(c => c is PushAttribute) as PushAttribute)?.Key ?? method);
+        //    socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, method);
+        //    socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
+        //    //socket.Callback = method;
+
+        //    return socket;
+        //}
 
         #region HttpCall
 
@@ -2006,7 +2018,7 @@ namespace Business.AspNet
                     var result2 = result as IResult;
                     result2.Callback = receive.Result.Callback ?? receive.Result.Business.Command;
 
-                    receive.WebSocket.SendAsync(new ArraySegment<byte>(result2.ResultCreateToDataBytes().ToBytes()));
+                    receive.WebSocket.SendAsync(result2.ResultCreateToDataBytes().ToBytes());
                 }
             }
         }
@@ -2019,6 +2031,7 @@ namespace Business.AspNet
             }
 
             var acceptBusiness = businessFirst;
+            WebSocketAcceptReply reply = default;
 
             try
             {
@@ -2034,24 +2047,30 @@ namespace Business.AspNet
                 //{
                 //    token = await acceptBusiness.WebSocketAccept(context, webSocket);
                 //}
-                var reply = await acceptBusiness.WebSocketAccept(context, webSocket);
+                reply = await acceptBusiness.WebSocketAccept(context);
 
                 if (string.IsNullOrEmpty(reply.Token))
                 {
                     if (webSocket.State == WebSocketState.Open)
                     {
-                        await webSocket.CloseAsync(0 == reply.CloseStatus ? WebSocketCloseStatus.NormalClosure : reply.CloseStatus, reply.Message, CancellationToken.None);
+                        //no await!
+                        webSocket.CloseAsync(0 == reply.CloseStatus ? WebSocketCloseStatus.NormalClosure : reply.CloseStatus, reply.Message, CancellationToken.None);
                     }
 
                     return;
                 }
 
-                await webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ResultCreate(reply.Message).ToBytes())); //accept ok! client checked
+                webSocket.SendObjectAsync(reply.Message); //accept ok! client checked
+
+                WebSocketContainer.WebSockets.TryAdd(reply.Token, webSocket);
+#if DEBUG
+                Console.WriteLine($"WebSockets Add:{reply.Token} Connections:{WebSocketContainer.WebSockets.Count}");
+#endif
 
                 var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
                 var buffer = new byte[Hosting.webSocketOptions.ReceiveBufferSize];
-                WebSocketReceiveResult socketResult = null;
+                WebSocketReceiveResult socketResult;
 
                 do
                 {
@@ -2063,34 +2082,32 @@ namespace Business.AspNet
 
                         if (string.IsNullOrWhiteSpace(receiveData.Business.BusinessName) || !bootstrap.BusinessList.TryGetValue(receiveData.Business.BusinessName, out IBusiness business))
                         {
-                            webSocket.SendAsync(new ArraySegment<byte>(Hosting.ResultType.ErrorBusiness(receiveData.Business.BusinessName).ToBytes()));
+                            webSocket.SendAsync(Hosting.ResultType.ErrorBusiness(receiveData.Business.BusinessName).ToBytes());
+                            continue;
                         }
-                        else
+
+                        //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
+                        Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).ContinueWith(c2 =>
                         {
-                            //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
-                            Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).ContinueWith(c2 =>
+                            if (null != c2.Exception)
                             {
-                                if (null != c2.Exception)
-                                {
-                                    Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(c2.Exception)));
-                                }
-                            })
-                            , new WebSocketReceive(await business.GetToken(context, new Token //token
-                            {
-                                Origin = Token.OriginValue.WebSocket,
-                                Key = reply.Token,
-                                //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
-                                Remote = remote,
-                                Callback = receiveData.Callback ?? receiveData.Business.Command,
-                                Path = context.Request.Path.Value,
-                            }), receiveData, business, webSocket));
-                        }
+                                Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(c2.Exception)));
+                            }
+                        })
+                        , new WebSocketReceive(await business.GetToken(context, new Token //token
+                        {
+                            Origin = Token.OriginValue.WebSocket,
+                            Key = reply.Token,
+                            //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
+                            Remote = remote,
+                            Callback = receiveData.Callback ?? receiveData.Business.Command,
+                            Path = context.Request.Path.Value,
+                        }), receiveData, business, webSocket));
                     }
                     catch (Exception ex)
                     {
                         Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
-                        var result = Hosting.ResultType.ResultCreate(0, Convert.ToString(ex));
-                        webSocket.SendAsync(new ArraySegment<byte>(result.ToBytes()));
+                        webSocket.SendAsync(Hosting.ResultType.ResultCreate(0, Convert.ToString(ex)).ToBytes());
                     }
 
                     if (webSocket.State != WebSocketState.Open)
@@ -2102,7 +2119,7 @@ namespace Business.AspNet
                 if (webSocket.State == WebSocketState.Open)
                 {
                     //client close
-                    await webSocket.CloseAsync(socketResult.CloseStatus.Value, socketResult.CloseStatusDescription, CancellationToken.None);
+                    webSocket.CloseAsync(socketResult?.CloseStatus.Value ?? WebSocketCloseStatus.Empty, socketResult?.CloseStatusDescription, CancellationToken.None);
                 }
             }
             catch (Exception ex)
@@ -2113,95 +2130,148 @@ namespace Business.AspNet
                 if (webSocket.State == WebSocketState.Open)
                 {
                     //server close
-                    await webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, Convert.ToString(ex), CancellationToken.None);
+                    webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, Convert.ToString(ex), CancellationToken.None);
                 }
             }
             finally
             {
-                await acceptBusiness.WebSocketDispose(context, webSocket);
+                if (null != reply.Token)
+                {
+                    WebSocketContainer.WebSockets.TryRemove(reply.Token, out _);
+
+#if DEBUG
+                    Console.WriteLine($"WebSockets Remove:{reply.Token} Connectionss:{WebSocketContainer.WebSockets.Count}");
+#endif
+                }
+
+                try
+                {
+                    await acceptBusiness.WebSocketDispose(context, reply.Token);
+                }
+                catch (Exception ex)
+                {
+                    Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                }
             }
         }
 
-        #region WebSocketSendAsync
+        #region WebSocket
 
         /// <summary>
-        /// Send socket message
+        /// WebSocket container
         /// </summary>
-        /// <param name="webSockets"></param>
-        /// <param name="bytes"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, params string[] id) => await SendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, -1, id);
-
-        /// <summary>
-        /// Send socket message
-        /// </summary>
-        /// <param name="webSockets"></param>
-        /// <param name="bytes"></param>
-        /// <param name="sendMaxDegreeOfParallelism"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SendAsync(webSockets, bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
-
-        /// <summary>
-        /// Send socket message
-        /// </summary>
-        /// <param name="webSockets"></param>
-        /// <param name="bytes"></param>
-        /// <param name="messageType"></param>
-        /// <param name="sendMaxDegreeOfParallelism"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => await SendAsync(webSockets, bytes, messageType, true, sendMaxDegreeOfParallelism, id);
-
-        /// <summary>
-        /// Send socket message
-        /// </summary>
-        /// <param name="webSockets"></param>
-        /// <param name="bytes"></param>
-        /// <param name="messageType"></param>
-        /// <param name="endOfMessage"></param>
-        /// <param name="sendMaxDegreeOfParallelism"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public static async ValueTask SendAsync(this IDictionary<string, WebSocket> webSockets, byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
+        public class WebSocketContainer : System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>
         {
-            if (null == bytes) { return; }
+            /// <summary>
+            /// WebSocket container
+            /// </summary>
+            public static readonly WebSocketContainer WebSockets = new WebSocketContainer();
 
-            if (null == id || 0 == id.Length)
+            /// <summary>
+            /// Send socket object
+            /// </summary>
+            /// <typeparam name="Data"></typeparam>
+            /// <param name="data"></param>
+            /// <param name="callback"></param>
+            /// <param name="id"></param>
+            public void SendObjectAsync<Data>(Data data, string callback = null, params string[] id)
             {
-                Parallel.ForEach(webSockets, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, c =>
-                {
-                    if (WebSocketState.Open != c.Value.State) { return; }
-
-                    c.Value.SendAsync(new ArraySegment<byte>(bytes), messageType, endOfMessage);
-                });
+                var result = Hosting.ResultType.ResultCreate(data);
+                result.Callback = callback;
+                SendAsync(result.ToBytes(), id);
             }
-            else if (1 == id.Length)
+
+            /// <summary>
+            /// Send socket message
+            /// </summary>
+            /// <param name="bytes"></param>
+            /// <param name="id"></param>
+            /// <returns></returns>
+            public void SendAsync(byte[] bytes, params string[] id) => SendAsync(bytes, WebSocketMessageType.Binary, true, -1, id);
+
+            /// <summary>
+            /// Send socket message
+            /// </summary>
+            /// <param name="bytes"></param>
+            /// <param name="sendMaxDegreeOfParallelism"></param>
+            /// <param name="id"></param>
+            /// <returns></returns>
+            public void SendAsync(byte[] bytes, int sendMaxDegreeOfParallelism = -1, params string[] id) => SendAsync(bytes, WebSocketMessageType.Binary, true, sendMaxDegreeOfParallelism, id);
+
+            /// <summary>
+            /// Send socket message
+            /// </summary>
+            /// <param name="bytes"></param>
+            /// <param name="messageType"></param>
+            /// <param name="sendMaxDegreeOfParallelism"></param>
+            /// <param name="id"></param>
+            /// <returns></returns>
+            public void SendAsync(byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, int sendMaxDegreeOfParallelism = -1, params string[] id) => SendAsync(bytes, messageType, true, sendMaxDegreeOfParallelism, id);
+
+            /// <summary>
+            /// Send socket message
+            /// </summary>
+            /// <param name="bytes"></param>
+            /// <param name="messageType"></param>
+            /// <param name="endOfMessage"></param>
+            /// <param name="sendMaxDegreeOfParallelism"></param>
+            /// <param name="id"></param>
+            /// <returns></returns>
+            public void SendAsync(byte[] bytes, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true, int sendMaxDegreeOfParallelism = -1, params string[] id)
             {
-                var c = id[0];
+                if (null == bytes) { return; }
 
-                if (string.IsNullOrWhiteSpace(c)) { return; }
-
-                if (!webSockets.TryGetValue(c, out WebSocket webSocket)) { return; }
-
-                if (webSocket.State != WebSocketState.Open) { return; }
-
-                webSocket.SendAsync(new ArraySegment<byte>(bytes), messageType, endOfMessage);
-            }
-            else
-            {
-                Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, c =>
+                if (null == id || 0 == id.Length)
                 {
+                    Parallel.ForEach(this, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, c =>
+                    {
+                        if (WebSocketState.Open != c.Value.State) { return; }
+
+                        c.Value.SendAsync(bytes, messageType, endOfMessage);
+                    });
+                }
+                else if (1 == id.Length)
+                {
+                    var c = id[0];
+
                     if (string.IsNullOrWhiteSpace(c)) { return; }
 
-                    if (!webSockets.TryGetValue(c, out WebSocket webSocket)) { return; }
+                    if (!TryGetValue(c, out WebSocket webSocket)) { return; }
 
                     if (webSocket.State != WebSocketState.Open) { return; }
 
-                    webSocket.SendAsync(new ArraySegment<byte>(bytes), messageType, endOfMessage);
-                });
+                    webSocket.SendAsync(bytes, messageType, endOfMessage);
+                }
+                else
+                {
+                    Parallel.ForEach(id, new ParallelOptions { MaxDegreeOfParallelism = sendMaxDegreeOfParallelism }, c =>
+                    {
+                        if (string.IsNullOrWhiteSpace(c)) { return; }
+
+                        if (!TryGetValue(c, out WebSocket webSocket)) { return; }
+
+                        if (webSocket.State != WebSocketState.Open) { return; }
+
+                        webSocket.SendAsync(bytes, messageType, endOfMessage);
+                    });
+                }
             }
+        }
+
+        /// <summary>
+        /// WebSocket SendAsync object
+        /// </summary>
+        /// <typeparam name="Data"></typeparam>
+        /// <param name="webSocket"></param>
+        /// <param name="data"></param>
+        /// <param name="callback"></param>
+        /// <param name="messageType"></param>
+        /// <returns></returns>
+        public static bool SendObjectAsync<Data>(this WebSocket webSocket, Data data = default, string callback = null, WebSocketMessageType messageType = WebSocketMessageType.Binary)
+        {
+            var result = Hosting.ResultType.ResultCreate(data?.MessagePackSerialize());
+            result.Callback = callback;
+            return SendAsync(webSocket, result.ToBytes(), messageType);
         }
 
         /// <summary>
@@ -2211,7 +2281,48 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="messageType"></param>
         /// <param name="endOfMessage"></param>
-        public static async ValueTask<bool> SendAsync(this WebSocket webSocket, ArraySegment<byte> data = default, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, null == data.Array ? new ArraySegment<byte>(new byte[0]) : data, messageType, endOfMessage));
+        /// <returns></returns>
+        public static bool SendAsync(this WebSocket webSocket, byte[] data = null, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, null == data ? new ArraySegment<byte>(new byte[0]) : new ArraySegment<byte>(data), messageType, endOfMessage));
+
+        /// <summary>
+        /// Send webSocket object
+        /// </summary>
+        /// <param name="business"></param>
+        /// <param name="args"></param>
+        /// <param name="id"></param>
+        /// <param name="method"></param>
+        public static void SendAsync(this IBusiness business, object[] args = null, string[] id = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null)
+        {
+            var cmd = business.Command.GetCommand(method);
+
+            if (null == cmd)
+            {
+                return;
+            }
+
+            object arg = null;
+
+            if (1 < args?.Length && !cmd.HasArgSingle)
+            {
+                arg = Activator.CreateInstance(cmd.ParametersType, args);
+            }
+            else if (0 < args?.Length && null != cmd.ParametersType)
+            {
+                arg = args[0];
+            }
+
+            //var socket = Hosting.ResultType.ResultCreate(arg?.MessagePackSerialize(cmd.ParametersType)) as ISocket<byte[]>;
+            var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
+
+            ////socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, (cmd.Meta.Attributes.FirstOrDefault(c => c is PushAttribute) as PushAttribute)?.Key ?? method);
+            socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, method);
+            socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
+            ////socket.Callback = method;
+
+            WebSocketContainer.WebSockets.SendAsync(socket.ToBytes(), id);
+
+            //SendObjectAsync(arg?.MessagePackSerialize(cmd.ParametersType), null, new BusinessInfo(business.Configer.Info.BusinessName, method), id);
+        }
 
         #endregion
 

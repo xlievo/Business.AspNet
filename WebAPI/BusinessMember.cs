@@ -23,7 +23,7 @@ namespace WebAPI
 
         static BusinessMember()
         {
-            timer.Change(TimeSpan.FromSeconds(3), TimeSpan.FromMilliseconds(10));
+            timer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(1));
         }
 
         static readonly string guids = string.Join(",", Enumerable.Range(0, 200).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
@@ -234,11 +234,16 @@ namespace WebAPI
 
             //await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
             //var data = this.GetSocketObject(new object[] { arg, dateTime, mm, fff, bbb }).ToBytes();
-            var data = this.GetSocketData(new object[] { new Test0011 { C31 = "aaaadd111111111111" }, 2233 }, "Test010").ToBytes();
 
-            await webSocket.SendAsync(new ArraySegment<byte>(data));
+            //var data = this.GetSocketData(new object[] { new Test0011 { C31 = "aaaadd111111111111" }, 2233 }, "Test010").ToBytes();
+
+            //webSocket.SendAsync(data);
+
+            //this.SendAsync(WebSockets, new object[] { new Test0011 { C31 = "aaaadd111111111111" }, 2233 }, null, "Test010");
 
             await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
+
+            webSocket.SendObjectAsync("sssssssssss", "123456");
 
             return this.ResultCreate(arg);
             //return this.ResultCreate(new { session, arg, files });
@@ -279,12 +284,11 @@ namespace WebAPI
         /// Test010!
         /// </summary>
         /// <param name="test">Test004XTest004XTest004XTest004X</param>
+        /// <param name="b"></param>
+        /// <param name="id"></param>
         /// <returns></returns>
         [Push]
-        public virtual async ValueTask Test010(Test0011 test, int b)
-        {
-            await WebSockets.SendAsync(this.GetSocketData(new object[] { test, b })?.ToBytes());
-        }
+        public virtual async Task Test010(Test0011 test, int b, [Ignore(IgnoreMode.Arg)] params string[] id) => this.SendAsync(new object[] { test, b }, id);
 
         public virtual async Task<List<string>> Test011(string a, string b)
         {

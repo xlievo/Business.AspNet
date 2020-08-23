@@ -249,47 +249,42 @@ namespace WebAPI
         /// </summary>
         public static readonly System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket> WebSockets = new System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>();
 
-        public sealed override async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context, WebSocket webSocket)
+        public sealed override async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context)
         {
             // checked and return a token
-            if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
+            if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t) || string.IsNullOrWhiteSpace(t))
             {
-                return default;//prevent
+                return new WebSocketAcceptReply(message: "illegal");//prevent
             }
 
-            if (string.IsNullOrWhiteSpace(t))
-            {
-                return default;//prevent
-            }
-
-            WebSockets.TryAdd(t, webSocket);
-#if DEBUG
-            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
-#endif
-            return new WebSocketAcceptReply(t);
+            //Utils.WebSockets.TryAdd(t, webSocket);
+//#if DEBUG
+//            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{Utils.WebSockets.Count}");
+//#endif
+            return new WebSocketAcceptReply(t, "ok!!!");
         }
 
-//        public sealed override async ValueTask WebSocketAcceptCompleted(HttpContext context, WebSocket webSocket, string token)
-//        {
-//            WebSockets.TryAdd(token, webSocket);
-//#if DEBUG
-//            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
-//#endif
-//        }
+        //        public sealed override async ValueTask WebSocketAcceptCompleted(HttpContext context, WebSocket webSocket, string token)
+        //        {
+        //            WebSockets.TryAdd(token, webSocket);
+        //#if DEBUG
+        //            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{WebSockets.Count}");
+        //#endif
+        //        }
 
         public sealed override ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => base.WebSocketReceive(context, webSocket, buffer);
 
-        public sealed async override ValueTask WebSocketDispose(HttpContext context, WebSocket webSocket)
+        public sealed async override ValueTask WebSocketDispose(HttpContext context, string token)
         {
             if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t))
             {
                 return;//prevent
             }
 
-            WebSockets.TryRemove(t.ToString(), out _);
-#if DEBUG
-            Console.WriteLine($"WebSockets Remove:{context.Connection.Id} Connectionss:{WebSockets.Count}");
-#endif
+            //Utils.WebSockets.TryRemove(t.ToString(), out _);
+//#if DEBUG
+//            Console.WriteLine($"WebSockets Remove:{context.Connection.Id} Connectionss:{Utils.WebSockets.Count}");
+//#endif
         }
     }
 }
