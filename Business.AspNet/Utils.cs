@@ -742,7 +742,10 @@ namespace Business.AspNet
         /// </summary>
         public Type ResultType { get; internal set; } = typeof(ResultObject<>).GetGenericTypeDefinition();
 
-        internal Action<LogData> log = c => Help.WriteLocal(c.Message, Utils.Hosting.LocalLogPath, console: true);
+        /// <summary>
+        /// Log output
+        /// </summary>
+        public Action<LogData> Log = c => Help.Console(c.Message);// Help.WriteLocal(c.Message, Utils.Hosting.LocalLogPath, console: true);
 
         internal bool useWebSocket;
 
@@ -954,8 +957,8 @@ namespace Business.AspNet
         /// </summary>
         public BusinessBase() => this.Logger = new Logger((Logger.LoggerData x) =>
         {
-            //Utils.Hosting.log?.Invoke(new LogData(LogType.Info, x.ToString()));
-            Help.Console(x.ToString());
+            Utils.Hosting.Log?.Invoke(new LogData(LogType.Info, x.ToString()));
+            //Help.Console(x.ToString());
             return default;
         });
 
@@ -1015,7 +1018,7 @@ namespace Business.AspNet
             var path = this.Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business))
             {
-                Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
+                Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
                 return this.NotFound();
             }
 
@@ -1061,7 +1064,7 @@ namespace Business.AspNet
                     break;
                 default:
                     {
-                        Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
+                        Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
                         return this.NotFound();
                     }
             }
@@ -1076,7 +1079,7 @@ namespace Business.AspNet
                 if (default(DocUI.BenchmarkArg).Equals(arg))
                 {
                     var argNull = new ArgumentNullException(nameof(arg));
-                    Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"benchmark {argNull.Message}"));
+                    Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"benchmark {argNull.Message}"));
                     return argNull.Message;
                 }
                 //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
@@ -1101,7 +1104,7 @@ namespace Business.AspNet
             if (null == cmd)
             {
                 var errorCmd = Help.ErrorCmd(business, c);
-                Utils.Hosting.log?.Invoke(new LogData(LogType.Error, $"ErrorCmd {errorCmd}"));
+                Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"ErrorCmd {errorCmd}"));
                 return errorCmd;
             }
 
@@ -1241,6 +1244,8 @@ namespace Business.AspNet
             return log;
         }
 
+        #region MessagePack
+
         /// <summary>
         /// MessagePack serialize
         /// </summary>
@@ -1276,6 +1281,8 @@ namespace Business.AspNet
         /// <param name="options"></param>
         /// <returns></returns>
         public static object MessagePackDeserialize(this byte[] value, Type type, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Deserialize(type, value, options);
+
+        #endregion
 
         ///// <summary>
         ///// Send webSocket object
@@ -1449,13 +1456,13 @@ namespace Business.AspNet
 
         static void StartupInfo(string message)
         {
-            if (null == Hosting.log)
+            if (null == Hosting.Log)
             {
                 Console.WriteLine(message);
             }
             else
             {
-                Hosting.log.Invoke(new LogData(LogType.Info, message));
+                Hosting.Log.Invoke(new LogData(LogType.Info, message));
             }
         }
 
@@ -1471,8 +1478,11 @@ namespace Business.AspNet
         {
             Hosting.logOptions = new LogOptions { StartupInfo = true, Logo = true };
             logOptions?.Invoke(Hosting.logOptions);
-            Hosting.log = Hosting.logOptions.Log;// Log;
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString((e.ExceptionObject as Exception)?.ExceptionWrite())));
+            if (null != Hosting.logOptions.Log)
+            {
+                Hosting.Log = Hosting.logOptions.Log;// Log;
+            }
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.Log?.Invoke(new LogData(LogType.Exception, Convert.ToString((e.ExceptionObject as Exception)?.ExceptionWrite())));
 
             if (Hosting.logOptions.Logo)
             {
@@ -1645,7 +1655,7 @@ namespace Business.AspNet
                                 }
                                 catch (Exception ex)
                                 {
-                                    Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                                    Hosting.Log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
                                 }
                             }
                         }
@@ -2065,7 +2075,7 @@ namespace Business.AspNet
                     if (webSocket.State == WebSocketState.Open)
                     {
                         //no await!
-                        webSocket.CloseAsync(0 == reply.CloseStatus ? WebSocketCloseStatus.NormalClosure : reply.CloseStatus, reply.Message, CancellationToken.None);
+                        await webSocket.CloseAsync(reply.CloseStatus, reply.Message);
                     }
 
                     return;
@@ -2074,9 +2084,6 @@ namespace Business.AspNet
                 webSocket.SendObjectAsync(reply.Message); //accept ok! client checked
 
                 WebSocketContainer.WebSockets.TryAdd(reply.Token, webSocket);
-#if DEBUG
-                Console.WriteLine($"WebSockets Add:{reply.Token} Connections:{WebSocketContainer.WebSockets.Count}");
-#endif
 
                 var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
@@ -2086,6 +2093,18 @@ namespace Business.AspNet
                 do
                 {
                     socketResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+                    if (WebSocketMessageType.Close == socketResult.MessageType)
+                    {
+                        if (WebSocketState.CloseReceived == webSocket.State)
+                        {
+                            await webSocket.CloseOutputAsync(socketResult.CloseStatus.Value, socketResult.CloseStatusDescription, CancellationToken.None);
+                        }
+
+                        Hosting.Log?.Invoke(new LogData(LogType.Exception, $"Closed in server by the client. [{socketResult.CloseStatus.Value}] [Token:{reply.Token}]"));
+
+                        continue;
+                    }
 
                     try
                     {
@@ -2097,12 +2116,11 @@ namespace Business.AspNet
                             continue;
                         }
 
-                        //WebSocketQueue.TryAdd(new WebSocketReceive(token, receiveData, business, context, webSocket));
                         Task.Factory.StartNew(async c => await WebSocketCall((WebSocketReceive)c).ContinueWith(c2 =>
                         {
                             if (null != c2.Exception)
                             {
-                                Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(c2.Exception)));
+                                Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(c2.Exception)}{Environment.NewLine}   [Token:{reply.Token}]"));
                             }
                         })
                         , new WebSocketReceive(await business.GetToken(context, new Token //token
@@ -2117,42 +2135,38 @@ namespace Business.AspNet
                     }
                     catch (Exception ex)
                     {
-                        Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                        Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]"));
                         webSocket.SendAsync(Hosting.ResultType.ResultCreate(0, Convert.ToString(ex)).ToBytes());
                     }
 
-                    if (webSocket.State != WebSocketState.Open)
-                    {
-                        break;
-                    }
+                    //if (WebSocketState.Open != webSocket.State)
+                    //{
+                    //    break;
+                    //}
                 } while (!socketResult.CloseStatus.HasValue);
 
-                if (webSocket.State == WebSocketState.Open)
-                {
-                    //client close
-                    webSocket.CloseAsync(socketResult?.CloseStatus.Value ?? WebSocketCloseStatus.Empty, socketResult?.CloseStatusDescription, CancellationToken.None);
-                }
+                //if (WebSocketState.Open == webSocket.State)
+                //{
+                //    //client close
+                //    webSocket.CloseAsync(socketResult?.CloseStatus.Value ?? WebSocketCloseStatus.Empty, socketResult?.CloseStatusDescription);
+                //}
             }
             catch (Exception ex)
             {
-                Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]"));
                 //var result = ResultType.ResultCreate(0, Convert.ToString(ex));
                 //await SocketSendAsync(result.ToBytes(), id);
-                if (webSocket.State == WebSocketState.Open)
-                {
-                    //server close
-                    webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, Convert.ToString(ex), CancellationToken.None);
-                }
+                //if (WebSocketState.Open == webSocket.State)
+                //{
+                //    //server close
+                //    webSocket.CloseAsync(WebSocketCloseStatus.InternalServerError, Convert.ToString(ex));
+                //}
             }
             finally
             {
                 if (null != reply.Token)
                 {
                     WebSocketContainer.WebSockets.TryRemove(reply.Token, out _);
-
-#if DEBUG
-                    Console.WriteLine($"WebSockets Remove:{reply.Token} Connectionss:{WebSocketContainer.WebSockets.Count}");
-#endif
                 }
 
                 try
@@ -2161,7 +2175,7 @@ namespace Business.AspNet
                 }
                 catch (Exception ex)
                 {
-                    Hosting.log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                    Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]"));
                 }
             }
         }
@@ -2334,6 +2348,15 @@ namespace Business.AspNet
 
             //SendObjectAsync(arg?.MessagePackSerialize(cmd.ParametersType), null, new BusinessInfo(business.Configer.Info.BusinessName, method), id);
         }
+
+        /// <summary>
+        /// Closes the WebSocket connection as an asynchronous operation using the close handshake defined in the WebSocket protocol specification section 7.
+        /// </summary>
+        /// <param name="webSocket"></param>
+        /// <param name="closeStatus"></param>
+        /// <param name="statusDescription"></param>
+        /// <returns></returns>
+        public static async ValueTask CloseAsync(this WebSocket webSocket, WebSocketCloseStatus closeStatus = WebSocketCloseStatus.NormalClosure, string statusDescription = null) => await webSocket.CloseOutputAsync(0 == closeStatus ? WebSocketCloseStatus.NormalClosure : closeStatus, statusDescription, CancellationToken.None);
 
         #endregion
 

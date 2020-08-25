@@ -23,7 +23,7 @@ namespace WebAPI
 
         static BusinessMember()
         {
-            timer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(1));
+            //timer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(1));
         }
 
         static readonly string guids = string.Join(",", Enumerable.Range(0, 200).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
@@ -244,6 +244,8 @@ namespace WebAPI
             await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
 
             webSocket.SendObjectAsync("sssssssssss", "123456");
+
+            //await webSocket.CloseAsync();
 
             return this.ResultCreate(arg);
             //return this.ResultCreate(new { session, arg, files });

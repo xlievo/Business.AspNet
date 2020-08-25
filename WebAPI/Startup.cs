@@ -61,7 +61,7 @@ namespace WebAPI
             //Using third party log components
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
-                .WriteTo.Console()
+                .WriteTo.Console(theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
                 .WriteTo.File(Utils.Hosting.LocalLogPath,
                 rollingInterval: RollingInterval.Day,
                 rollOnFileSizeLimit: true)

@@ -40,16 +40,16 @@
   <ItemGroup>
     <PackageReference Include="Business.Core" Version="1.6.1.1" />
     <PackageReference Include="Business.DocUI" Version="1.2.9" />
-    <PackageReference Include="MessagePack" Version="2.1.152" />
+    <PackageReference Include="MessagePack" Version="2.1.165" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.HttpOverrides" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="2.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.6" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="3.1.6" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="3.1.7" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="3.1.7" />
   </ItemGroup>
 
 </Project>

@@ -226,6 +226,7 @@ namespace WebAPI
         {
             this.Logger = new Logger(async (Logger.LoggerData log) =>
             {
+                Utils.Hosting.Log?.Invoke(new LogOptions.LogData(LogOptions.LogType.Info, log.ToString()));
                 //var result = await LogClient.Log(log);
 
                 //Console.WriteLine(log.ToString());
@@ -252,13 +253,18 @@ namespace WebAPI
                 return default;//prevent
             }
 
-            //Utils.WebSockets.TryAdd(t, webSocket);
-//#if DEBUG
-//            Console.WriteLine($"WebSockets Add:{context.Connection.Id} Connections:{Utils.WebSockets.Count}");
-//#endif
+#if DEBUG
+            Console.WriteLine($"WebSockets Add:{t} Connections:{Utils.WebSocketContainer.WebSockets.Count}");
+#endif
             return new WebSocketAcceptReply(t, "ok!!!");
         }
 
-        
+        public override ValueTask WebSocketDispose(HttpContext context, string token)
+        {
+#if DEBUG
+            Console.WriteLine($"WebSockets Remove:{token} Connectionss:{Utils.WebSocketContainer.WebSockets.Count}");
+#endif
+            return default;
+        }
     }
 }
