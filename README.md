@@ -151,7 +151,7 @@ Why is there no comment on the document?
 **In project properties -> generate -> select XML document file**
 
 ## You want to control WebSocket?
-To enable WebSocket, UseWebSockets() must be used. It is closed by default  
+To enable WebSocket, UseWebSocket() must be used. It is closed by default  
 ```C#
 app.CreateBusiness()
     .UseWebSocket(options =>
