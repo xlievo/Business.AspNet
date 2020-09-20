@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Security.AccessControl;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,12 +19,37 @@ namespace WebAPI
     {
         static readonly Timer timer = new System.Threading.Timer(new TimerCallback(async obj =>
         {
-            await Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
+            await Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = DateTime.Now.ToString(), C32 = "c32" }, 1123 });
         }));
 
         static BusinessMember()
         {
             //timer.Change(TimeSpan.FromSeconds(1), TimeSpan.FromMilliseconds(1));
+
+            //Task.Run(async () =>
+            //{
+            //    while (true)
+            //    {
+            //        if (0 == Utils.WebSocketContainer.WebSockets.Count)
+            //        {
+            //            await Task.Delay(1);
+            //            continue;
+            //        }
+
+            //        if (!Business.Core.Configer.BusinessList.TryGetValue("API/v2", out Business.Core.IBusiness business))
+            //        {
+            //            await Task.Delay(1);
+            //            continue;
+            //        }
+
+            //        Parallel.For(0, 1000000, async c =>
+            //         {
+            //             await business.Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = DateTime.Now.ToString(), C32 = "c32" }, 1123 });
+            //         });
+
+            //        break;
+            //    }
+            //});
         }
 
         static readonly string guids = string.Join(",", Enumerable.Range(0, 200).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
@@ -243,12 +269,65 @@ namespace WebAPI
 
             await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
 
-            webSocket.SendObjectAsync("sssssssssss", "123456");
+            webSocket.SendObjectAsync("sssssssssss", "123456", false);
 
             //await webSocket.CloseAsync();
 
-            return this.ResultCreate(arg);
+            return this.ResultCreate(arg, "ssssssssssssss!@#", 99999);
+
             //return this.ResultCreate(new { session, arg, files });
+        }
+
+        /// <summary>
+        /// result
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        public struct ResultObject2<Type>
+        {
+            public ResultObject2(int state, string message, Type data, bool hasData, string callback)
+            {
+                State = state;
+                Message = message;
+                Data = data;
+                HasData = hasData;
+                Callback = callback;
+            }
+
+            public int State { get; }
+
+            public string Message { get; }
+
+            public Type Data { get; }
+
+            public bool HasData { get; }
+
+            public string Callback { get; }
+        }
+
+        /// <summary>
+        /// result
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        public struct ResultObject3<Type>
+        {
+            //public ResultObject2(int state, string message, Type data, bool hasData, string callback)
+            //{
+            //    State = state;
+            //    Message = message;
+            //    Data = data;
+            //    HasData = hasData;
+            //    Callback = callback;
+            //}
+
+            public int State { get; set; }
+
+            public string Message { get; set; }
+
+            public Type Data { get; set; }
+
+            public bool HasData { get; set; }
+
+            public string Callback { get; set; }
         }
 
         [Command("abc", Group = Utils.GroupWebSocket)]

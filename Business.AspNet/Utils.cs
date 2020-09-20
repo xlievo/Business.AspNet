@@ -41,45 +41,11 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
 using static Business.AspNet.LogOptions;
+using System.Net;
 
 namespace Business.AspNet
 {
     #region Socket Support
-
-    /*
-    public class BusinessInfoFormatter : MessagePack.Formatters.IMessagePackFormatter<IBusinessInfo>
-    {
-        public static readonly BusinessInfoFormatter Instance = new BusinessInfoFormatter();
-
-        public IBusinessInfo Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
-        {
-            if (!reader.TryReadArrayHeader(out _)) { return null; }
-            return new BusinessInfo { BusinessName = reader.ReadString(), Command = reader.ReadString() };
-        }
-
-        public void Serialize(ref MessagePackWriter writer, IBusinessInfo value, MessagePackSerializerOptions options)
-        {
-            if (null == value) { return; }
-            writer.WriteArrayHeader(2);
-            writer.Write(value.BusinessName);
-            writer.Write(value.Command);
-        }
-    }
-
-    public interface IBusinessInfo
-    {
-        /// <summary>
-        /// Business to call
-        /// </summary>
-        string BusinessName { get; }
-
-        /// <summary>
-        /// Command to call
-        /// </summary>
-        string Command { get; }
-    }
-
-    */
 
     /// <summary>
     /// socket receive send
@@ -94,7 +60,7 @@ namespace Business.AspNet
         /// <summary>
         /// Specific Byte/Json data objects
         /// </summary>
-        Type Data { get; set; }
+        Type Data { get; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
@@ -105,7 +71,7 @@ namespace Business.AspNet
         /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        byte[] ToBytes();
+        byte[] ToBytes(bool dataBytes = true);
     }
 
     /// <summary>
@@ -169,18 +135,20 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="state"></param>
         /// <param name="message"></param>
+        /// <param name="callback"></param>
         /// <param name="genericDefinition"></param>
         /// <param name="checkData"></param>
+        /// <param name="hasData"></param>
         /// <param name="hasDataResult"></param>
-        public ResultObject(System.Type dataType, Type data, int state = 1, string message = null, System.Type genericDefinition = null, bool checkData = true, bool hasDataResult = false)
+        public ResultObject(System.Type dataType, Type data, int state = 1, string message = null, string callback = null, System.Type genericDefinition = null, bool checkData = true, bool hasData = false, bool hasDataResult = false)
         {
             this.DataType = dataType;
             this.Data = data;
             this.State = state;
             this.Message = message;
-            this.HasData = checkData && !Equals(null, data);
+            this.HasData = checkData ? !Equals(null, data) : hasData;
 
-            this.Callback = null;
+            this.Callback = callback;
             this.Business = default;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
@@ -192,12 +160,13 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public ResultObject(Type data, int state = 1, string message = null)
+        /// <param name="hasData"></param>
+        public ResultObject(Type data, int state, string message, bool hasData)
         {
             this.Data = data;
             this.State = state;
             this.Message = message;
-            this.HasData = !Equals(null, data);
+            this.HasData = hasData;
 
             this.Callback = null;
             this.Business = default;
@@ -211,14 +180,14 @@ namespace Business.AspNet
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("S")]
         [Newtonsoft.Json.JsonProperty("S")]
-        public int State { get; set; }
+        public int State { get; }
 
         /// <summary>
         /// Success can be null
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("M")]
         [Newtonsoft.Json.JsonProperty("M")]
-        public string Message { get; set; }
+        public string Message { get; }
 
         /// <summary>
         /// Specific dynamic data objects
@@ -230,14 +199,14 @@ namespace Business.AspNet
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("D")]
         [Newtonsoft.Json.JsonProperty("D")]
-        public Type Data { get; set; }
+        public Type Data { get; }
 
         /// <summary>
         /// Whether there is value
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("H")]
         [Newtonsoft.Json.JsonProperty("H")]
-        public bool HasData { get; set; }
+        public bool HasData { get; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
@@ -252,7 +221,7 @@ namespace Business.AspNet
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public System.Type DataType { get; set; }
+        public System.Type DataType { get; }
 
         /// <summary>
         /// Result object generic definition
@@ -284,22 +253,10 @@ namespace Business.AspNet
         public override string ToString() => Help.JsonSerialize(this);
 
         /// <summary>
-        /// Json format Data
+        /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        public string ToDataString() => Help.JsonSerialize(this.Data);
-
-        /// <summary>
-        /// ProtoBuf format
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToBytes() => this.MessagePackSerialize();
-
-        /// <summary>
-        /// ProtoBuf format Data
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToDataBytes() => this.Data.MessagePackSerialize();
+        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? ResultFactory.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
     }
 
     ///// <summary>
@@ -388,6 +345,102 @@ namespace Business.AspNet
         /// CloseStatus
         /// </summary>
         public WebSocketCloseStatus CloseStatus { get; }
+    }
+
+    /// <summary>
+    /// NAT
+    /// </summary>
+    public readonly struct NAT
+    {
+        /// <summary>
+        /// NAT
+        /// </summary>
+        /// <param name="port"></param>
+        /// <param name="token"></param>
+        /// <param name="address"></param>
+        public NAT(int port, string token, string address = null)
+        {
+            Port = port;
+            Token = token;
+            Address = address;
+        }
+
+        /// <summary>
+        /// Port
+        /// </summary>
+        public int Port { get; }
+
+        /// <summary>
+        /// Token
+        /// </summary>
+        public string Token { get; }
+
+        /// <summary>
+        /// Address
+        /// </summary>
+        public string Address { get; }
+    }
+
+    /// <summary>
+    /// IPEndPoint
+    /// </summary>
+    public readonly struct IPEndPoint
+    {
+        /// <summary>
+        /// IPEndPoint
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="port"></param>
+        public IPEndPoint(System.Net.IPAddress address, int port) : this(address?.GetAddressBytes(), port) { }
+
+        /// <summary>
+        /// IPEndPoint
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="port"></param>
+        public IPEndPoint(byte[] address, int port)
+        {
+            Address = address ?? throw new ArgumentNullException(nameof(address));
+            Port = port;
+
+            key = $"{BitConverter.ToString(Address)}:{Port}";
+        }
+
+        /// <summary>
+        /// Address
+        /// </summary>
+        public byte[] Address { get; }
+
+        /// <summary>
+        /// Port
+        /// </summary>
+        public int Port { get; }
+
+        readonly string key;
+
+        /// <summary>
+        /// ToEndPoint
+        /// </summary>
+        /// <returns></returns>
+        public System.Net.IPEndPoint ToEndPoint() => new System.Net.IPEndPoint(new System.Net.IPAddress(Address), Port);
+        /// <summary>
+        /// Indicates whether this instance and a specified object are equal.
+        /// </summary>
+        /// <param name="obj">The object to compare with the current instance.</param>
+        /// <returns>true if obj and this instance are the same type and represent the same value; otherwise, false.</returns>
+        public override bool Equals(object obj) => GetHashCode().Equals(obj.GetHashCode());
+
+        /// <summary>
+        /// Returns the hash code for this instance.
+        /// </summary>
+        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        public override int GetHashCode() => key.GetHashCode();
+
+        /// <summary>
+        /// Returns the IP address and port number of the specified endpoint.
+        /// </summary>
+        /// <returns>A string containing the IP address and the port number of the specified endpoint (for example, 192.168.1.2:80).</returns>
+        public override string ToString() => ToEndPoint().ToString();
     }
 
     /// <summary>
@@ -1133,8 +1186,6 @@ namespace Business.AspNet
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
                         new UseEntry(token));
-
-            //var dd = result.ToBytes();
 
             return result;
         }
@@ -1993,6 +2044,37 @@ namespace Business.AspNet
             return bootstrap;
         }
 
+        /// <summary>
+        /// ToEndPoint
+        /// </summary>
+        /// <param name="endPoint"></param>
+        /// <returns></returns>
+        public static IPEndPoint ToEndPoint(this System.Net.IPEndPoint endPoint)
+        {
+            if (endPoint is null)
+            {
+                throw new ArgumentNullException(nameof(endPoint));
+            }
+
+            return new IPEndPoint(endPoint.Address, endPoint.Port);
+        }
+
+        //static System.Collections.Concurrent.ConcurrentDictionary<IPEndPoint, string> EndPoints = new System.Collections.Concurrent.ConcurrentDictionary<IPEndPoint, string>();
+
+        ///// <summary>
+        ///// udp port to listen
+        ///// </summary>
+        ///// <param name="bootstrap"></param>
+        ///// <param name="port"></param>
+        ///// <param name="natPort"></param>
+        ///// <returns></returns>
+        //public static BootstrapAll<IBusiness> UseLiteNetLibHost(this BootstrapAll<IBusiness> bootstrap, int port = 65000, int natPort = 65001)
+        //{
+        //    NatPunch.Instance.Run(port, natPort);
+
+        //    return bootstrap;
+        //}
+
         ///// <summary>
         ///// Use ISocket type object
         ///// </summary>
@@ -2039,7 +2121,7 @@ namespace Business.AspNet
                     var result2 = result as IResult;
                     result2.Callback = receive.Result.Callback ?? receive.Result.Business.Command;
 
-                    receive.WebSocket.SendAsync(result2.ResultCreateToDataBytes().ToBytes());
+                    receive.WebSocket.SendAsync(result2.ToBytes());
                 }
             }
         }
@@ -2081,7 +2163,7 @@ namespace Business.AspNet
                     return;
                 }
 
-                webSocket.SendObjectAsync(reply.Message); //accept ok! client checked
+                webSocket.SendObjectAsync(reply.Message, dataBytes: false); //accept ok! client checked
 
                 WebSocketContainer.WebSockets.TryAdd(reply.Token, webSocket);
 
@@ -2198,13 +2280,9 @@ namespace Business.AspNet
             /// <typeparam name="Data"></typeparam>
             /// <param name="data"></param>
             /// <param name="callback"></param>
+            /// <param name="dataBytes"></param>
             /// <param name="id"></param>
-            public void SendObjectAsync<Data>(Data data, string callback = null, params string[] id)
-            {
-                var result = Hosting.ResultType.ResultCreate(data);
-                result.Callback = callback;
-                SendAsync(result.ToBytes(), id);
-            }
+            public void SendObjectAsync<Data>(Data data, string callback = null, bool dataBytes = true, params string[] id) => SendAsync(Hosting.ResultType.ResultCreate(data, callback: callback).ToBytes(dataBytes), id);
 
             /// <summary>
             /// Send socket message
@@ -2290,14 +2368,10 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <param name="data"></param>
         /// <param name="callback"></param>
+        /// <param name="dataBytes"></param>
         /// <param name="messageType"></param>
         /// <returns></returns>
-        public static bool SendObjectAsync<Data>(this WebSocket webSocket, Data data = default, string callback = null, WebSocketMessageType messageType = WebSocketMessageType.Binary)
-        {
-            var result = Hosting.ResultType.ResultCreate(data?.MessagePackSerialize());
-            result.Callback = callback;
-            return SendAsync(webSocket, result.ToBytes(), messageType);
-        }
+        public static bool SendObjectAsync<Data>(this WebSocket webSocket, Data data = default, string callback = null, bool dataBytes = true, WebSocketMessageType messageType = WebSocketMessageType.Binary) => SendAsync(webSocket, Hosting.ResultType.ResultCreate(data?.MessagePackSerialize(), callback: callback).ToBytes(dataBytes), messageType);
 
         /// <summary>
         /// WebSocket SendAsync
@@ -2336,15 +2410,15 @@ namespace Business.AspNet
                 arg = args[0];
             }
 
-            //var socket = Hosting.ResultType.ResultCreate(arg?.MessagePackSerialize(cmd.ParametersType)) as ISocket<byte[]>;
-            var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
+            var socket = Hosting.ResultType.ResultCreate(arg?.MessagePackSerialize(cmd.ParametersType)) as ISocket<byte[]>;
+            //var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
 
             ////socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, (cmd.Meta.Attributes.FirstOrDefault(c => c is PushAttribute) as PushAttribute)?.Key ?? method);
             socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, method);
-            socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
+            //socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
             ////socket.Callback = method;
 
-            WebSocketContainer.WebSockets.SendAsync(socket.ToBytes(), id);
+            WebSocketContainer.WebSockets.SendAsync(socket.ToBytes(false), id);
 
             //SendObjectAsync(arg?.MessagePackSerialize(cmd.ParametersType), null, new BusinessInfo(business.Configer.Info.BusinessName, method), id);
         }

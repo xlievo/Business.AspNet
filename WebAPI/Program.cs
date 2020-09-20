@@ -25,7 +25,9 @@ namespace WebAPI
             .ConfigureLogging(logging => logging.AddFilter("Microsoft.AspNetCore.DataProtection", LogLevel.Error))
             .ConfigureWebHostDefaults(webBuilder =>
             {
-                webBuilder.UseStartup<Startup>();
+                webBuilder
+                //.UseUrls("http://localhost:6001", "http://192.168.1.107:6001")
+                .UseStartup<Startup>();
             });
     }
 }

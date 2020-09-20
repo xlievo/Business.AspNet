@@ -26,18 +26,20 @@ namespace WebAPI
         /// <param name="data"></param>
         /// <param name="state"></param>
         /// <param name="message"></param>
+        /// <param name="callback"></param>
         /// <param name="genericDefinition"></param>
         /// <param name="checkData"></param>
+        /// <param name="hasData"></param>
         /// <param name="hasDataResult"></param>
-        public MyResultObject(System.Type dataType, Type data, int state = 1, string message = null, System.Type genericDefinition = null, bool checkData = true, bool hasDataResult = false)
+        public MyResultObject(System.Type dataType, Type data, int state = 1, string message = null, string callback = null, System.Type genericDefinition = null, bool checkData = true, bool hasData = false, bool hasDataResult = false)
         {
             this.DataType = dataType;
             this.Data = data;
             this.State = state;
             this.Message = message;
-            this.HasData = checkData && !Equals(null, data);
+            this.HasData = checkData ? !Equals(null, data) : hasData;
 
-            this.Callback = null;
+            this.Callback = callback;
             this.Business = default;
             this.GenericDefinition = genericDefinition;
             this.HasDataResult = hasDataResult;
@@ -49,12 +51,12 @@ namespace WebAPI
         /// <param name="data"></param>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public MyResultObject(Type data, int state = 1, string message = null)
+        public MyResultObject(Type data, int state, string message, bool hasData)
         {
             this.Data = data;
             this.State = state;
             this.Message = message;
-            this.HasData = !Equals(null, data);
+            this.HasData = hasData;
 
             this.Callback = null;
             this.Business = default;
@@ -63,19 +65,39 @@ namespace WebAPI
             this.HasDataResult = false;
         }
 
+        //public MyResultObject(int state, string message, bool hasData, Type data, string callback, System.Type dataType, System.Type genericDefinition, bool hasDataResult, BusinessInfo business)
+        //{
+        //    State = state;
+        //    Message = message;
+        //    HasData = hasData;
+        //    Data = data;
+        //    Callback = callback;
+        //    DataType = dataType;
+        //    GenericDefinition = genericDefinition;
+        //    HasDataResult = hasDataResult;
+        //    Business = business;
+        //}
+
         /// <summary>
         /// The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("S")]
         [Newtonsoft.Json.JsonProperty("S")]
-        public int State { get; set; }
+        public int State { get; }
 
         /// <summary>
         /// Success can be null
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("M")]
         [Newtonsoft.Json.JsonProperty("M")]
-        public string Message { get; set; }
+        public string Message { get; }
+
+        /// <summary>
+        /// Whether there is value
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("H")]
+        [Newtonsoft.Json.JsonProperty("H")]
+        public bool HasData { get; }
 
         /// <summary>
         /// Specific dynamic data objects
@@ -87,14 +109,7 @@ namespace WebAPI
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("D")]
         [Newtonsoft.Json.JsonProperty("D")]
-        public Type Data { get; set; }
-
-        /// <summary>
-        /// Whether there is value
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("H")]
-        [Newtonsoft.Json.JsonProperty("H")]
-        public bool HasData { get; set; }
+        public Type Data { get; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
@@ -110,7 +125,7 @@ namespace WebAPI
         [MessagePack.IgnoreMember]
         [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
-        public System.Type DataType { get; set; }
+        public System.Type DataType { get; }
 
         /// <summary>
         /// Result object generic definition
@@ -142,22 +157,10 @@ namespace WebAPI
         public override string ToString() => Help.JsonSerialize(this);
 
         /// <summary>
-        /// Json format Data
+        /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        public string ToDataString() => Help.JsonSerialize(this.Data);
-
-        /// <summary>
-        /// ProtoBuf format
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToBytes() => this.MessagePackSerialize();
-
-        /// <summary>
-        /// ProtoBuf format Data
-        /// </summary>
-        /// <returns></returns>
-        public byte[] ToDataBytes() => this.Data.MessagePackSerialize();
+        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? ResultFactory.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
     }
 
     [TokenCheck]

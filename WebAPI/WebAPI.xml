@@ -111,6 +111,18 @@
             rrrrrr2
             </returns>
         </member>
+        <member name="T:WebAPI.BusinessMember.ResultObject2`1">
+            <summary>
+            result
+            </summary>
+            <typeparam name="Type"></typeparam>
+        </member>
+        <member name="T:WebAPI.BusinessMember.ResultObject3`1">
+            <summary>
+            result
+            </summary>
+            <typeparam name="Type"></typeparam>
+        </member>
         <member name="M:WebAPI.BusinessMember.Test010(WebAPI.Test0011,System.Int32,System.String[])">
             <summary>
             Test010!
@@ -360,7 +372,7 @@
             </summary>
             <typeparam name="Type"></typeparam>
         </member>
-        <member name="M:WebAPI.MyResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.Type,System.Boolean,System.Boolean)">
+        <member name="M:WebAPI.MyResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.String,System.Type,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Activator.CreateInstance
             </summary>
@@ -368,11 +380,13 @@
             <param name="data"></param>
             <param name="state"></param>
             <param name="message"></param>
+            <param name="callback"></param>
             <param name="genericDefinition"></param>
             <param name="checkData"></param>
+            <param name="hasData"></param>
             <param name="hasDataResult"></param>
         </member>
-        <member name="M:WebAPI.MyResultObject`1.#ctor(`0,System.Int32,System.String)">
+        <member name="M:WebAPI.MyResultObject`1.#ctor(`0,System.Int32,System.String,System.Boolean)">
             <summary>
             MessagePack.MessagePackSerializer.Serialize(this)
             </summary>
@@ -390,6 +404,11 @@
             Success can be null
             </summary>
         </member>
+        <member name="P:WebAPI.MyResultObject`1.HasData">
+            <summary>
+            Whether there is value
+            </summary>
+        </member>
         <member name="P:WebAPI.MyResultObject`1.Business#Core#Result#IResult#Data">
             <summary>
             Specific dynamic data objects
@@ -398,11 +417,6 @@
         <member name="P:WebAPI.MyResultObject`1.Data">
             <summary>
             Specific Byte/Json data objects
-            </summary>
-        </member>
-        <member name="P:WebAPI.MyResultObject`1.HasData">
-            <summary>
-            Whether there is value
             </summary>
         </member>
         <member name="P:WebAPI.MyResultObject`1.Callback">
@@ -436,21 +450,9 @@
             </summary>
             <returns></returns>
         </member>
-        <member name="M:WebAPI.MyResultObject`1.ToDataString">
+        <member name="M:WebAPI.MyResultObject`1.ToBytes(System.Boolean)">
             <summary>
-            Json format Data
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:WebAPI.MyResultObject`1.ToBytes">
-            <summary>
-            ProtoBuf format
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:WebAPI.MyResultObject`1.ToDataBytes">
-            <summary>
-            ProtoBuf format Data
+            ProtoBuf,MessagePack or Other
             </summary>
             <returns></returns>
         </member>
