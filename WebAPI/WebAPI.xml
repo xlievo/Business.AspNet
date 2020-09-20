@@ -381,6 +381,7 @@
             <param name="data"></param>
             <param name="state"></param>
             <param name="message"></param>
+            <param name="hasData"></param>
         </member>
         <member name="P:WebAPI.MyResultObject`1.State">
             <summary>

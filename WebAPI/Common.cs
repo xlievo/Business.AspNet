@@ -17,7 +17,7 @@ namespace WebAPI
     /// result
     /// </summary>
     /// <typeparam name="Type"></typeparam>
-    public struct MyResultObject<Type> : IResult<Type>, ISocket<Type>
+    public struct MyResultObject<Type> : IResultObject<Type>
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -51,6 +51,7 @@ namespace WebAPI
         /// <param name="data"></param>
         /// <param name="state"></param>
         /// <param name="message"></param>
+        /// <param name="hasData"></param>
         public MyResultObject(Type data, int state, string message, bool hasData)
         {
             this.Data = data;
@@ -160,7 +161,7 @@ namespace WebAPI
         /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? ResultFactory.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
+        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? Utils.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData, HasDataResult, Business).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
     }
 
     [TokenCheck]

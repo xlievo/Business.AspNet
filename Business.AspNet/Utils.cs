@@ -47,31 +47,43 @@ namespace Business.AspNet
 {
     #region Socket Support
 
+    ///// <summary>
+    ///// socket receive send
+    ///// </summary>
+    //public interface ISocket<Type>
+    //{
+    //    /// <summary>
+    //    /// Business
+    //    /// </summary>
+    //    BusinessInfo Business { get; set; }
+
+    //    /// <summary>
+    //    /// Specific Byte/Json data objects
+    //    /// </summary>
+    //    Type Data { get; }
+
+    //    /// <summary>
+    //    /// Gets the token of this result, used for callback
+    //    /// </summary>
+    //    string Callback { get; set; }
+
+    //    /// <summary>
+    //    /// ProtoBuf,MessagePack or Other
+    //    /// </summary>
+    //    /// <returns></returns>
+    //    byte[] ToBytes(bool dataBytes = true);
+    //}
+
     /// <summary>
     /// socket receive send
     /// </summary>
-    public interface ISocket<Type>
+    /// <typeparam name="Type"></typeparam>
+    public interface IResultObject<Type> : IResult<Type>
     {
         /// <summary>
         /// Business
         /// </summary>
         BusinessInfo Business { get; set; }
-
-        /// <summary>
-        /// Specific Byte/Json data objects
-        /// </summary>
-        Type Data { get; }
-
-        /// <summary>
-        /// Gets the token of this result, used for callback
-        /// </summary>
-        string Callback { get; set; }
-
-        /// <summary>
-        /// ProtoBuf,MessagePack or Other
-        /// </summary>
-        /// <returns></returns>
-        byte[] ToBytes(bool dataBytes = true);
     }
 
     /// <summary>
@@ -126,7 +138,7 @@ namespace Business.AspNet
     /// result
     /// </summary>
     /// <typeparam name="Type"></typeparam>
-    public struct ResultObject<Type> : IResult<Type>, ISocket<Type>
+    public struct ResultObject<Type> : IResultObject<Type>
     {
         /// <summary>
         /// Activator.CreateInstance
@@ -256,7 +268,7 @@ namespace Business.AspNet
         /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? ResultFactory.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
+        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? Utils.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData, HasDataResult, Business).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
     }
 
     ///// <summary>
@@ -293,7 +305,7 @@ namespace Business.AspNet
 
     readonly struct WebSocketReceive
     {
-        public WebSocketReceive(IToken token, ISocket<byte[]> result, IBusiness business, WebSocket webSocket)
+        public WebSocketReceive(IToken token, IResultObject<byte[]> result, IBusiness business, WebSocket webSocket)
         {
             Token = token;
             Result = result;
@@ -304,7 +316,7 @@ namespace Business.AspNet
 
         public IToken Token { get; }
 
-        public ISocket<byte[]> Result { get; }
+        public IResultObject<byte[]> Result { get; }
 
         public IBusiness Business { get; }
 
@@ -982,7 +994,7 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
+        ValueTask<IResultObject<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
 
         /// <summary>
         /// WebSocket dispose
@@ -1039,7 +1051,7 @@ namespace Business.AspNet
         /// <param name="buffer"></param>
         /// <returns></returns>
         [Ignore]
-        public virtual ValueTask<ISocket<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => new ValueTask<ISocket<byte[]>>((ISocket<byte[]>)buffer.MessagePackDeserialize(Utils.Hosting.socketType));
+        public virtual ValueTask<IResultObject<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => new ValueTask<IResultObject<byte[]>>((IResultObject<byte[]>)buffer.MessagePackDeserialize(Utils.Hosting.socketType));
 
         /// <summary>
         /// WebSocket dispose
@@ -1333,6 +1345,25 @@ namespace Business.AspNet
         /// <returns></returns>
         public static object MessagePackDeserialize(this byte[] value, Type type, MessagePack.MessagePackSerializerOptions options = null) => MessagePack.MessagePackSerializer.Deserialize(type, value, options);
 
+        /// <summary>
+        /// ToResult
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <param name="dataBytes"></param>
+        /// <returns></returns>
+        public static IResultObject<Type> ToResult<Type>(this byte[] value, bool dataBytes = true)
+        {
+            if (dataBytes)
+            {
+                var result = (IResultObject<byte[]>)value.MessagePackDeserialize(Hosting.socketType);
+
+                return ResultCreate(Hosting.ResultType, result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, businessInfo: result.Business);
+            }
+
+            return (IResultObject<Type>)value.MessagePackDeserialize(Hosting.ResultType.MakeGenericType(typeof(Type)));
+        }
+
         #endregion
 
         ///// <summary>
@@ -1477,21 +1508,22 @@ namespace Business.AspNet
         /// Used to create the IResult returns object
         /// </summary>
         /// <typeparam name="Data"></typeparam>
+        /// <param name="resultTypeDefinition"></param>
         /// <param name="data"></param>
         /// <param name="message"></param>
         /// <param name="state"></param>
-        /// <param name="resultTypeDefinition"></param>
+        /// <param name="callback"></param>
+        /// <param name="checkData"></param>
+        /// <param name="hasData"></param>
+        /// <param name="hasDataResult"></param>
+        /// <param name="businessInfo"></param>
         /// <returns></returns>
-        public static IResult<Data> ResultCreate<Data>(Data data = default, string message = null, int state = 1, Type resultTypeDefinition = null) => (resultTypeDefinition ?? Hosting.ResultType).ResultCreate(data, message, state);
-
-        /// <summary>
-        /// Used to create the IResult returns object
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="message"></param>
-        /// <param name="resultTypeDefinition"></param>
-        /// <returns></returns>
-        public static IResult ResultCreate(int state = 1, string message = null, Type resultTypeDefinition = null) => (resultTypeDefinition ?? Hosting.ResultType).ResultCreate(state, message);
+        public static IResultObject<Data> ResultCreate<Data>(Type resultTypeDefinition, Data data = default, string message = null, int state = 1, string callback = null, bool checkData = true, bool hasData = false, bool hasDataResult = true, BusinessInfo businessInfo = default)
+        {
+            var result = ResultFactory.ResultCreate(resultTypeDefinition, data, message, state, callback, checkData, hasData, hasDataResult) as IResultObject<Data>;
+            result.Business = businessInfo;
+            return result;
+        }
 
         #endregion
 
@@ -1590,7 +1622,7 @@ namespace Business.AspNet
 
             bootstrap.Config.BuildBefore = strap =>
             {
-                Hosting.ResultType = strap.Config.ResultType;
+                Hosting.ResultType = strap.Config.ResultType.GetGenericTypeDefinition();
                 Hosting.socketType = Hosting.ResultType.MakeGenericType(typeof(byte[]));
                 MessagePack.MessagePackSerializer.DefaultOptions = Hosting.useMessagePackOptions;
 
@@ -2410,15 +2442,15 @@ namespace Business.AspNet
                 arg = args[0];
             }
 
-            var socket = Hosting.ResultType.ResultCreate(arg?.MessagePackSerialize(cmd.ParametersType)) as ISocket<byte[]>;
+            //var socket = ResultCreate(Hosting.ResultType, arg?.MessagePackSerialize(cmd.ParametersType), businessInfo: new BusinessInfo(business.Configer.Info.BusinessName, method));
             //var socket = Activator.CreateInstance(Hosting.socketType) as ISocket<byte[]>;
 
             ////socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, (cmd.Meta.Attributes.FirstOrDefault(c => c is PushAttribute) as PushAttribute)?.Key ?? method);
-            socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, method);
+            //socket.Business = new BusinessInfo(business.Configer.Info.BusinessName, method);
             //socket.Data = arg?.MessagePackSerialize(cmd.ParametersType);
             ////socket.Callback = method;
 
-            WebSocketContainer.WebSockets.SendAsync(socket.ToBytes(false), id);
+            WebSocketContainer.WebSockets.SendAsync(ResultCreate(Hosting.ResultType, arg?.MessagePackSerialize(cmd.ParametersType), businessInfo: new BusinessInfo(business.Configer.Info.BusinessName, method)).ToBytes(false), id);
 
             //SendObjectAsync(arg?.MessagePackSerialize(cmd.ParametersType), null, new BusinessInfo(business.Configer.Info.BusinessName, method), id);
         }
