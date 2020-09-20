@@ -151,6 +151,17 @@ Why is there no comment on the document?
 **In project properties -> generate -> select XML document file**
 
 ## You want to control WebSocket?
+To enable WebSocket, UseWebSockets() must be used. It is closed by default  
+```C#
+app.CreateBusiness()
+    .UseWebSocket(options =>
+    {
+	    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+	    options.ReceiveBufferSize = 4 * 1024;
+    })
+    .Build();
+```
+
 There are three ways of rewriting to help you
 
 a: **[WebSocketAccept]** is accepting a WebSocket connection. You can return null to refuse to disconnect the connection
@@ -260,18 +271,6 @@ app.CreateBusiness()
             server.KestrelOptions.Limits.MaxConcurrentUpgradedConnections = long.MaxValue;
             server.KestrelOptions.Limits.MaxRequestBodySize = null;
         }
-    })
-    .Build();
-```
-
-## WebSocket settings
-To enable WebSocket, UseWebSockets() must be used. It is closed by default  
-```C#
-app.CreateBusiness()
-    .UseWebSocket(options =>
-    {
-	    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
-	    options.ReceiveBufferSize = 4 * 1024;
     })
     .Build();
 ```
