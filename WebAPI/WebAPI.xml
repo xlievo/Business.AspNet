@@ -111,18 +111,6 @@
             rrrrrr2
             </returns>
         </member>
-        <member name="T:WebAPI.BusinessMember.ResultObject2`1">
-            <summary>
-            result
-            </summary>
-            <typeparam name="Type"></typeparam>
-        </member>
-        <member name="T:WebAPI.BusinessMember.ResultObject3`1">
-            <summary>
-            result
-            </summary>
-            <typeparam name="Type"></typeparam>
-        </member>
         <member name="M:WebAPI.BusinessMember.Test010(WebAPI.Test0011,System.Int32,System.String[])">
             <summary>
             Test010!

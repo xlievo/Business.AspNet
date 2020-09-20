@@ -278,58 +278,6 @@ namespace WebAPI
             //return this.ResultCreate(new { session, arg, files });
         }
 
-        /// <summary>
-        /// result
-        /// </summary>
-        /// <typeparam name="Type"></typeparam>
-        public struct ResultObject2<Type>
-        {
-            public ResultObject2(int state, string message, Type data, bool hasData, string callback)
-            {
-                State = state;
-                Message = message;
-                Data = data;
-                HasData = hasData;
-                Callback = callback;
-            }
-
-            public int State { get; }
-
-            public string Message { get; }
-
-            public Type Data { get; }
-
-            public bool HasData { get; }
-
-            public string Callback { get; }
-        }
-
-        /// <summary>
-        /// result
-        /// </summary>
-        /// <typeparam name="Type"></typeparam>
-        public struct ResultObject3<Type>
-        {
-            //public ResultObject2(int state, string message, Type data, bool hasData, string callback)
-            //{
-            //    State = state;
-            //    Message = message;
-            //    Data = data;
-            //    HasData = hasData;
-            //    Callback = callback;
-            //}
-
-            public int State { get; set; }
-
-            public string Message { get; set; }
-
-            public Type Data { get; set; }
-
-            public bool HasData { get; set; }
-
-            public string Callback { get; set; }
-        }
-
         [Command("abc", Group = Utils.GroupWebSocket)]
         public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null)
         {
