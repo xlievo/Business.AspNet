@@ -41,7 +41,6 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
 using static Business.AspNet.LogOptions;
-using System.Net;
 
 namespace Business.AspNet
 {

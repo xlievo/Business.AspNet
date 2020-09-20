@@ -268,7 +268,7 @@ app.CreateBusiness()
 To enable WebSocket, UseWebSockets() must be used. It is closed by default  
 ```C#
 app.CreateBusiness()
-    .UseWebSockets(options =>
+    .UseWebSocket(options =>
     {
 	    options.KeepAliveInterval = TimeSpan.FromSeconds(120);
 	    options.ReceiveBufferSize = 4 * 1024;
