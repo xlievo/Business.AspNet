@@ -20,6 +20,16 @@ namespace WebAPI
     public struct MyResultObject<Type> : IResultObject<Type>
     {
         /// <summary>
+        /// MyResultObject
+        /// </summary>
+        /// <param name="value"></param>
+        public static implicit operator MyResultObject<Type>(byte[] value)
+        {
+            var result = value.MessagePackDeserialize<MyResultObject<byte[]>>();
+            return (MyResultObject<Type>)Utils.ResultCreate(typeof(MyResultObject<>), result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult, result.Business);
+        }
+
+        /// <summary>
         /// Activator.CreateInstance
         /// </summary>
         /// <param name="dataType"></param>
@@ -161,7 +171,7 @@ namespace WebAPI
         /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? Utils.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData, HasDataResult, Business).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
+        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? Utils.ResultCreate(GenericDefinition ?? typeof(MyResultObject<>), HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData, HasDataResult, Business).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
     }
 
     [TokenCheck]

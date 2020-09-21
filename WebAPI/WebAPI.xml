@@ -360,6 +360,12 @@
             </summary>
             <typeparam name="Type"></typeparam>
         </member>
+        <member name="M:WebAPI.MyResultObject`1.op_Implicit(System.Byte[])~WebAPI.MyResultObject{`0}">
+            <summary>
+            MyResultObject
+            </summary>
+            <param name="value"></param>
+        </member>
         <member name="M:WebAPI.MyResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.String,System.Type,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Activator.CreateInstance

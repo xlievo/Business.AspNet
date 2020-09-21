@@ -76,14 +76,19 @@ namespace Business.AspNet
     /// <summary>
     /// socket receive send
     /// </summary>
-    /// <typeparam name="Type"></typeparam>
-    public interface IResultObject<Type> : IResult<Type>
+    public interface IResultObject : IResult
     {
         /// <summary>
         /// Business
         /// </summary>
         BusinessInfo Business { get; set; }
     }
+
+    /// <summary>
+    /// socket receive send
+    /// </summary>
+    /// <typeparam name="Type"></typeparam>
+    public interface IResultObject<Type> : IResultObject, IResult<Type> { }
 
     /// <summary>
     /// socket receive send
@@ -139,6 +144,16 @@ namespace Business.AspNet
     /// <typeparam name="Type"></typeparam>
     public struct ResultObject<Type> : IResultObject<Type>
     {
+        /// <summary>
+        /// ResultObject
+        /// </summary>
+        /// <param name="value"></param>
+        public static implicit operator ResultObject<Type>(byte[] value)
+        {
+            var result = value.MessagePackDeserialize<ResultObject<byte[]>>();
+            return (ResultObject<Type>)Utils.ResultCreate(typeof(ResultObject<>), result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult, result.Business);
+        }
+
         /// <summary>
         /// Activator.CreateInstance
         /// </summary>
@@ -267,7 +282,7 @@ namespace Business.AspNet
         /// ProtoBuf,MessagePack or Other
         /// </summary>
         /// <returns></returns>
-        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? (HasDataResult ? Utils.ResultCreate(GenericDefinition, HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData, HasDataResult, Business).ToBytes(false) : ResultFactory.ResultCreate(GenericDefinition, State, Message, Callback).ToBytes(false)) : this.MessagePackSerialize();
+        public byte[] ToBytes(bool dataBytes = true) => dataBytes ? Utils.ResultCreate(GenericDefinition ?? typeof(ResultObject<>), HasData ? Data?.MessagePackSerialize() : default, Message, State, Callback, false, HasData, HasDataResult, Business).ToBytes(false) : this.MessagePackSerialize();
     }
 
     ///// <summary>
@@ -358,6 +373,8 @@ namespace Business.AspNet
         public WebSocketCloseStatus CloseStatus { get; }
     }
 
+    #region UDP
+    /*
     /// <summary>
     /// NAT
     /// </summary>
@@ -453,6 +470,9 @@ namespace Business.AspNet
         /// <returns>A string containing the IP address and the port number of the specified endpoint (for example, 192.168.1.2:80).</returns>
         public override string ToString() => ToEndPoint().ToString();
     }
+
+    */
+    #endregion
 
     /// <summary>
     /// Push method
@@ -1357,10 +1377,35 @@ namespace Business.AspNet
             {
                 var result = (IResultObject<byte[]>)value.MessagePackDeserialize(Hosting.socketType);
 
-                return ResultCreate(Hosting.ResultType, result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, businessInfo: result.Business);
+                return ResultCreate(Hosting.ResultType, result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult, result.Business);
             }
 
             return (IResultObject<Type>)value.MessagePackDeserialize(Hosting.ResultType.MakeGenericType(typeof(Type)));
+        }
+
+        /// <summary>
+        /// ToResultObject
+        /// </summary>
+        /// <typeparam name="Result"></typeparam>
+        /// <param name="value"></param>
+        /// <param name="dataBytes"></param>
+        /// <returns></returns>
+        public static Result ToResultObject<Result>(this byte[] value, bool dataBytes = true)
+            where Result : IResultObject
+        {
+            var type = typeof(Result);
+
+            if (dataBytes)
+            {
+                var genericType = type.GetGenericTypeDefinition();
+                var genericArg = type.GenericTypeArguments[0];
+
+                var result = (IResultObject<byte[]>)value.MessagePackDeserialize(genericType.MakeGenericType(typeof(byte[])));
+
+                return (Result)ResultCreate(genericType, genericArg, result.HasData ? result.Data.MessagePackDeserialize(genericArg) : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult);
+            }
+
+            return (Result)value.MessagePackDeserialize(type);
         }
 
         #endregion
@@ -1517,9 +1562,25 @@ namespace Business.AspNet
         /// <param name="hasDataResult"></param>
         /// <param name="businessInfo"></param>
         /// <returns></returns>
-        public static IResultObject<Data> ResultCreate<Data>(Type resultTypeDefinition, Data data = default, string message = null, int state = 1, string callback = null, bool checkData = true, bool hasData = false, bool hasDataResult = true, BusinessInfo businessInfo = default)
+        public static IResultObject<Data> ResultCreate<Data>(Type resultTypeDefinition, Data data = default, string message = null, int state = 1, string callback = null, bool checkData = true, bool hasData = false, bool hasDataResult = true, BusinessInfo businessInfo = default) => ResultCreate(resultTypeDefinition, typeof(Data), data, message, state, callback, checkData, hasData, hasDataResult, businessInfo) as IResultObject<Data>;
+
+        /// <summary>
+        /// Used to create the IResult returns object
+        /// </summary>
+        /// <param name="resultTypeDefinition"></param>
+        /// <param name="dataType"></param>
+        /// <param name="data"></param>
+        /// <param name="message"></param>
+        /// <param name="state"></param>
+        /// <param name="callback"></param>
+        /// <param name="checkData"></param>
+        /// <param name="hasData"></param>
+        /// <param name="hasDataResult"></param>
+        /// <param name="businessInfo"></param>
+        /// <returns></returns>
+        public static IResultObject ResultCreate(Type resultTypeDefinition, Type dataType, object data = null, string message = null, int state = 1, string callback = null, bool checkData = true, bool hasData = false, bool hasDataResult = true, BusinessInfo businessInfo = default)
         {
-            var result = ResultFactory.ResultCreate(resultTypeDefinition, data, message, state, callback, checkData, hasData, hasDataResult) as IResultObject<Data>;
+            var result = ResultFactory.ResultCreate(resultTypeDefinition, dataType, data, message, state, callback, checkData, hasData, hasDataResult) as IResultObject;
             result.Business = businessInfo;
             return result;
         }
@@ -2075,6 +2136,7 @@ namespace Business.AspNet
             return bootstrap;
         }
 
+        /*
         /// <summary>
         /// ToEndPoint
         /// </summary>
@@ -2089,7 +2151,7 @@ namespace Business.AspNet
 
             return new IPEndPoint(endPoint.Address, endPoint.Port);
         }
-
+        */
         //static System.Collections.Concurrent.ConcurrentDictionary<IPEndPoint, string> EndPoints = new System.Collections.Concurrent.ConcurrentDictionary<IPEndPoint, string>();
 
         ///// <summary>

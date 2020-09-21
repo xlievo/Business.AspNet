@@ -33,8 +33,6 @@ public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             options.Debug = true;
             options.Benchmark = true;
-            options.Navigtion = true;
-            options.Testing = true;
         })
         .Build();
     */
@@ -84,8 +82,10 @@ public class TokenCheck : ArgumentAttribute
         //..1: check token key
         if (string.IsNullOrWhiteSpace(key))
         {
-            //return this.ResultCreate(this.State, this.Message);
+            return this.ResultCreate(this.State, "token illegal");
         }
+		//..2: check token logic
+		
         return this.ResultCreate(); //ok
     }
 }
