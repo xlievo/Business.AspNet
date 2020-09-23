@@ -77,7 +77,9 @@ public class TokenCheck : ArgumentAttribute
 
     public override async ValueTask<IResult> Proces(dynamic value)
     {
-        var key = value.Key as string;
+        Token token = value;
+		
+        var key = token.Key;
 
         //..1: check token key
         if (string.IsNullOrWhiteSpace(key))
