@@ -273,6 +273,18 @@ namespace WebAPI
 
             //await webSocket.CloseAsync();
 
+            var dd = this.ResultCreate(arg, "ssssssssssssss!@#", 99999) as IResultObject;
+            dd.Business = new BusinessInfo("sss111", "xxxxxxx");
+
+
+            var dd2 = dd.ToBytes();
+
+            Business.AspNet.ResultObject<Test004X> ss2 = dd2;
+
+            var ss3 = dd2.ToResultObject<Business.AspNet.ResultObject<Test004X>>();
+
+            var ss4 = dd2.ToResult<Test004X>();
+
             return this.ResultCreate(arg, "ssssssssssssss!@#", 99999);
 
             //return this.ResultCreate(new { session, arg, files });

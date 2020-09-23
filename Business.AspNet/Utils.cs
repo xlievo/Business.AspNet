@@ -148,11 +148,7 @@ namespace Business.AspNet
         /// ResultObject
         /// </summary>
         /// <param name="value"></param>
-        public static implicit operator ResultObject<Type>(byte[] value)
-        {
-            var result = value.MessagePackDeserialize<ResultObject<byte[]>>();
-            return (ResultObject<Type>)Utils.ResultCreate(typeof(ResultObject<>), result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult, result.Business);
-        }
+        public static implicit operator ResultObject<Type>(byte[] value) => value.ToResultObject<ResultObject<Type>>();
 
         /// <summary>
         /// Activator.CreateInstance
@@ -1402,7 +1398,7 @@ namespace Business.AspNet
 
                 var result = (IResultObject<byte[]>)value.MessagePackDeserialize(genericType.MakeGenericType(typeof(byte[])));
 
-                return (Result)ResultCreate(genericType, genericArg, result.HasData ? result.Data.MessagePackDeserialize(genericArg) : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult);
+                return (Result)ResultCreate(genericType, genericArg, result.HasData ? result.Data.MessagePackDeserialize(genericArg) : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult, result.Business);
             }
 
             return (Result)value.MessagePackDeserialize(type);

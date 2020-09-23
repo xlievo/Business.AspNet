@@ -23,11 +23,7 @@ namespace WebAPI
         /// MyResultObject
         /// </summary>
         /// <param name="value"></param>
-        public static implicit operator MyResultObject<Type>(byte[] value)
-        {
-            var result = value.MessagePackDeserialize<MyResultObject<byte[]>>();
-            return (MyResultObject<Type>)Utils.ResultCreate(typeof(MyResultObject<>), result.HasData ? result.Data.MessagePackDeserialize<Type>() : default, result.Message, result.State, result.Callback, false, result.HasData, result.HasDataResult, result.Business);
-        }
+        public static implicit operator MyResultObject<Type>(byte[] value) => value.ToResultObject<MyResultObject<Type>>();
 
         /// <summary>
         /// Activator.CreateInstance
