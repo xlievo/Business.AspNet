@@ -49,7 +49,7 @@ using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System;
 
-[TokenCheck]//This is your token verification
+[TokenCheck(message: "token illegal!")]//This is your token verification
 [Logger(canWrite: false)]//Do not output log
 public struct Token : IToken
 {
@@ -82,7 +82,7 @@ public class TokenCheck : ArgumentAttribute
         //..1: check token key
         if (string.IsNullOrWhiteSpace(key))
         {
-            return this.ResultCreate(this.State, "token illegal");
+            return this.ResultCreate(this.State, this.Message);
         }
 		//..2: check token logic
 		
