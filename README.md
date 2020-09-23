@@ -202,7 +202,7 @@ this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
 {
     foreach (var item in log)
     {
-        Console.WriteLine(log.ToString());
+        Console.WriteLine(item.ToString());
     }
 }
 , new Logger.BatchOptions
