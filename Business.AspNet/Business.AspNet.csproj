@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>0.8.4</Version>
+    <Version>0.8.6</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>https://github.com/xlievo/Business.AspNet</Description>
     <Copyright>Copyright ©  2014~2020 Business Project - http://www.tmopen.com</Copyright>
@@ -14,7 +14,7 @@
     <PackageTags>Business.Core, Business.AspNet</PackageTags>
     <Authors>xlievo</Authors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyVersion>0.8.4.0</AssemblyVersion>
+    <AssemblyVersion>0.8.6.0</AssemblyVersion>
     <Company>www.tmopen.com</Company>
   </PropertyGroup>
 
@@ -38,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Business.Core" Version="1.6.2.4" />
+    <PackageReference Include="Business.Core" Version="1.6.3" />
     <PackageReference Include="Business.DocUI" Version="1.2.9" />
     <PackageReference Include="MessagePack" Version="2.1.194" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />

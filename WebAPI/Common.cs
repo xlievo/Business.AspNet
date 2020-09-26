@@ -221,15 +221,15 @@ namespace WebAPI
     [MyJsonArg(Group = Utils.GroupJson)]
     public abstract class BusinessBase : Business.AspNet.BusinessBase
     {
-        /// <summary>
-        /// Log client
-        /// </summary>
-        public readonly static HttpClient LogClient = Utils.Hosting.HttpClientFactory.CreateClient("log");
+        ///// <summary>
+        ///// Log client
+        ///// </summary>
+        //public readonly static HttpClient LogClient = Utils.Hosting.HttpClientFactory.CreateClient("log");
 
         static BusinessBase()
         {
-            LogClient.Timeout = TimeSpan.FromSeconds(3);
-            LogClient.BaseAddress = new Uri("http://xx:8000/Log");
+            //LogClient.Timeout = TimeSpan.FromSeconds(3);
+            //LogClient.BaseAddress = new Uri("http://xx:8000/Log");
         }
 
         public BusinessBase()

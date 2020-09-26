@@ -808,9 +808,9 @@ namespace Business.AspNet
         public IConfiguration Config { get; internal set; }
 
         /// <summary>
-        /// HttpClient factory
+        /// Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
         /// </summary>
-        public IHttpClientFactory HttpClientFactory { get; internal set; }
+        public IServiceProvider ServiceProvider { get; internal set; }
 
         /// <summary>
         /// Combine(DirectorySeparatorChar + data + AppDomain.CurrentDomain.FriendlyName.log.txt)
@@ -1254,16 +1254,7 @@ namespace Business.AspNet
         /// <summary>
         /// Host environment instance
         /// </summary>
-        public static readonly Hosting Hosting = new Hosting
-        {
-            HttpClientFactory = new ServiceCollection()
-                .AddHttpClient("any").ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
-                {
-                    AllowAutoRedirect = false,
-                    UseDefaultCredentials = true,
-                }).Services
-                .BuildServiceProvider().GetService<IHttpClientFactory>()
-        };
+        public static readonly Hosting Hosting = new Hosting();
 
         ///// <summary>
         ///// Log client
@@ -1615,6 +1606,8 @@ namespace Business.AspNet
         /// <returns></returns>
         public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, Action<LogOptions> logOptions = null, params object[] constructorArguments)
         {
+            Hosting.ServiceProvider = app.ApplicationServices;
+
             Hosting.logOptions = new LogOptions { StartupInfo = true, Logo = true };
             logOptions?.Invoke(Hosting.logOptions);
             if (null != Hosting.logOptions.Log)
@@ -1668,7 +1661,7 @@ namespace Business.AspNet
                 StartupInfo($"Addresses: {string.Join(" ", Hosting.Addresses)}");
             }
 
-            bootstrap = Bootstrap.CreateAll<IBusiness>(constructorArguments);
+            bootstrap = Bootstrap.CreateAll<IBusiness>(constructorArguments, type => app.ApplicationServices.GetService(type));
 
             bootstrap.Config.ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
 
@@ -2089,6 +2082,7 @@ namespace Business.AspNet
                 //    camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
                 //}
                 //ResolvedServices = Count = 79
+
                 var resolvedServices = app.ApplicationServices.GetType().GetProperty("ResolvedServices", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(app.ApplicationServices) as System.Collections.IDictionary;
 
                 foreach (System.Collections.DictionaryEntry item in resolvedServices)

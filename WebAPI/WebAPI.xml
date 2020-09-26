@@ -456,10 +456,5 @@
             SessionSessionSessionSessionSessionSession
             </summary>
         </member>
-        <member name="F:WebAPI.BusinessBase.LogClient">
-            <summary>
-            Log client
-            </summary>
-        </member>
     </members>
 </doc>

@@ -15,6 +15,7 @@ using Business.Core.Utils;
 using Microsoft.AspNetCore.Http.Features;
 using Serilog;
 using Serilog.Core;
+using System.Net.Http;
 
 namespace WebAPI
 {
@@ -33,6 +34,13 @@ namespace WebAPI
             //Enable MVC
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
                 .AddNewtonsoftJson();
+
+            services.AddHttpClient(string.Empty)
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler() 
+                {
+                    AllowAutoRedirect = false,
+                    UseDefaultCredentials = true,
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -85,7 +93,7 @@ namespace WebAPI
                             break;
                     }
                 };
-            })
+            }, "test123")
             .UseDoc(options =>
             {
                 options.Debug = true;
@@ -95,7 +103,7 @@ namespace WebAPI
             })
             //.UseJsonOptions(options =>
             //{
-            //    //options.PropertyNamingPolicy = null;
+            //    options.PropertyNamingPolicy = null;
             //})
             //.UseNewtonsoftJson(options =>
             //{

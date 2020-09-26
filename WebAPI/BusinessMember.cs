@@ -4,9 +4,12 @@ using Business.Core.Annotations;
 using Business.Core.Result;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Security.AccessControl;
 using System.Threading;
@@ -54,8 +57,16 @@ namespace WebAPI
 
         static readonly string guids = string.Join(",", Enumerable.Range(0, 200).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
 
-        public BusinessMember()
+        HttpClient httpClient;
+
+        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, string test123)
         {
+            httpClient = httpClientFactory.CreateClient();
+
+            cache.Set("key", 123);
+            Debug.Assert(123 == cache.Get<int>("key"));
+            Debug.Assert("test123" == test123);
+
             //this.BindAfter += () =>
             //{
             //    //Business.Core.Configer.BusinessList["API/v2"].Command.AsyncCall("Test010", new object[] { new Test0011 { C31 = "c31", C32 = "c32" }, 1123 });
