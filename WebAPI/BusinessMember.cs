@@ -5,6 +5,7 @@ using Business.Core.Result;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -59,8 +60,10 @@ namespace WebAPI
 
         HttpClient httpClient;
 
-        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, string test123)
+        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, ILogger<BusinessMember> logger, string test123)
         {
+            logger.LogInformation(test123);
+
             httpClient = httpClientFactory.CreateClient();
 
             cache.Set("key", 123);

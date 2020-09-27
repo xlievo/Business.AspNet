@@ -12,6 +12,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using System.Net.Http;
+using Microsoft.Extensions.Logging;
 
 #region AspNet
 
@@ -41,6 +43,8 @@ public class Startup
         });
         services.AddMvc(option => option.EnableEndpointRouting = false)
             .SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Latest);
+
+        services.AddHttpClient();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -88,8 +92,9 @@ public class TokenCheck : ArgumentAttribute
         //..1: check token key
         if (string.IsNullOrWhiteSpace(key))
         {
-            return this.ResultCreate(this.State, this.Message);
+            return this.ResultCreate(this.State, this.Message); //error
         }
+
         //..2: check token logic
 
         return this.ResultCreate(); //ok
@@ -114,13 +119,17 @@ public struct MyLogicArg
 //Maybe you need a custom base class? To unify the processing of logs and token
 public class MyBusiness : Business.AspNet.BusinessBase
 {
-    public MyBusiness()
+    readonly IHttpClientFactory _clientFactory;
+
+    public MyBusiness(ILogger<MyBusiness> logger, IHttpClientFactory clientFactory)
     {
+        _clientFactory = clientFactory;
+
         this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
         {
             foreach (var item in log)
             {
-                Console.WriteLine(item.ToString());
+                logger.LogInformation(item.ToString());
             }
         }
         , new Logger.BatchOptions
