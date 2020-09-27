@@ -289,6 +289,7 @@ app.CreateBusiness()
 ~~You also need to understand call wrapping and return wrapping~~
 
 ***
+You can look at the minimum use cases first https://github.com/xlievo/Business.AspNet/blob/master/SimpleDemo.cs  
 To learn more about him, refer to the https://github.com/xlievo/Business.AspNet/tree/master/WebAPI use case
 
 ASP.NET just acts as the communication layer. 
