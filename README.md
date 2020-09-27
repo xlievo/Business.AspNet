@@ -184,8 +184,7 @@ b: **[Business.Core.Annotations.HttpFile]** The file object currently requested 
 c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only for websocket communication
 
 **In addition to parameter injection, there is a static object that you can use [Business.AspNet.Utils.Hosting]**  
-[Hosting.AppSettings] An object of the appsettings.json configuration file [Appsettings] node  
-[Hosting.HttpClientFactory] An HTTP factory, convenient for you to communicate with the outside world
+[Hosting.AppSettings] An object of the appsettings.json configuration file [Appsettings] node
 
 ## About logger
 Register log callback in business class constructor  
@@ -220,6 +219,8 @@ Support POST and GET methods at the same time
 a: **[Built-in]** "http://localhost:5000/MyBusiness?c=&t=&d="
 
 b: **[Classic]** "http://localhost:5000/MyBusiness/MyLogic"
+
+c: **[Parameters]** In special cases, you may need to use [Parameters] to declare that on the parameter object or parameter, it will convert the requested form or query data to the class parameter object you specify
 
 Refer to the document description  
 **Try copying "routes" on a document to browser access?**
