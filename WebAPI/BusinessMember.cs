@@ -372,6 +372,38 @@ namespace WebAPI
         {
             return new List<string> { "sssss" };
         }
+
+        [Use(typeof(Context))]
+        [InjectionArgCheck]
+        public class TestInjectionArg
+        {
+            public string Method { get; set; }
+
+            public string Body { get; set; }
+        }
+
+        public class InjectionArgCheck : ArgumentAttribute
+        {
+            public InjectionArgCheck(int state = -811, string message = null) : base(state, message)
+            {
+                this.CanNull = false;
+                this.Description = "InjectionArg";
+            }
+
+            public override async ValueTask<IResult> Proces(dynamic value)
+            {
+                var context = value as Context;
+
+                var session = new TestInjectionArg { Method = context.Request.Method, Body = await context.Request.Body.StreamReadStringAsync() };
+
+                return this.ResultCreate(session);//return out session
+            }
+        }
+
+        public virtual async Task<IResult<TestInjectionArg>> TestInjection(TestInjectionArg arg)
+        {
+            return this.ResultCreate(arg);
+        }
     }
 
     /// <summary>

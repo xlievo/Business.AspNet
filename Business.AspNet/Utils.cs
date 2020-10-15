@@ -41,6 +41,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
 using static Business.AspNet.LogOptions;
+using System.Xml.Serialization;
 
 namespace Business.AspNet
 {
@@ -489,57 +490,6 @@ namespace Business.AspNet
     }
 
     /// <summary>
-    /// NewtonsoftJsonArg
-    /// </summary>
-    public class NewtonsoftJsonArgAttribute : JsonArgAttribute
-    {
-        /// <summary>
-        /// NewtonsoftJsonArg
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="message"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null) : base(state, message) { }
-
-        /// <summary>
-        /// Settings
-        /// </summary>
-        readonly Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonOptions = new Newtonsoft.Json.JsonSerializerSettings
-        {
-            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
-            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
-            DateFormatString = "yyyy-MM-ddTHH:mm:ss",
-            DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Local,
-            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
-            Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter() }
-        };
-
-        /// <summary>
-        /// Proces
-        /// </summary>
-        /// <typeparam name="Type"></typeparam>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public override ValueTask<IResult> Proces<Type>(dynamic value)
-        {
-            var result = CheckNull(this, value);
-            if (!result.HasData) { return new ValueTask<IResult>(result); }
-
-            //Check whether the defined value type is the default value, (top-level object commit)
-            result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
-
-            try
-            {
-                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonOptions)));
-            }
-            catch (Exception ex)
-            {
-                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"));
-            }
-        }
-    }
-
-    /// <summary>
     /// Deserialization of binary format
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
@@ -705,6 +655,116 @@ namespace Business.AspNet
     }
 
     #endregion
+
+    /// <summary>
+    /// NewtonsoftJsonArg
+    /// </summary>
+    public class NewtonsoftJsonArgAttribute : JsonArgAttribute
+    {
+        /// <summary>
+        /// NewtonsoftJsonArg
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null) : base(state, message) { }
+
+        /// <summary>
+        /// Settings
+        /// </summary>
+        readonly Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonOptions = new Newtonsoft.Json.JsonSerializerSettings
+        {
+            ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
+            ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
+            DateFormatString = "yyyy-MM-ddTHH:mm:ss",
+            DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Local,
+            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+            Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter() }
+        };
+
+        /// <summary>
+        /// Proces
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public override ValueTask<IResult> Proces<Type>(dynamic value)
+        {
+            var result = CheckNull(this, value);
+            if (!result.HasData) { return new ValueTask<IResult>(result); }
+
+            //Check whether the defined value type is the default value, (top-level object commit)
+            result = CheckDefinitionValueType(this, value, CheckValueType);
+            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
+
+            try
+            {
+                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonOptions)));
+            }
+            catch (Exception ex)
+            {
+                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"));
+            }
+        }
+    }
+
+    /// <summary>
+    /// XML.Deserialize
+    /// </summary>
+    [System.AttributeUsage(System.AttributeTargets.Assembly | System.AttributeTargets.Method | System.AttributeTargets.Class | System.AttributeTargets.Struct | System.AttributeTargets.Property | System.AttributeTargets.Field | System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    public class XmlArgAttribute : ArgumentAttribute
+    {
+        /// <summary>
+        /// XmlArgAttribute
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        /// <param name="rootElementName">Controls XML serialization of the attribute target as an XML root element.</param>
+        public XmlArgAttribute(int state = -14, string message = null, string rootElementName = "xml") : base(state, message)
+        {
+            this.CanNull = false;
+            this.Description = "Xml parsing";
+            //this.ArgMeta.Filter |= FilterModel.NotDefinition;
+            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, System.Collections.Generic.IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection) || this.ArgMeta.Arg.Parameters || ignoreArg;
+
+            this.RootElementName = rootElementName;
+        }
+
+        /// <summary>
+        /// Controls XML serialization of the attribute target as an XML root element.
+        /// </summary>
+        public string RootElementName { get; set; }
+
+        /// <summary>
+        /// Check whether the defined value type is the default value, (top-level object commit), Default true
+        /// </summary>
+        public bool CheckValueType { get; set; } = true;
+
+        /// <summary>
+        /// Proces
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public override ValueTask<IResult> Proces<Type>(dynamic value)
+        {
+            var result = CheckNull(this, value);
+            if (!result.HasData) { return result; }
+
+            //Check whether the defined value type is the default value, (top-level object commit)
+            result = CheckDefinitionValueType(this, value, CheckValueType);
+            if (!Equals(null, result)) { return result; }
+
+            try
+            {
+                using (var reader = new System.IO.StringReader(value))
+                {
+                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(this.ArgMeta.MemberType, new XmlRootAttribute(RootElementName));
+                    return new ValueTask<IResult>(this.ResultCreate(xmlSerializer.Deserialize(reader)));
+                }
+            }
+            catch (System.Exception ex) { return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} Xml deserialize error. {ex.Message}")); }
+        }
+    }
 
     struct Logs
     {
