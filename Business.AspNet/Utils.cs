@@ -41,7 +41,6 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Hosting.Server;
 using static Business.AspNet.LogOptions;
-using System.Xml.Serialization;
 
 namespace Business.AspNet
 {
@@ -710,7 +709,7 @@ namespace Business.AspNet
     /// <summary>
     /// XML.Deserialize
     /// </summary>
-    [System.AttributeUsage(System.AttributeTargets.Assembly | System.AttributeTargets.Method | System.AttributeTargets.Class | System.AttributeTargets.Struct | System.AttributeTargets.Property | System.AttributeTargets.Field | System.AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class XmlArgAttribute : ArgumentAttribute
     {
         /// <summary>
@@ -723,8 +722,7 @@ namespace Business.AspNet
         {
             this.CanNull = false;
             this.Description = "Xml parsing";
-            //this.ArgMeta.Filter |= FilterModel.NotDefinition;
-            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, System.Collections.Generic.IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection) || this.ArgMeta.Arg.Parameters || ignoreArg;
+            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection) || this.ArgMeta.Arg.Parameters || ignoreArg;
 
             this.RootElementName = rootElementName;
         }
@@ -745,24 +743,24 @@ namespace Business.AspNet
         /// <typeparam name="Type"></typeparam>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override ValueTask<IResult> Proces<Type>(dynamic value)
+        public override ValueTask<IResult> Proces(dynamic value)
         {
             var result = CheckNull(this, value);
-            if (!result.HasData) { return result; }
+            if (!result.HasData) { return new ValueTask<IResult>(result); }
 
             //Check whether the defined value type is the default value, (top-level object commit)
             result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return result; }
+            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
 
             try
             {
                 using (var reader = new System.IO.StringReader(value))
                 {
-                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(this.ArgMeta.MemberType, new XmlRootAttribute(RootElementName));
+                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(this.ArgMeta.MemberType, new System.Xml.Serialization.XmlRootAttribute(RootElementName));
                     return new ValueTask<IResult>(this.ResultCreate(xmlSerializer.Deserialize(reader)));
                 }
             }
-            catch (System.Exception ex) { return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} Xml deserialize error. {ex.Message}")); }
+            catch (Exception ex) { return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} Xml deserialize error. {ex.Message}")); }
         }
     }
 
