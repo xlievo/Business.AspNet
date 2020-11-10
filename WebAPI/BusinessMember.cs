@@ -252,7 +252,7 @@ namespace WebAPI
         "{\"arg\":{\"AAA\":[],\"A\":\"http://127.0.0.1:5000/doc/index.html\",\"B\":\"\",\"C\":{\"C1\":\"\",\"C2\":\"\",\"C3\":[]},\"D\":0,\"E\":false,\"F\":\"2019-12-02T06:24\",\"myEnum\":2},\"dateTime\":\"2019-12-02T07:24\",\"mm\":99.0234,\"fff\":777,\"bbb\":false}")]
         [Testing("test, important logic, do not delete!!!",
         "{\"arg\":{\"menu_item\":\"\",\"bbbb\":\"\",\"bbb\":\"\",\"aaa\":[\"aa\",\"bb\"],\"a\":\"http://127.0.0.1:5000/doc/index.html\",\"b\":\"\",\"c\":{\"c1\":\"ok\",\"c2\":\"😀😭\",\"c3\":[{\"c31\":\"cc1\",\"c32\":\"cc2\",\"aaa\":[]},{\"c31\":\"cc3\",\"c32\":\"cc4\",\"aaa\":[]},{\"c31\":\"cc5\",\"c32\":\"cc6\",\"aaa\":[]}]},\"d\":0,\"e\":false,\"f\":\"2019-12-02T06:24\",\"myEnum\":4},\"dateTime\":\"2019-12-02T08:24\",\"mm\":111.0123456,\"fff\":555,\"bbb\":true}")]
-        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 arg, DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
+        public virtual async Task<IResult<Test004>> Test001(Session session, Test004 arg, [CheckNull(CheckValueType = true)] DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
         {
             context?.Response.Headers.TryAdd("sss", "qqq");
 
@@ -509,6 +509,7 @@ namespace WebAPI
         /// <summary>
         /// DDD
         /// </summary>
+        [CheckNull(CheckValueType = true)]
         public decimal? D { get; set; }
 
         public bool E { get; set; }
@@ -516,6 +517,7 @@ namespace WebAPI
         /// <summary>
         /// FF
         /// </summary>
+        [CheckNull(CheckValueType = true)]
         public DateTime F { get; set; }
 
         /// <summary>

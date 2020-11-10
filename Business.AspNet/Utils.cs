@@ -665,12 +665,12 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null) : base(state, message) { }
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null) : base(state, message) => this.Description = "NewtonsoftJson parsing";
 
         /// <summary>
-        /// Settings
+        /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
         /// </summary>
-        readonly Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonOptions = new Newtonsoft.Json.JsonSerializerSettings
+        public readonly Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = new Newtonsoft.Json.JsonSerializerSettings
         {
             ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
             ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
@@ -697,70 +697,12 @@ namespace Business.AspNet
 
             try
             {
-                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonOptions)));
+                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonSettings)));
             }
             catch (Exception ex)
             {
-                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"));
+                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} NewtonsoftJson deserialize error. {ex.Message}"));
             }
-        }
-    }
-
-    /// <summary>
-    /// XML.Deserialize
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
-    public class XmlArgAttribute : ArgumentAttribute
-    {
-        /// <summary>
-        /// XmlArgAttribute
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="message"></param>
-        /// <param name="rootElementName">Controls XML serialization of the attribute target as an XML root element.</param>
-        public XmlArgAttribute(int state = -14, string message = null, string rootElementName = "xml") : base(state, message)
-        {
-            this.CanNull = false;
-            this.Description = "Xml parsing";
-            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection) || this.ArgMeta.Arg.Parameters || ignoreArg;
-
-            this.RootElementName = rootElementName;
-        }
-
-        /// <summary>
-        /// Controls XML serialization of the attribute target as an XML root element.
-        /// </summary>
-        public string RootElementName { get; set; }
-
-        /// <summary>
-        /// Check whether the defined value type is the default value, (top-level object commit), Default true
-        /// </summary>
-        public bool CheckValueType { get; set; } = true;
-
-        /// <summary>
-        /// Proces
-        /// </summary>
-        /// <typeparam name="Type"></typeparam>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public override ValueTask<IResult> Proces(dynamic value)
-        {
-            var result = CheckNull(this, value);
-            if (!result.HasData) { return new ValueTask<IResult>(result); }
-
-            //Check whether the defined value type is the default value, (top-level object commit)
-            result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
-
-            try
-            {
-                using (var reader = new System.IO.StringReader(value))
-                {
-                    var xmlSerializer = new System.Xml.Serialization.XmlSerializer(this.ArgMeta.MemberType, new System.Xml.Serialization.XmlRootAttribute(RootElementName));
-                    return new ValueTask<IResult>(this.ResultCreate(xmlSerializer.Deserialize(reader)));
-                }
-            }
-            catch (Exception ex) { return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} Xml deserialize error. {ex.Message}")); }
         }
     }
 
