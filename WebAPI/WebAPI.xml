@@ -94,7 +94,7 @@
             MyEnum C
             </summary>
         </member>
-        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
+        <member name="M:WebAPI.BusinessMember.Test001(WebAPI.Session,WebAPI.Token,WebAPI.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
             <summary>
             test doc Test001
             and Test001

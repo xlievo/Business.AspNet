@@ -44,7 +44,7 @@ namespace WebAPI
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IHostApplicationLifetime appLifetime)
         {
             if (env.IsDevelopment())
             {
@@ -59,6 +59,12 @@ namespace WebAPI
                 proxy_set_header X-Forwarded-Proto $scheme;
             }
             */
+
+            appLifetime.ApplicationStopped.Register(() =>
+            {
+                Console.WriteLine("Terminating application...");
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            });
 
             //Document pages need to be accessed across domains
             app.UseCors("any");

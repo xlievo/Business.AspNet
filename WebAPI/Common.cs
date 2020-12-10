@@ -180,7 +180,7 @@ namespace WebAPI
 
         [System.Text.Json.Serialization.JsonPropertyName("R")]
         [Newtonsoft.Json.JsonProperty("R")]
-        public string Remote { get; set; }
+        public Remote Remote { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("P")]
         [Newtonsoft.Json.JsonProperty("P")]

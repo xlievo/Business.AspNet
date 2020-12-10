@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
@@ -426,7 +427,6 @@ namespace Business.AspNet
         {
             Address = address ?? throw new ArgumentNullException(nameof(address));
             Port = port;
-
             key = $"{BitConverter.ToString(Address)}:{Port}";
         }
 
@@ -466,7 +466,6 @@ namespace Business.AspNet
         /// <returns>A string containing the IP address and the port number of the specified endpoint (for example, 192.168.1.2:80).</returns>
         public override string ToString() => ToEndPoint().ToString();
     }
-
     */
     #endregion
 
@@ -491,7 +490,7 @@ namespace Business.AspNet
     /// <summary>
     /// Deserialization of binary format
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
+    //[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class MessagePackAttribute : ArgumentAttribute
     {
         /// <summary>
@@ -499,7 +498,8 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public MessagePackAttribute(int state = -13, string message = null) : base(state, message)
+        /// <param name="type"></param>
+        public MessagePackAttribute(int state = -13, string message = null, System.Type type = null) : base(state, message, type)
         {
             this.CanNull = false;
             this.Description = "MessagePackArg Binary parsing";
@@ -658,19 +658,25 @@ namespace Business.AspNet
     /// <summary>
     /// NewtonsoftJsonArg
     /// </summary>
-    public class NewtonsoftJsonArgAttribute : JsonArgAttribute
+    public class NewtonsoftJsonArgAttribute : ArgumentAttribute
     {
         /// <summary>
         /// NewtonsoftJsonArg
         /// </summary>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null) : base(state, message) => this.Description = "NewtonsoftJson parsing";
+        /// <param name="type"></param>
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, System.Type type = null) : base(state, message, type)
+        {
+            this.CanNull = false;
+            this.Description = "NewtonsoftJson parsing";
+            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection) || this.ArgMeta.Arg.Parameters || ignoreArg;
+        }
 
         /// <summary>
         /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
         /// </summary>
-        public readonly Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = new Newtonsoft.Json.JsonSerializerSettings
+        readonly Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = new Newtonsoft.Json.JsonSerializerSettings
         {
             ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore,
             ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
@@ -679,6 +685,11 @@ namespace Business.AspNet
             NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
             Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter() }
         };
+
+        /// <summary>
+        /// Check whether the defined value type is the default value, (top-level object commit), Default true
+        /// </summary>
+        public bool CheckValueType { get; set; } = true;
 
         /// <summary>
         /// Proces
@@ -806,6 +817,11 @@ namespace Business.AspNet
         /// Configuration file "appsettings.json"
         /// </summary>
         public IConfiguration Config { get; internal set; }
+
+        /// <summary>
+        /// Allows consumers to be notified of application lifetime events.
+        /// </summary>
+        public IHostApplicationLifetime AppLifetime { get; internal set; }
 
         /// <summary>
         /// Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
@@ -941,7 +957,7 @@ namespace Business.AspNet
         /// Client IP address
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("R")]
-        public string Remote { get; set; }
+        public Remote Remote { get; set; }
 
         /// <summary>
         /// Request path
@@ -1192,7 +1208,7 @@ namespace Business.AspNet
             {
                 Origin = Token.OriginValue.Http,
                 Key = t,
-                Remote = string.Format("{0}:{1}", this.HttpContext.Connection.RemoteIpAddress.MapToIPv4().ToString(), this.HttpContext.Connection.RemotePort),
+                Remote = new Remote(this.HttpContext.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out Microsoft.Extensions.Primitives.StringValues remote2) ? remote2.ToString() : this.HttpContext.Connection.RemoteIpAddress.ToString(), this.HttpContext.Connection.RemotePort),
                 Path = this.Request.Path.Value,
             });
 
@@ -1654,6 +1670,7 @@ namespace Business.AspNet
             Hosting.Addresses = addresses;
             Hosting.Config = app.ApplicationServices.GetService<IConfiguration>();
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
+            Hosting.AppLifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
 
             //Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");
             if (Hosting.logOptions.StartupInfo)
@@ -2250,7 +2267,8 @@ namespace Business.AspNet
 
                 WebSocketContainer.WebSockets.TryAdd(reply.Token, webSocket);
 
-                var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
+                //var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
+                var remote = new Remote(context.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out Microsoft.Extensions.Primitives.StringValues remote2) ? remote2.ToString() : context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
                 var buffer = new byte[Hosting.webSocketOptions.ReceiveBufferSize];
                 WebSocketReceiveResult socketResult;

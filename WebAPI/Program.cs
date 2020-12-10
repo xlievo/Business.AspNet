@@ -21,6 +21,7 @@ namespace WebAPI
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+            //.UseConsoleLifetime(opts => opts.SuppressStatusMessages = true)
             .ConfigureLogging(logging => logging.AddFilter("Microsoft.Hosting.Lifetime", LogLevel.Error))
             .ConfigureLogging(logging => logging.AddFilter("Microsoft.AspNetCore.DataProtection", LogLevel.Error))
             .ConfigureWebHostDefaults(webBuilder =>
