@@ -1,0 +1,994 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Business.AspNet</name>
+    </assembly>
+    <members>
+        <member name="T:Business.AspNet.IResultObject">
+            <summary>
+            socket receive send
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.IResultObject.Business">
+            <summary>
+            Business
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.IResultObject`1">
+            <summary>
+            socket receive send
+            </summary>
+            <typeparam name="Type"></typeparam>
+        </member>
+        <member name="T:Business.AspNet.BusinessInfo">
+            <summary>
+            socket receive send
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.BusinessInfo.Null">
+            <summary>
+            Null
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.BusinessInfo.#ctor(System.String,System.String)">
+            <summary>
+            socket receive send
+            </summary>
+            <param name="businessName"></param>
+            <param name="command"></param>
+        </member>
+        <member name="P:Business.AspNet.BusinessInfo.BusinessName">
+            <summary>
+            Business to call
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.BusinessInfo.Command">
+            <summary>
+            Command to call
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.BusinessInfo.Equals(System.Object)">
+            <summary>
+            Indicates whether this instance and a specified object are equal.
+            </summary>
+            <param name="obj">The object to compare with the current instance.</param>
+            <returns>true if obj and this instance are the same type and represent the same value; otherwise, false.</returns>
+        </member>
+        <member name="M:Business.AspNet.BusinessInfo.GetHashCode">
+            <summary>
+            Returns the hash code for this instance.
+            </summary>
+            <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
+        </member>
+        <member name="T:Business.AspNet.ResultObject`1">
+            <summary>
+            result
+            </summary>
+            <typeparam name="Type"></typeparam>
+        </member>
+        <member name="M:Business.AspNet.ResultObject`1.op_Implicit(System.Byte[])~Business.AspNet.ResultObject{`0}">
+            <summary>
+            ResultObject
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:Business.AspNet.ResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.String,System.Type,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Activator.CreateInstance
+            </summary>
+            <param name="dataType"></param>
+            <param name="data"></param>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="callback"></param>
+            <param name="genericDefinition"></param>
+            <param name="checkData"></param>
+            <param name="hasData"></param>
+            <param name="hasDataResult"></param>
+        </member>
+        <member name="M:Business.AspNet.ResultObject`1.#ctor(`0,System.Int32,System.String,System.Boolean)">
+            <summary>
+            MessagePack.MessagePackSerializer.Serialize(this)
+            </summary>
+            <param name="data"></param>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="hasData"></param>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.State">
+            <summary>
+            The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.Message">
+            <summary>
+            Success can be null
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.Business#Core#Result#IResult#Data">
+            <summary>
+            Specific dynamic data objects
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.Data">
+            <summary>
+            Specific Byte/Json data objects
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.HasData">
+            <summary>
+            Whether there is value
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.Callback">
+            <summary>
+            Gets the token of this result, used for callback
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.DataType">
+            <summary>
+            Data type
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.GenericDefinition">
+            <summary>
+            Result object generic definition
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.HasDataResult">
+            <summary>
+            Return data or not
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.ResultObject`1.Business">
+            <summary>
+            Business info
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.ResultObject`1.ToString">
+            <summary>
+            Json format
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.ResultObject`1.ToBytes(System.Boolean)">
+            <summary>
+            ProtoBuf,MessagePack or Other
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.WebSocketAcceptReply">
+            <summary>
+            WebSocketAcceptReply, ok, illegal
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.WebSocketAcceptReply.#ctor(System.String,System.String,System.Net.WebSockets.WebSocketCloseStatus)">
+            <summary>
+            WebSocketAcceptReply
+            </summary>
+            <param name="token"></param>
+            <param name="message"></param>
+            <param name="closeStatus"></param>
+        </member>
+        <member name="P:Business.AspNet.WebSocketAcceptReply.Token">
+            <summary>
+            Token
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.WebSocketAcceptReply.Message">
+            <summary>
+            Message
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.WebSocketAcceptReply.CloseStatus">
+            <summary>
+            CloseStatus
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.PushAttribute">
+            <summary>
+            Push method
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.MessagePackAttribute">
+            <summary>
+            Deserialization of binary format
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.MessagePackAttribute.#ctor(System.Int32,System.String,System.Type)">
+            <summary>
+            Default constructor
+            </summary>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="type"></param>
+        </member>
+        <member name="P:Business.AspNet.MessagePackAttribute.CheckValueType">
+            <summary>
+            Check whether the defined value type is the default value, (top-level object commit), Default true
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.MessagePackAttribute.Proces``1(System.Object)">
+            <summary>
+            processing method
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.WebSocketCommandAttribute">
+            <summary>
+            WebSocket command
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.WebSocketCommandAttribute.#ctor(System.String)">
+            <summary>
+            Command attribute on a method, for multiple sources to invoke the method
+            </summary>
+            <param name="onlyName"></param>
+        </member>
+        <member name="P:Business.AspNet.WebSocketCommandAttribute.Group">
+            <summary>
+            Used for the command group
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.JsonCommandAttribute">
+            <summary>
+            Json command
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.JsonCommandAttribute.#ctor(System.String)">
+            <summary>
+            Command attribute on a method, for multiple sources to invoke the method
+            </summary>
+            <param name="onlyName"></param>
+        </member>
+        <member name="P:Business.AspNet.JsonCommandAttribute.Group">
+            <summary>
+            Used for the command group
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.HttpFile">
+            <summary>
+            Simple asp.net HTTP request file
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.HttpFile.GetFileAsync(System.String)">
+            <summary>
+            GetFileAsync
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.HttpFileAttribute">
+            <summary>
+            Simple asp.net HTTP request file attribute
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.HttpFileAttribute.#ctor(System.Int32,System.String)">
+            <summary>
+            Simple asp.net HTTP request file attribute
+            </summary>
+            <param name="state"></param>
+            <param name="message"></param>
+        </member>
+        <member name="M:Business.AspNet.HttpFileAttribute.Proces``1(System.Object)">
+            <summary>
+            Proces
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.NewtonsoftJsonArgAttribute">
+            <summary>
+            NewtonsoftJsonArg
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
+            <summary>
+            NewtonsoftJsonArg
+            </summary>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="type"></param>
+        </member>
+        <member name="F:Business.AspNet.NewtonsoftJsonArgAttribute.newtonsoftJsonSettings">
+            <summary>
+            The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.NewtonsoftJsonArgAttribute.CheckValueType">
+            <summary>
+            Check whether the defined value type is the default value, (top-level object commit), Default true
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.Proces``1(System.Object)">
+            <summary>
+            Proces
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.LogOptions">
+            <summary>
+            LogOptions
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.LogOptions.Logo">
+            <summary>
+            Logo
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.LogOptions.StartupInfo">
+            <summary>
+            StartupInfo
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.LogOptions.Log">
+            <summary>
+            Log
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.LogOptions.LogData">
+            <summary>
+            LogData
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.LogOptions.LogData.#ctor(Business.AspNet.LogOptions.LogType,System.String)">
+            <summary>
+            LogData
+            </summary>
+            <param name="type"></param>
+            <param name="message"></param>
+        </member>
+        <member name="P:Business.AspNet.LogOptions.LogData.Type">
+            <summary>
+            Type
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.LogOptions.LogData.Message">
+            <summary>
+            Message
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.LogOptions.LogType">
+            <summary>
+            LogType
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.LogOptions.LogType.Error">
+            <summary>
+            Error
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.LogOptions.LogType.Exception">
+            <summary>
+            Exception
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.LogOptions.LogType.Info">
+            <summary>
+            Info
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.Hosting">
+            <summary>
+            Environment
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.Environment">
+            <summary>
+            Provides information about the web hosting environment an application is running in.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.Addresses">
+            <summary>
+            The urls the hosted application will listen on.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.Config">
+            <summary>
+            Configuration file "appsettings.json"
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.AppLifetime">
+            <summary>
+            Allows consumers to be notified of application lifetime events.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.ServiceProvider">
+            <summary>
+            Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.LocalLogPath">
+            <summary>
+            Combine(DirectorySeparatorChar + data + AppDomain.CurrentDomain.FriendlyName.log.txt)
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.ResultType">
+            <summary>
+            result type
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Hosting.Log">
+            <summary>
+            Log output
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Hosting.webSocketOptions">
+            <summary>
+            Configuration options for the WebSocketMiddleware
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Hosting.socketType">
+            <summary>
+            Socket type
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.RouteCTD">
+            <summary>
+            Custom route "c", "t", "d" parameter name.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.RouteCTD.C">
+            <summary>
+            Default value "c". command
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.RouteCTD.T">
+            <summary>
+            Default value "t". token
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.RouteCTD.D">
+            <summary>
+            Default value "d". data
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.Server">
+            <summary>
+            Sets the specified limits to the Microsoft.AspNetCore.Http server.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Server.KestrelOptions">
+            <summary>
+            Provides programmatic configuration of Kestrel-specific features.
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Server.FormOptions">
+            <summary>
+            Sets the specified limits to the Microsoft.AspNetCore.Http.HttpRequest.Form.
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.Token">
+            <summary>
+            Built in token object
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Token.Key">
+            <summary>
+            token
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Token.Remote">
+            <summary>
+            Client IP address
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Token.Path">
+            <summary>
+            Request path
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Token.Callback">
+            <summary>
+            Request callback data
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Token.Origin">
+            <summary>
+            Source of request
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.Token.OriginValue">
+            <summary>
+            Source of request
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Token.OriginValue.Default">
+            <summary>
+            Default call
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Token.OriginValue.Http">
+            <summary>
+            HTTP request
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Token.OriginValue.WebSocket">
+            <summary>
+            WebSocket request
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.IBusiness">
+            <summary>
+            Business base class for ASP.Net Core
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.IBusiness.GetToken(Microsoft.AspNetCore.Http.HttpContext,Business.AspNet.Token)">
+            <summary>
+            Get the requested token
+            </summary>
+            <param name="context"></param>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.IBusiness.WebSocketAccept(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
+            <para>checked and return a token</para>
+            </summary>
+            <param name="context"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.IBusiness.WebSocketReceive(Microsoft.AspNetCore.Http.HttpContext,System.Net.WebSockets.WebSocket,System.Byte[])">
+            <summary>
+            Receive a websocket packet, return IReceiveData object
+            </summary>
+            <param name="context"></param>
+            <param name="webSocket"></param>
+            <param name="buffer"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.IBusiness.WebSocketDispose(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            WebSocket dispose
+            </summary>
+            <param name="context"></param>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.BusinessBase">
+            <summary>
+            Business base class for ASP.Net Core
+            <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.BusinessBase.#ctor">
+            <summary>
+            Default constructor
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.BusinessBase.GetToken(Microsoft.AspNetCore.Http.HttpContext,Business.AspNet.Token)">
+            <summary>
+            Get the requested token
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.BusinessBase.WebSocketAccept(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
+            <para>checked and return a token</para>
+            </summary>
+            <param name="context"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.BusinessBase.WebSocketReceive(Microsoft.AspNetCore.Http.HttpContext,System.Net.WebSockets.WebSocket,System.Byte[])">
+            <summary>
+            Receive a websocket packet, return IReceiveData object
+            </summary>
+            <param name="context"></param>
+            <param name="webSocket"></param>
+            <param name="buffer"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.BusinessBase.WebSocketDispose(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+            <summary>
+            WebSocket dispose
+            </summary>
+            <param name="context"></param>
+            <param name="token"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.Context">
+            <summary>
+            A class for an MVC controller with view support.
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.Context.Call">
+            <summary>
+            Call
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.Utils">
+            <summary>
+            Business.AspNet
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.contextParameterTypes">
+            <summary>
+            "Context", "HttpFile", "WebSocket" 
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.GroupJson">
+            <summary>
+            Default JSON format grouping
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.GroupWebSocket">
+            <summary>
+            Default WebSocket format grouping
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.Hosting">
+            <summary>
+            Host environment instance
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.Utils.MessagePackSerialize``1(``0,MessagePack.MessagePackSerializerOptions)">
+            <summary>
+            MessagePack serialize
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.MessagePackSerialize(System.Object,System.Type,MessagePack.MessagePackSerializerOptions)">
+            <summary>
+            MessagePack serialize
+            </summary>
+            <param name="value"></param>
+            <param name="type"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.MessagePackDeserialize``1(System.Byte[],MessagePack.MessagePackSerializerOptions)">
+            <summary>
+            MessagePack deserialize
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.MessagePackDeserialize(System.Byte[],System.Type,MessagePack.MessagePackSerializerOptions)">
+            <summary>
+            MessagePack deserialize
+            </summary>
+            <param name="value"></param>
+            <param name="type"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.ToResult``1(System.Byte[],System.Boolean)">
+            <summary>
+            ToResult
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <param name="dataBytes"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.ToResultObject``1(System.Byte[],System.Boolean)">
+            <summary>
+            ToResultObject
+            </summary>
+            <typeparam name="Result"></typeparam>
+            <param name="value"></param>
+            <param name="dataBytes"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.HttpCallctd(System.Net.Http.HttpClient,System.String,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Called in POST "c,t,d" "application/x-www-form-urlencoded" format
+            </summary>
+            <param name="httpClient"></param>
+            <param name="c"></param>
+            <param name="t"></param>
+            <param name="d"></param>
+            <param name="uri"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.HttpCall(System.Net.Http.HttpClient,System.Collections.Generic.KeyValuePair{System.String,System.String}[],System.String,System.Threading.CancellationToken)">
+            <summary>
+            Called in POST "application/x-www-form-urlencoded" format
+            </summary>
+            <param name="httpClient"></param>
+            <param name="keyValues"></param>
+            <param name="uri"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.HttpCall(System.Net.Http.HttpClient,System.String,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Called in POST "application/json" format
+            </summary>
+            <param name="httpClient"></param>
+            <param name="data"></param>
+            <param name="mediaType"></param>
+            <param name="uri"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.HttpCall(System.Net.Http.HttpClient,System.Net.Http.HttpContent,System.Net.Http.HttpMethod,System.Uri,System.Threading.CancellationToken)">
+            <summary>
+            HTTP call
+            </summary>
+            <param name="httpClient"></param>
+            <param name="content"></param>
+            <param name="method"></param>
+            <param name="uri"></param>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.ResultCreate``1(System.Type,``0,System.String,System.Int32,System.String,System.Boolean,System.Boolean,System.Boolean,Business.AspNet.BusinessInfo)">
+            <summary>
+            Used to create the IResult returns object
+            </summary>
+            <typeparam name="Data"></typeparam>
+            <param name="resultTypeDefinition"></param>
+            <param name="data"></param>
+            <param name="message"></param>
+            <param name="state"></param>
+            <param name="callback"></param>
+            <param name="checkData"></param>
+            <param name="hasData"></param>
+            <param name="hasDataResult"></param>
+            <param name="businessInfo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.ResultCreate(System.Type,System.Type,System.Object,System.String,System.Int32,System.String,System.Boolean,System.Boolean,System.Boolean,Business.AspNet.BusinessInfo)">
+            <summary>
+            Used to create the IResult returns object
+            </summary>
+            <param name="resultTypeDefinition"></param>
+            <param name="dataType"></param>
+            <param name="data"></param>
+            <param name="message"></param>
+            <param name="state"></param>
+            <param name="callback"></param>
+            <param name="checkData"></param>
+            <param name="hasData"></param>
+            <param name="hasDataResult"></param>
+            <param name="businessInfo"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.Log(System.Net.Http.HttpClient,Business.Core.Logger.LoggerData,System.String,System.String)">
+            <summary>
+            Write out the Elasticsearch default log
+            </summary>
+            <param name="httpClient"></param>
+            <param name="data"></param>
+            <param name="index"></param>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.CreateBusiness(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.Action{Business.AspNet.LogOptions},System.Object[])">
+            <summary>
+            Configure Business.Core in the startup class configure method
+            <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>
+            </summary>
+            <param name="app">provides the mechanisms to configure an application's request pipeline.</param>
+            <param name="logOptions">logOptions">Output all non business exceptions or errors in the application</param>
+            <param name="constructorArguments">constructorArguments</param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseWebSocket(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Microsoft.AspNetCore.Builder.WebSocketOptions})">
+            <summary>
+            Configuration greater than contract.
+            <para>"appsettings.json" -> "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }</para>
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseServer(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Business.AspNet.Server})">
+            <summary>
+            Configuration greater than contract.
+            <para>"appsettings.json" -> "FormOptions": { "KeyLengthLimit": 2048, "ValueCountLimit": 1024 }</para>
+            <para>"appsettings.json" -> "Kestrel": { "AllowSynchronousIO": true, "Limits": { "MinRequestBodyDataRate": null } }</para>
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseRouteCTD(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Business.AspNet.RouteCTD})">
+            <summary>
+            Custom route "c", "t", "d" parameter name.
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseMultipleParameterDeserialize(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Func{System.Type,System.String,System.Object,System.Object})">
+            <summary>
+            Deserialize of multiple parameters submitted
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseJsonOptions(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{System.Text.Json.JsonSerializerOptions})">
+            <summary>
+            Configures Microsoft.AspNetCore.Mvc.JsonOptions for the specified builder.
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options">An System.Action to configure the Microsoft.AspNetCore.Mvc.JsonOptions.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseNewtonsoftJson(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Newtonsoft.Json.JsonSerializerSettings})">
+            <summary>
+            UseNewtonsoftJson
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseMessagePack(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Func{MessagePack.MessagePackSerializerOptions,MessagePack.MessagePackSerializerOptions})">
+            <summary>
+            UseMessagePack
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.WebSocketCall(Business.AspNet.WebSocketReceive)">
+            <summary>
+            -1
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.Utils.WebSocketContainer">
+            <summary>
+            WebSocket container
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.WebSocketContainer.WebSockets">
+            <summary>
+            WebSocket container
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendObjectAsync``1(``0,System.String,System.Boolean,System.String[])">
+            <summary>
+            Send socket object
+            </summary>
+            <typeparam name="Data"></typeparam>
+            <param name="data"></param>
+            <param name="callback"></param>
+            <param name="dataBytes"></param>
+            <param name="id"></param>
+        </member>
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.String[])">
+            <summary>
+            Send socket message
+            </summary>
+            <param name="bytes"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.Int32,System.String[])">
+            <summary>
+            Send socket message
+            </summary>
+            <param name="bytes"></param>
+            <param name="sendMaxDegreeOfParallelism"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Int32,System.String[])">
+            <summary>
+            Send socket message
+            </summary>
+            <param name="bytes"></param>
+            <param name="messageType"></param>
+            <param name="sendMaxDegreeOfParallelism"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Boolean,System.Int32,System.String[])">
+            <summary>
+            Send socket message
+            </summary>
+            <param name="bytes"></param>
+            <param name="messageType"></param>
+            <param name="endOfMessage"></param>
+            <param name="sendMaxDegreeOfParallelism"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.SendObjectAsync``1(System.Net.WebSockets.WebSocket,``0,System.String,System.Boolean,System.Net.WebSockets.WebSocketMessageType)">
+            <summary>
+            WebSocket SendAsync object
+            </summary>
+            <typeparam name="Data"></typeparam>
+            <param name="webSocket"></param>
+            <param name="data"></param>
+            <param name="callback"></param>
+            <param name="dataBytes"></param>
+            <param name="messageType"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.SendAsync(System.Net.WebSockets.WebSocket,System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Boolean)">
+            <summary>
+            WebSocket SendAsync
+            </summary>
+            <param name="webSocket"></param>
+            <param name="data"></param>
+            <param name="messageType"></param>
+            <param name="endOfMessage"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.SendAsync(Business.AspNet.IBusiness,System.Object[],System.String[],System.String)">
+            <summary>
+            Send webSocket object
+            </summary>
+            <param name="business"></param>
+            <param name="args"></param>
+            <param name="id"></param>
+            <param name="method"></param>
+        </member>
+        <member name="M:Business.AspNet.Utils.CloseAsync(System.Net.WebSockets.WebSocket,System.Net.WebSockets.WebSocketCloseStatus,System.String)">
+            <summary>
+            Closes the WebSocket connection as an asynchronous operation using the close handshake defined in the WebSocket protocol specification section 7.
+            </summary>
+            <param name="webSocket"></param>
+            <param name="closeStatus"></param>
+            <param name="statusDescription"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.Utils.NewtonsoftCamelCaseNamingStrategy">
+            <summary>
+            Newtonsoft.Json CamelCaseNamingStrategy
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Utils.NewtonsoftCamelCaseNamingStrategy.Instance">
+            <summary>
+            Instance
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.Utils.NewtonsoftCamelCaseNamingStrategy.ResolvePropertyName(System.String)">
+            <summary>
+            ResolvePropertyName
+            </summary>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
+        <member name="F:Business.AspNet.Utils.NewtonsoftJsonOptions">
+            <summary>
+            Responsible for parsing the overall request data
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.Utils.TryNewtonsoftJsonDeserialize``1(System.String,Newtonsoft.Json.JsonSerializerSettings)">
+            <summary>
+            TryJsonDeserialize
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.TryNewtonsoftJsonDeserialize(System.String,System.Type,Newtonsoft.Json.JsonSerializerSettings)">
+            <summary>
+            TryJsonDeserialize
+            </summary>
+            <param name="value"></param>
+            <param name="type"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.NewtonsoftJsonSerialize``1(``0,Newtonsoft.Json.JsonSerializerSettings)">
+            <summary>
+            JsonSerialize
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <param name="options"></param>
+            <returns></returns>
+        </member>
+    </members>
+</doc>

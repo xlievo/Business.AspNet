@@ -370,105 +370,6 @@ namespace Business.AspNet
         public WebSocketCloseStatus CloseStatus { get; }
     }
 
-    #region UDP
-    /*
-    /// <summary>
-    /// NAT
-    /// </summary>
-    public readonly struct NAT
-    {
-        /// <summary>
-        /// NAT
-        /// </summary>
-        /// <param name="port"></param>
-        /// <param name="token"></param>
-        /// <param name="address"></param>
-        public NAT(int port, string token, string address = null)
-        {
-            Port = port;
-            Token = token;
-            Address = address;
-        }
-
-        /// <summary>
-        /// Port
-        /// </summary>
-        public int Port { get; }
-
-        /// <summary>
-        /// Token
-        /// </summary>
-        public string Token { get; }
-
-        /// <summary>
-        /// Address
-        /// </summary>
-        public string Address { get; }
-    }
-
-    /// <summary>
-    /// IPEndPoint
-    /// </summary>
-    public readonly struct IPEndPoint
-    {
-        /// <summary>
-        /// IPEndPoint
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="port"></param>
-        public IPEndPoint(System.Net.IPAddress address, int port) : this(address?.GetAddressBytes(), port) { }
-
-        /// <summary>
-        /// IPEndPoint
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="port"></param>
-        public IPEndPoint(byte[] address, int port)
-        {
-            Address = address ?? throw new ArgumentNullException(nameof(address));
-            Port = port;
-            key = $"{BitConverter.ToString(Address)}:{Port}";
-        }
-
-        /// <summary>
-        /// Address
-        /// </summary>
-        public byte[] Address { get; }
-
-        /// <summary>
-        /// Port
-        /// </summary>
-        public int Port { get; }
-
-        readonly string key;
-
-        /// <summary>
-        /// ToEndPoint
-        /// </summary>
-        /// <returns></returns>
-        public System.Net.IPEndPoint ToEndPoint() => new System.Net.IPEndPoint(new System.Net.IPAddress(Address), Port);
-        /// <summary>
-        /// Indicates whether this instance and a specified object are equal.
-        /// </summary>
-        /// <param name="obj">The object to compare with the current instance.</param>
-        /// <returns>true if obj and this instance are the same type and represent the same value; otherwise, false.</returns>
-        public override bool Equals(object obj) => GetHashCode().Equals(obj.GetHashCode());
-
-        /// <summary>
-        /// Returns the hash code for this instance.
-        /// </summary>
-        /// <returns>A 32-bit signed integer that is the hash code for this instance.</returns>
-        public override int GetHashCode() => key.GetHashCode();
-
-        /// <summary>
-        /// Returns the IP address and port number of the specified endpoint.
-        /// </summary>
-        /// <returns>A string containing the IP address and the port number of the specified endpoint (for example, 192.168.1.2:80).</returns>
-        public override string ToString() => ToEndPoint().ToString();
-    }
-    */
-    #endregion
-
     /// <summary>
     /// Push method
     /// </summary>
@@ -806,8 +707,12 @@ namespace Business.AspNet
         /// <summary>
         /// Provides information about the web hosting environment an application is running in.
         /// </summary>
+#if NET5_0
+        public Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment { get; internal set; }
+#else
         public Microsoft.AspNetCore.Hosting.IHostingEnvironment Environment { get; internal set; }
-
+#endif
+        
         /// <summary>
         /// The urls the hosted application will listen on.
         /// </summary>
@@ -1669,7 +1574,11 @@ namespace Business.AspNet
 
             Hosting.Addresses = addresses;
             Hosting.Config = app.ApplicationServices.GetService<IConfiguration>();
+#if NET5_0
+            Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
+#else
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
+#endif
             Hosting.AppLifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
 
             //Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");

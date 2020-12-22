@@ -237,7 +237,7 @@ namespace WebAPI
         /// rrrrrr
         /// rrrrrr2
         /// </returns>
-        //[Doc(Group = "Module 1", Position = 1)]
+        [Doc(Group = "Module 1", Position = 1)]
         //[Command("AAA")]
         //[Command("jjjTest001jjj", Group = Utils.GroupJson)]
         //[JsonCommand("jjjTest001jjj")]
