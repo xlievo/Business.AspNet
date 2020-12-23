@@ -48,6 +48,7 @@ using Business.AspNet;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 using System;
+using System.Linq;
 
 [TokenCheck(message: "token illegal!")]//This is your token verification
 [Logger(canWrite: false)]//Do not output log
@@ -57,7 +58,7 @@ public struct Token : IToken
     public string Key { get; set; }
 
     [System.Text.Json.Serialization.JsonPropertyName("R")]
-    public string Remote { get; set; }
+    public Remote Remote { get; set; }
 
     [System.Text.Json.Serialization.JsonPropertyName("P")]
     public string Path { get; set; }
