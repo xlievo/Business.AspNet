@@ -1,0 +1,460 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebAPI50</name>
+    </assembly>
+    <members>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.BBBB">
+            <summary>
+            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.BBB">
+            <summary>
+            Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.AAA">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.A">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.B">
+            <summary>
+            BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.C">
+            <summary>
+            Test0010 Test0010 Test0010 Test0010
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.D">
+            <summary>
+            DDD
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.F">
+            <summary>
+            FF
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.myEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.Test0010.C1">
+            <summary>
+            C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.Test0010.C2">
+            <summary>
+            C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.Test0010.C3">
+            <summary>
+            C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.Test0010.Test0011.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.Test0010.Test0011.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.Test0010.Test0011.AAA">
+            <summary>
+            AAA@@@
+            </summary>
+        </member>
+        <member name="T:WebAPI50.BusinessMember.Test001_Arg.Test004.MyEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001_Arg.Test004.MyEnum.A">
+            <summary>
+            MyEnum A
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001_Arg.Test004.MyEnum.C">
+            <summary>
+            MyEnum C
+            </summary>
+        </member>
+        <member name="M:WebAPI50.BusinessMember.Test001(WebAPI50.Session,WebAPI50.Token,WebAPI50.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
+            <summary>
+            test doc Test001
+            and Test001
+            </summary>
+            <param name="session">A token sample222</param>
+            <param name="arg"></param>
+            <param name="dateTime"></param>
+            <param name="httpFile"></param>
+            <param name="mm">mmmmmmmm!</param>
+            <param name="fff"></param>
+            <param name="bbb"></param>
+            <returns>
+            rrrrrr
+            rrrrrr2
+            </returns>
+        </member>
+        <member name="M:WebAPI50.BusinessMember.Test010(WebAPI50.Test0011,System.Int32,System.String[])">
+            <summary>
+            Test010!
+            </summary>
+            <param name="test">Test004XTest004XTest004XTest004X</param>
+            <param name="b"></param>
+            <param name="id"></param>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI50.BusinessMember.Test012">
+            <summary>
+            Test012Test012Test012Test012
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI50.BusinessMember.Test013">
+            <summary>
+            Test013Test013Test013Test013
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:WebAPI50.Test001">
+            <summary>
+            Test001Test001Test001Test001
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001.A">
+            <summary>
+            aaaaaaaaaa
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001.B">
+            <summary>
+            bbbbbbbbbbbbbbbbbb
+            </summary>
+        </member>
+        <member name="T:WebAPI50.MyEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum
+            </summary>
+        </member>
+        <member name="F:WebAPI50.MyEnum.A">
+            <summary>
+            MyEnum A
+            </summary>
+        </member>
+        <member name="F:WebAPI50.MyEnum.B">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="F:WebAPI50.MyEnum.C">
+            <summary>
+            MyEnum C
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test002.BB">
+            <summary>
+            Test002 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test003`1.BBB">
+            <summary>
+            Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="T:WebAPI50.Test004">
+            <summary>
+            Test004Test004Test004Test004Test004Test004Test004
+            Test004Test004Test004Test004Test004Test004Test004
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004.MENU_ITEM">
+            <summary>
+            Test004 MENU_ITEMMENU_ITEMMENU_ITEM@@@
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004.BBBB">
+            <summary>
+            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
+            </summary>
+        </member>
+        <member name="T:WebAPI50.Test001`1">
+            <summary>
+            Test001Test001Tes
+            t001Test001Test001Test001
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.AAA">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.A">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.B">
+            <summary>
+            BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.D">
+            <summary>
+            DDD
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.F">
+            <summary>
+            FF
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.myEnum">
+            <summary>
+            
+            </summary>
+        </member>
+        <member name="T:WebAPI50.Test001`1.Test0010`1">
+            <summary>
+            Test0010 Test0010 Test0010 Test0010
+            </summary>
+            <typeparam name="T"></typeparam>
+        </member>
+        <member name="P:WebAPI50.Test001`1.Test0010`1.C1">
+            <summary>
+            C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.Test0010`1.C2">
+            <summary>
+            C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test001`1.Test0010`1.C3">
+            <summary>
+            C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+            </summary>
+        </member>
+        <member name="T:WebAPI50.Test0011">
+            <summary>
+            Test0011Test0011Test0011Test0011Test0011
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test0011.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test0011.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test0011.AAA">
+            <summary>
+            AAA@@@
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.BBBB">
+            <summary>
+            Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.BBB">
+            <summary>
+            Test003 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.AAA">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.A">
+            <summary>
+            AAAAAAAAAaaaaaaaaaaaaaaaaaaaaaaaAAAAAAA
+            <h5><code>CheckNull</code></h5><h5><code>CheckUrl</code></h5>
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.B">
+            <summary>
+            BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.C">
+            <summary>
+            Test0010 Test0010 Test0010 Test0010
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.D">
+            <summary>
+            DDD
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.F">
+            <summary>
+            FF
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.myEnum">
+            <summary>
+            MyEnumMyEnumMyEnumMyEnumMyEnumMyEnum<br/><strong>A : 0</strong> MyEnum A<br/><strong>B : 2</strong><br/><strong>C : 4</strong> MyEnum C
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.Test0010.C1">
+            <summary>
+            C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1C1
+            <h5><code>Test</code></h5>
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.Test0010.C2">
+            <summary>
+            C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2C2
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.Test0010.C3">
+            <summary>
+            C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3C3
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.Test0010.Test0011.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.Test0010.Test0011.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI50.Test004X.Test0010.Test0011.AAA">
+            <summary>
+            AAA@@@
+            </summary>
+        </member>
+        <member name="T:WebAPI50.Test004X.MyEnum">
+            <summary>
+            MyEnum C
+            MyEnum C
+            MyEnum C
+            </summary>
+        </member>
+        <member name="T:WebAPI50.MyResultObject`1">
+            <summary>
+            result
+            </summary>
+            <typeparam name="Type"></typeparam>
+        </member>
+        <member name="M:WebAPI50.MyResultObject`1.op_Implicit(System.Byte[])~WebAPI50.MyResultObject{`0}">
+            <summary>
+            MyResultObject
+            </summary>
+            <param name="value"></param>
+        </member>
+        <member name="M:WebAPI50.MyResultObject`1.#ctor(System.Type,`0,System.Int32,System.String,System.String,System.Type,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Activator.CreateInstance
+            </summary>
+            <param name="dataType"></param>
+            <param name="data"></param>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="callback"></param>
+            <param name="genericDefinition"></param>
+            <param name="checkData"></param>
+            <param name="hasData"></param>
+            <param name="hasDataResult"></param>
+        </member>
+        <member name="M:WebAPI50.MyResultObject`1.#ctor(`0,System.Int32,System.String,System.Boolean)">
+            <summary>
+            MessagePack.MessagePackSerializer.Serialize(this)
+            </summary>
+            <param name="data"></param>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="hasData"></param>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.State">
+            <summary>
+            The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.Message">
+            <summary>
+            Success can be null
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.HasData">
+            <summary>
+            Whether there is value
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.Business#Core#Result#IResult#Data">
+            <summary>
+            Specific dynamic data objects
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.Data">
+            <summary>
+            Specific Byte/Json data objects
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.Callback">
+            <summary>
+            Gets the token of this result, used for callback
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.DataType">
+            <summary>
+            Data type
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.GenericDefinition">
+            <summary>
+            Result object generic definition
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.HasDataResult">
+            <summary>
+            Return data or not
+            </summary>
+        </member>
+        <member name="P:WebAPI50.MyResultObject`1.Business">
+            <summary>
+            Business
+            </summary>
+        </member>
+        <member name="M:WebAPI50.MyResultObject`1.ToString">
+            <summary>
+            Json format
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:WebAPI50.MyResultObject`1.ToBytes(System.Boolean)">
+            <summary>
+            ProtoBuf,MessagePack or Other
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:WebAPI50.Session">
+            <summary>
+            SessionSessionSessionSessionSessionSession
+            </summary>
+        </member>
+    </members>
+</doc>
