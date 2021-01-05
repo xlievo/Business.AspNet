@@ -650,34 +650,7 @@ namespace Business.AspNet
         /// <summary>
         /// Log
         /// </summary>
-        public Action<LogData> Log { get; set; }
-
-        /// <summary>
-        /// LogData
-        /// </summary>
-        public readonly struct LogData
-        {
-            /// <summary>
-            /// LogData
-            /// </summary>
-            /// <param name="type"></param>
-            /// <param name="message"></param>
-            public LogData(LogType type, string message)
-            {
-                Type = type;
-                Message = message;
-            }
-
-            /// <summary>
-            /// Type
-            /// </summary>
-            public LogType Type { get; }
-
-            /// <summary>
-            /// Message
-            /// </summary>
-            public string Message { get; }
-        }
+        public Action<LogType, string> Log { get; set; }
 
         /// <summary>
         /// LogType
@@ -707,12 +680,12 @@ namespace Business.AspNet
         /// <summary>
         /// Provides information about the web hosting environment an application is running in.
         /// </summary>
-#if NET5_0
-        public Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment { get; internal set; }
-#else
+#if NETSTANDARD2_0
         public Microsoft.AspNetCore.Hosting.IHostingEnvironment Environment { get; internal set; }
+#else
+        public Microsoft.AspNetCore.Hosting.IWebHostEnvironment Environment { get; internal set; }
 #endif
-        
+
         /// <summary>
         /// The urls the hosted application will listen on.
         /// </summary>
@@ -736,7 +709,7 @@ namespace Business.AspNet
         /// <summary>
         /// Combine(DirectorySeparatorChar + data + AppDomain.CurrentDomain.FriendlyName.log.txt)
         /// </summary>
-        public string LocalLogPath { get; set; } = System.IO.Path.Combine(System.IO.Path.DirectorySeparatorChar.ToString(), "data", $"{AppDomain.CurrentDomain.FriendlyName}.log.txt");
+        public string LogPath { get; set; } = System.IO.Path.Combine(System.IO.Path.DirectorySeparatorChar.ToString(), "data", $"{AppDomain.CurrentDomain.FriendlyName}.log.txt");
 
         /// <summary>
         /// result type
@@ -746,7 +719,7 @@ namespace Business.AspNet
         /// <summary>
         /// Log output
         /// </summary>
-        public Action<LogData> Log = c => Help.Console(c.Message);// Help.WriteLocal(c.Message, Utils.Hosting.LocalLogPath, console: true);
+        public Action<LogType, string> Log = (type, message) => Help.Console(message);
 
         internal bool useWebSocket;
 
@@ -958,7 +931,7 @@ namespace Business.AspNet
         /// </summary>
         public BusinessBase() => this.Logger = new Logger((Logger.LoggerData x) =>
         {
-            Utils.Hosting.Log?.Invoke(new LogData(LogType.Info, x.ToString()));
+            x.ToString().Log();
             //Help.Console(x.ToString());
             return default;
         });
@@ -1019,7 +992,7 @@ namespace Business.AspNet
             var path = this.Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business))
             {
-                Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
+                $"404 {this.Request.Path.Value}".Log(LogType.Error);
                 return this.NotFound();
             }
 
@@ -1065,7 +1038,7 @@ namespace Business.AspNet
                     break;
                 default:
                     {
-                        Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"404 {this.Request.Path.Value}"));
+                        $"404 {this.Request.Path.Value}".Log(LogType.Error);
                         return this.NotFound();
                     }
             }
@@ -1080,7 +1053,7 @@ namespace Business.AspNet
                 if (default(DocUI.BenchmarkArg).Equals(arg))
                 {
                     var argNull = new ArgumentNullException(nameof(arg));
-                    Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"benchmark {argNull.Message}"));
+                    $"benchmark {argNull.Message}".Log(LogType.Error);
                     return argNull.Message;
                 }
                 //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
@@ -1105,7 +1078,7 @@ namespace Business.AspNet
             if (null == cmd)
             {
                 var errorCmd = Help.ErrorCmd(business, c);
-                Utils.Hosting.Log?.Invoke(new LogData(LogType.Error, $"ErrorCmd {errorCmd}"));
+                $"ErrorCmd {errorCmd}".Log(LogType.Error);
                 return errorCmd;
             }
 
@@ -1209,7 +1182,7 @@ namespace Business.AspNet
             //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
         }
 
-        static string Logo()
+        static void Logo()
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine();
@@ -1227,11 +1200,9 @@ namespace Business.AspNet
             sb.AppendLine("        #####  ####  #####");
             sb.AppendLine("         ################");
             sb.AppendLine("          ##############");
-            var log = sb.ToString();
             Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine(log);
+            Console.WriteLine(sb.ToString());
             Console.ResetColor();
-            return log;
         }
 
         #region MessagePack
@@ -1496,6 +1467,26 @@ namespace Business.AspNet
         #endregion
 
         /// <summary>
+        /// call Hosting.Log(LogType.Exception, ex?.ToString())
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="message"></param>
+        public static void Log(this Exception ex, string message = null)
+        {
+            var inner = ex;
+            while (null != inner && null != inner.InnerException) { inner = inner.InnerException; }
+
+            Hosting.Log?.Invoke(LogType.Exception, message ?? inner?.ToString());
+        }
+
+        /// <summary>
+        /// call Hosting.Log(LogType.Info, message)
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="logType"></param>
+        public static void Log(this string message, LogType logType = LogType.Info) => Hosting.Log?.Invoke(logType, message);
+
+        /// <summary>
         /// Write out the Elasticsearch default log
         /// </summary>
         /// <param name="httpClient"></param>
@@ -1513,7 +1504,7 @@ namespace Business.AspNet
             }
             else
             {
-                Hosting.Log.Invoke(new LogData(LogType.Info, message));
+                message.Log();
             }
         }
 
@@ -1535,7 +1526,7 @@ namespace Business.AspNet
             {
                 Hosting.Log = Hosting.logOptions.Log;// Log;
             }
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.Log?.Invoke(new LogData(LogType.Exception, Convert.ToString((e.ExceptionObject as Exception)?.ExceptionWrite())));
+            AppDomain.CurrentDomain.UnhandledException += (sender, e) => (e.ExceptionObject as Exception).Log();
 
             if (Hosting.logOptions.Logo)
             {
@@ -1547,7 +1538,7 @@ namespace Business.AspNet
                 StartupInfo($"Date: {DateTimeOffset.Now}");
                 StartupInfo(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
                 StartupInfo($"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
-                StartupInfo($"LocalLogPath: {Hosting.LocalLogPath}");
+                StartupInfo($"LogPath: {Hosting.LogPath}");
             }
 
             //AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
@@ -1574,10 +1565,10 @@ namespace Business.AspNet
 
             Hosting.Addresses = addresses;
             Hosting.Config = app.ApplicationServices.GetService<IConfiguration>();
-#if NET5_0
-            Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
-#else
+#if NETSTANDARD2_0
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IHostingEnvironment>();
+#else
+            Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
 #endif
             Hosting.AppLifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
 
@@ -1713,7 +1704,7 @@ namespace Business.AspNet
                                 }
                                 catch (Exception ex)
                                 {
-                                    Hosting.Log?.Invoke(new LogData(LogType.Exception, Convert.ToString(ex.ExceptionWrite())));
+                                    ex.Log();
                                 }
                             }
                         }
@@ -2193,7 +2184,7 @@ namespace Business.AspNet
                             await webSocket.CloseOutputAsync(socketResult.CloseStatus.Value, socketResult.CloseStatusDescription, CancellationToken.None);
                         }
 
-                        Hosting.Log?.Invoke(new LogData(LogType.Exception, $"Closed in server by the client. [{socketResult.CloseStatus.Value}] [Token:{reply.Token}]"));
+                        Hosting.Log?.Invoke(LogType.Exception, $"Closed in server by the client. [{socketResult.CloseStatus.Value}] [Token:{reply.Token}]");
 
                         continue;
                     }
@@ -2212,7 +2203,7 @@ namespace Business.AspNet
                         {
                             if (null != c2.Exception)
                             {
-                                Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(c2.Exception)}{Environment.NewLine}   [Token:{reply.Token}]"));
+                                c2.Exception.Log($"{Convert.ToString(c2.Exception)}{Environment.NewLine}   [Token:{reply.Token}]");
                             }
                         })
                         , new WebSocketReceive(await business.GetToken(context, new Token //token
@@ -2227,7 +2218,7 @@ namespace Business.AspNet
                     }
                     catch (Exception ex)
                     {
-                        Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]"));
+                        ex.Log($"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]");
                         webSocket.SendAsync(Hosting.ResultType.ResultCreate(0, Convert.ToString(ex)).ToBytes());
                     }
 
@@ -2245,7 +2236,7 @@ namespace Business.AspNet
             }
             catch (Exception ex)
             {
-                Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]"));
+                ex.Log($"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]");
                 //var result = ResultType.ResultCreate(0, Convert.ToString(ex));
                 //await SocketSendAsync(result.ToBytes(), id);
                 //if (WebSocketState.Open == webSocket.State)
@@ -2267,7 +2258,7 @@ namespace Business.AspNet
                 }
                 catch (Exception ex)
                 {
-                    Hosting.Log?.Invoke(new LogData(LogType.Exception, $"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]"));
+                    ex.Log($"{Convert.ToString(ex.ExceptionWrite())}{Environment.NewLine}   [Token:{reply.Token}]");
                 }
             }
         }

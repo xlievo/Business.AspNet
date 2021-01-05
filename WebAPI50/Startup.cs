@@ -57,9 +57,9 @@ namespace WebAPI50
             }
             */
 
-            appLifetime.ApplicationStopped.Register(() =>
+            appLifetime.ApplicationStopping.Register(() =>
             {
-                Console.WriteLine("Terminating application...");
+                "Terminating application...".Log();
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
             });
 
@@ -67,32 +67,32 @@ namespace WebAPI50
             app.UseCors("any");
 
             //Override the original global log directory
-            Utils.Hosting.LocalLogPath = "/data/mylog.txt";
+            Utils.Hosting.LogPath = "/data/mylog.txt";
 
             //Using third party log components
             Log.Logger = new LoggerConfiguration()
                 .MinimumLevel.Information()
                 .WriteTo.Console(theme: Serilog.Sinks.SystemConsole.Themes.AnsiConsoleTheme.Code)
-                .WriteTo.File(Utils.Hosting.LocalLogPath,
+                .WriteTo.File(Utils.Hosting.LogPath,
                 rollingInterval: RollingInterval.Day,
                 rollOnFileSizeLimit: true)
                 .CreateLogger();
 
             app.CreateBusiness(logOptions =>
             {
-                logOptions.Log = log =>
+                logOptions.Log = (type, message) =>
                 {
                     //all non business information
-                    switch (log.Type)
+                    switch (type)
                     {
                         case LogOptions.LogType.Error:
-                            Log.Error(log.Message);
+                            Log.Error(message);
                             break;
                         case LogOptions.LogType.Exception:
-                            Log.Fatal(log.Message);
+                            Log.Fatal(message);
                             break;
                         case LogOptions.LogType.Info:
-                            Log.Information(log.Message);
+                            Log.Information(message);
                             break;
                     }
                 };

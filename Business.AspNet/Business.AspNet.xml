@@ -331,28 +331,6 @@
             Log
             </summary>
         </member>
-        <member name="T:Business.AspNet.LogOptions.LogData">
-            <summary>
-            LogData
-            </summary>
-        </member>
-        <member name="M:Business.AspNet.LogOptions.LogData.#ctor(Business.AspNet.LogOptions.LogType,System.String)">
-            <summary>
-            LogData
-            </summary>
-            <param name="type"></param>
-            <param name="message"></param>
-        </member>
-        <member name="P:Business.AspNet.LogOptions.LogData.Type">
-            <summary>
-            Type
-            </summary>
-        </member>
-        <member name="P:Business.AspNet.LogOptions.LogData.Message">
-            <summary>
-            Message
-            </summary>
-        </member>
         <member name="T:Business.AspNet.LogOptions.LogType">
             <summary>
             LogType
@@ -403,7 +381,7 @@
             Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
             </summary>
         </member>
-        <member name="P:Business.AspNet.Hosting.LocalLogPath">
+        <member name="P:Business.AspNet.Hosting.LogPath">
             <summary>
             Combine(DirectorySeparatorChar + data + AppDomain.CurrentDomain.FriendlyName.log.txt)
             </summary>
@@ -758,6 +736,20 @@
             <param name="hasDataResult"></param>
             <param name="businessInfo"></param>
             <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.Log(System.Exception,System.String)">
+            <summary>
+            call Hosting.Log(LogType.Exception, ex?.ToString())
+            </summary>
+            <param name="ex"></param>
+            <param name="message"></param>
+        </member>
+        <member name="M:Business.AspNet.Utils.Log(System.String,Business.AspNet.LogOptions.LogType)">
+            <summary>
+            call Hosting.Log(LogType.Info, message)
+            </summary>
+            <param name="message"></param>
+            <param name="logType"></param>
         </member>
         <member name="M:Business.AspNet.Utils.Log(System.Net.Http.HttpClient,Business.Core.Logger.LoggerData,System.String,System.String)">
             <summary>
