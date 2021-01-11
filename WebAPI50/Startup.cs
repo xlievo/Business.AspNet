@@ -11,6 +11,7 @@ using Business.AspNet;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 using Serilog;
+using Business.Core;
 
 namespace WebAPI50
 {
@@ -85,14 +86,15 @@ namespace WebAPI50
                     //all non business information
                     switch (type)
                     {
-                        case LogOptions.LogType.Error:
+                        case Logger.Type.All:
+                        case Logger.Type.Record:
+                            Log.Information(message);
+                            break;
+                        case Logger.Type.Error:
                             Log.Error(message);
                             break;
-                        case LogOptions.LogType.Exception:
+                        case Logger.Type.Exception:
                             Log.Fatal(message);
-                            break;
-                        case LogOptions.LogType.Info:
-                            Log.Information(message);
                             break;
                     }
                 };

@@ -331,26 +331,6 @@
             Log
             </summary>
         </member>
-        <member name="T:Business.AspNet.LogOptions.LogType">
-            <summary>
-            LogType
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.LogOptions.LogType.Error">
-            <summary>
-            Error
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.LogOptions.LogType.Exception">
-            <summary>
-            Exception
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.LogOptions.LogType.Info">
-            <summary>
-            Info
-            </summary>
-        </member>
         <member name="T:Business.AspNet.Hosting">
             <summary>
             Environment
@@ -744,12 +724,18 @@
             <param name="ex"></param>
             <param name="message"></param>
         </member>
-        <member name="M:Business.AspNet.Utils.Log(System.String,Business.AspNet.LogOptions.LogType)">
+        <member name="M:Business.AspNet.Utils.Log(System.String,Business.Core.Logger.Type)">
             <summary>
             call Hosting.Log(LogType.Info, message)
             </summary>
             <param name="message"></param>
             <param name="logType"></param>
+        </member>
+        <member name="M:Business.AspNet.Utils.Log(Business.Core.Logger.LoggerData)">
+            <summary>
+            call Hosting.Log(log.Type, log.ToString())
+            </summary>
+            <param name="log"></param>
         </member>
         <member name="M:Business.AspNet.Utils.Log(System.Net.Http.HttpClient,Business.Core.Logger.LoggerData,System.String,System.String)">
             <summary>

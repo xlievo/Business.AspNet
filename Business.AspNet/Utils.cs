@@ -650,26 +650,26 @@ namespace Business.AspNet
         /// <summary>
         /// Log
         /// </summary>
-        public Action<LogType, string> Log { get; set; }
+        public Action<Logger.Type, string> Log { get; set; }
 
-        /// <summary>
-        /// LogType
-        /// </summary>
-        public enum LogType
-        {
-            /// <summary>
-            /// Error
-            /// </summary>
-            Error = -1,
-            /// <summary>
-            /// Exception
-            /// </summary>
-            Exception = 0,
-            /// <summary>
-            /// Info
-            /// </summary>
-            Info = 1,
-        }
+        ///// <summary>
+        ///// LogType
+        ///// </summary>
+        //public enum LogType
+        //{
+        //    /// <summary>
+        //    /// Error
+        //    /// </summary>
+        //    Error = -1,
+        //    /// <summary>
+        //    /// Exception
+        //    /// </summary>
+        //    Exception = 0,
+        //    /// <summary>
+        //    /// Info
+        //    /// </summary>
+        //    Info = 1,
+        //}
     }
 
     /// <summary>
@@ -719,7 +719,7 @@ namespace Business.AspNet
         /// <summary>
         /// Log output
         /// </summary>
-        public Action<LogType, string> Log = (type, message) => Help.Console(message);
+        public Action<Logger.Type, string> Log = (type, message) => Help.Console(message);
 
         internal bool useWebSocket;
 
@@ -992,7 +992,7 @@ namespace Business.AspNet
             var path = this.Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business))
             {
-                $"404 {this.Request.Path.Value}".Log(LogType.Error);
+                $"404 {this.Request.Path.Value}".Log(Logger.Type.Error);
                 return this.NotFound();
             }
 
@@ -1038,7 +1038,7 @@ namespace Business.AspNet
                     break;
                 default:
                     {
-                        $"404 {this.Request.Path.Value}".Log(LogType.Error);
+                        $"404 {this.Request.Path.Value}".Log(Logger.Type.Error);
                         return this.NotFound();
                     }
             }
@@ -1053,7 +1053,7 @@ namespace Business.AspNet
                 if (default(DocUI.BenchmarkArg).Equals(arg))
                 {
                     var argNull = new ArgumentNullException(nameof(arg));
-                    $"benchmark {argNull.Message}".Log(LogType.Error);
+                    $"benchmark {argNull.Message}".Log(Logger.Type.Error);
                     return argNull.Message;
                 }
                 //arg.host = $"{this.Request.Scheme}://localhost:{this.HttpContext.Connection.LocalPort}/{business.Configer.Info.BusinessName}";
@@ -1078,7 +1078,7 @@ namespace Business.AspNet
             if (null == cmd)
             {
                 var errorCmd = Help.ErrorCmd(business, c);
-                $"ErrorCmd {errorCmd}".Log(LogType.Error);
+                $"ErrorCmd {errorCmd}".Log(Logger.Type.Error);
                 return errorCmd;
             }
 
@@ -1471,20 +1471,20 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="ex"></param>
         /// <param name="message"></param>
-        public static void Log(this Exception ex, string message = null)
-        {
-            var inner = ex;
-            while (null != inner && null != inner.InnerException) { inner = inner.InnerException; }
-
-            Hosting.Log?.Invoke(LogType.Exception, message ?? inner?.ToString());
-        }
+        public static void Log(this Exception ex, string message = null) => Hosting.Log?.Invoke(Logger.Type.Exception, message ?? ex.GetBase()?.ToString());
 
         /// <summary>
         /// call Hosting.Log(LogType.Info, message)
         /// </summary>
         /// <param name="message"></param>
         /// <param name="logType"></param>
-        public static void Log(this string message, LogType logType = LogType.Info) => Hosting.Log?.Invoke(logType, message);
+        public static void Log(this string message, Logger.Type logType = Logger.Type.Record) => Hosting.Log?.Invoke(logType, message);
+
+        /// <summary>
+        /// call Hosting.Log(log.Type, log.ToString())
+        /// </summary>
+        /// <param name="log"></param>
+        public static void Log(this Logger.LoggerData log) => Hosting.Log?.Invoke(log.Type, log.ToString());
 
         /// <summary>
         /// Write out the Elasticsearch default log
@@ -2184,7 +2184,7 @@ namespace Business.AspNet
                             await webSocket.CloseOutputAsync(socketResult.CloseStatus.Value, socketResult.CloseStatusDescription, CancellationToken.None);
                         }
 
-                        Hosting.Log?.Invoke(LogType.Exception, $"Closed in server by the client. [{socketResult.CloseStatus.Value}] [Token:{reply.Token}]");
+                        Hosting.Log?.Invoke(Logger.Type.Exception, $"Closed in server by the client. [{socketResult.CloseStatus.Value}] [Token:{reply.Token}]");
 
                         continue;
                     }

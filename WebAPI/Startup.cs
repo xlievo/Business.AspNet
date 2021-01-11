@@ -90,14 +90,15 @@ namespace WebAPI
                     //all non business information
                     switch (type)
                     {
-                        case LogOptions.LogType.Error:
+                        case Business.Core.Logger.Type.All:
+                        case Business.Core.Logger.Type.Record:
+                            Log.Information(message);
+                            break;
+                        case Business.Core.Logger.Type.Error:
                             Log.Error(message);
                             break;
-                        case LogOptions.LogType.Exception:
+                        case Business.Core.Logger.Type.Exception:
                             Log.Fatal(message);
-                            break;
-                        case LogOptions.LogType.Info:
-                            Log.Information(message);
                             break;
                     }
                 };
