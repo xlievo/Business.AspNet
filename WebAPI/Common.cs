@@ -236,7 +236,7 @@ namespace WebAPI
         {
             this.Logger = new Logger(async (Logger.LoggerData log) =>
             {
-                log.ToString().Log();
+                log.Log();
                 //var result = await LogClient.Log(log);
 
                 //Console.WriteLine(log.ToString());

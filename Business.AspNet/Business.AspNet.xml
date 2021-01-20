@@ -331,6 +331,26 @@
             Log
             </summary>
         </member>
+        <member name="T:Business.AspNet.LogType">
+            <summary>
+            LogType
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.LogType.Error">
+            <summary>
+            Error
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.LogType.Exception">
+            <summary>
+            Exception
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.LogType.Info">
+            <summary>
+            Info
+            </summary>
+        </member>
         <member name="T:Business.AspNet.Hosting">
             <summary>
             Environment
@@ -717,23 +737,23 @@
             <param name="businessInfo"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.Log(System.Exception,System.String)">
+        <member name="M:Business.AspNet.Utils.Log(System.String,Business.AspNet.LogType)">
             <summary>
-            call Hosting.Log(LogType.Exception, ex?.ToString())
-            </summary>
-            <param name="ex"></param>
-            <param name="message"></param>
-        </member>
-        <member name="M:Business.AspNet.Utils.Log(System.String,Business.Core.Logger.Type)">
-            <summary>
-            call Hosting.Log(LogType.Info, message)
+            call Hosting.Log(Logger.Type.Record, message)
             </summary>
             <param name="message"></param>
             <param name="logType"></param>
         </member>
+        <member name="M:Business.AspNet.Utils.Log(System.Exception,System.String)">
+            <summary>
+            call Hosting.Log(Logger.Type.Exception, ex?.ToString())
+            </summary>
+            <param name="ex"></param>
+            <param name="message"></param>
+        </member>
         <member name="M:Business.AspNet.Utils.Log(Business.Core.Logger.LoggerData)">
             <summary>
-            call Hosting.Log(log.Type, log.ToString())
+            call Hosting.Log(log.Type, log.ToString()), All and Record = LogType.Info
             </summary>
             <param name="log"></param>
         </member>
@@ -741,7 +761,7 @@
             <summary>
             Write out the Elasticsearch default log
             </summary>
-            <param name="httpClient"></param>
+            <param name="httpClient">Elasticsearch httpClient</param>
             <param name="data"></param>
             <param name="index"></param>
             <param name="c"></param>
