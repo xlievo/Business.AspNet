@@ -28,8 +28,13 @@ namespace WebAPI50
             });
 
             //Enable MVC
-            services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
-                .AddNewtonsoftJson();
+            services.AddControllers(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
+                .AddJsonOptions(c =>
+                {
+                    //c.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                    //c.JsonSerializerOptions.PropertyNamingPolicy = Business.Core.Utils.Help.JsonNamingPolicyCamelCase.Instance;
+                });
+            //.AddNewtonsoftJson();
 
             services.AddHttpClient(string.Empty)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
@@ -105,14 +110,14 @@ namespace WebAPI50
                 options.Navigtion = true;
                 options.Testing = true;
             })
-            //.UseJsonOptions(options =>
-            //{
-            //    options.PropertyNamingPolicy = null;
-            //})
-            //.UseNewtonsoftJson(options =>
-            //{
-            //    options.ContractResolver = null;
-            //})
+            .UseJsonOptions(options =>
+            {
+                //options.PropertyNamingPolicy = Business.Core.Utils.Help.JsonNamingPolicyCamelCase.Instance;
+            })
+            .UseNewtonsoftJson(options =>
+            {
+                //options.ContractResolver = null;
+            })
             .UseMessagePack(options => options.WithCompression(MessagePack.MessagePackCompression.Lz4Block))
             .UseResultType(typeof(MyResultObject<>))//use ResultObject
             .UseWebSocket(options =>

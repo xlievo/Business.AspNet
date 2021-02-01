@@ -1538,8 +1538,9 @@ namespace Business.AspNet
             logOptions?.Invoke(Hosting.logOptions);
             if (null != Hosting.logOptions.Log)
             {
-                Hosting.Log = Hosting.logOptions.Log;// Log;
+                Hosting.Log = Hosting.logOptions.Log; //Log;
             }
+
             AppDomain.CurrentDomain.UnhandledException += (sender, e) => (e.ExceptionObject as Exception).Log();
 
             if (Hosting.logOptions.Logo)
@@ -1662,6 +1663,7 @@ namespace Business.AspNet
                     Hosting.useServer(new Server { KestrelOptions = kestrelServer?.Options, FormOptions = contextFactory.GetType().GetField("_formOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(contextFactory) as FormOptions });
                 }
 
+#if NETSTANDARD2_0
                 //add route
                 app.UseMvc(routes =>
                 {
@@ -1673,17 +1675,15 @@ namespace Business.AspNet
                         defaults: new { controller = "Context", action = "Call" });
                     }
                 });
-
-                // 3.x
-                //services.AddControllers()
-
-                //app.UseEndpoints(endpoints =>
-                //{
-                //    foreach (var item in Business.Core.Configer.BusinessList)
-                //    {
-                //        endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Business", action = "Call" });
-                //    }
-                //});
+#else
+                app.UseRouting().UseEndpoints(endpoints =>
+                {
+                    foreach (var item in Configer.BusinessList)
+                    {
+                        endpoints.MapControllerRoute(item.Key, $"{item.Key}/{{*path}}", new { controller = "Context", action = "Call" });
+                    }
+                });
+#endif
 
                 #region AcceptWebSocket
 
@@ -1985,57 +1985,48 @@ namespace Business.AspNet
         static Func<string, string> UseJson(IApplicationBuilder app)
         {
             Func<string, string> camelCase = null;
-            //JsonSerializerOptions 77/140
-            var jsonHelper = app.ApplicationServices.GetService<Microsoft.AspNetCore.Mvc.Rendering.IJsonHelper>();
-            var _htmlSafeJsonSerializerOptions = jsonHelper.GetType().GetField("_htmlSafeJsonSerializerOptions", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (null != _htmlSafeJsonSerializerOptions)
+
+            var formatFilter = app.ApplicationServices.GetService<Microsoft.AspNetCore.Mvc.Formatters.FormatFilter>();
+            var options = formatFilter.GetType().GetField("_options", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(formatFilter) as MvcOptions;
+
+            dynamic textJsonOutput = options.OutputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonOutputFormatter".Equals(c.GetType().FullName));
+            System.Text.Json.JsonSerializerOptions textJsonSerializerOptions = textJsonOutput?.SerializerOptions;
+            if (null != textJsonSerializerOptions)
             {
-                var jsonSerializerOptions = _htmlSafeJsonSerializerOptions.GetValue(jsonHelper) as System.Text.Json.JsonSerializerOptions;
-                if (null != jsonSerializerOptions.PropertyNamingPolicy)
+                if (null != textJsonSerializerOptions.PropertyNamingPolicy)
                 {
-                    jsonSerializerOptions.PropertyNamingPolicy = Help.JsonNamingPolicyCamelCase.Instance;
+                    textJsonSerializerOptions.PropertyNamingPolicy = Help.JsonNamingPolicyCamelCase.Instance;
                 }
-                Hosting.useJsonOptions?.Invoke(jsonSerializerOptions);
-                camelCase = c => jsonSerializerOptions.PropertyNamingPolicy?.ConvertName(c);
-            }
-            else
-            {
-                //var _defaultSettingsJsonSerializer = jsonHelper.GetType().GetField("_defaultSettingsJsonSerializer", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                //if (null != _defaultSettingsJsonSerializer)
-                //{
-                //    var jsonSerializerOptions = _defaultSettingsJsonSerializer.GetValue(jsonHelper) as Newtonsoft.Json.JsonSerializer;
+                Hosting.useJsonOptions?.Invoke(textJsonSerializerOptions);
 
-                //    Hosting.useNewtonsoftJson?.Invoke(jsonSerializerOptions);
-                //    jsonSerializerOptions.ContractResolver = null;
-                //    //_defaultSettingsJsonSerializer.SetValue(jsonHelper, jsonSerializerOptions);
-
-                //    var resolver = jsonSerializerOptions.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
-                //    camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
-                //}
-                //ResolvedServices = Count = 79
-
-                var resolvedServices = app.ApplicationServices.GetType().GetProperty("ResolvedServices", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(app.ApplicationServices) as System.Collections.IDictionary;
-
-                foreach (System.Collections.DictionaryEntry item in resolvedServices)
+                //input
+                dynamic textJsonInput = options.InputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonInputFormatter".Equals(c.GetType().FullName));
+                textJsonSerializerOptions = textJsonInput?.SerializerOptions;
+                if (null != textJsonSerializerOptions)
                 {
-                    var type = item.Key.GetType().GetProperty("Type").GetValue(item.Key) as Type;
-
-                    if (type.FullName.StartsWith("Microsoft.Extensions.Options.IOptions`1[[Microsoft.AspNetCore.Mvc.MvcNewtonsoftJsonOptions, Microsoft.AspNetCore.Mvc.NewtonsoftJson"))
+                    if (null != textJsonSerializerOptions.PropertyNamingPolicy)
                     {
-                        dynamic value = item.Value;
-                        Newtonsoft.Json.JsonSerializerSettings jsonSerializerOptions = value.Value.SerializerSettings;
-
-                        if (jsonSerializerOptions?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
-                        {
-                            resolver.NamingStrategy = NewtonsoftCamelCaseNamingStrategy.Instance;
-                        }
-
-                        Hosting.useNewtonsoftJsonOptions?.Invoke(jsonSerializerOptions);
-                        resolver = jsonSerializerOptions?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
-
-                        camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
+                        textJsonSerializerOptions.PropertyNamingPolicy = Help.JsonNamingPolicyCamelCase.Instance;
                     }
+                    Hosting.useJsonOptions?.Invoke(textJsonSerializerOptions);
                 }
+
+                camelCase = c => textJsonSerializerOptions.PropertyNamingPolicy?.ConvertName(c);
+            }
+            else //NewtonsoftJson
+            {
+                var newtonsoftJsonOutput = options.OutputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter".Equals(c.GetType().FullName));
+                var newtonsoftJsonSerializerOptions = newtonsoftJsonOutput.GetType().GetProperty("SerializerSettings", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(newtonsoftJsonOutput) as Newtonsoft.Json.JsonSerializerSettings;
+
+                if (newtonsoftJsonSerializerOptions?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
+                {
+                    resolver.NamingStrategy = NewtonsoftCamelCaseNamingStrategy.Instance;
+                }
+
+                Hosting.useNewtonsoftJsonOptions?.Invoke(newtonsoftJsonSerializerOptions);
+                resolver = newtonsoftJsonSerializerOptions?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+
+                camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
             }
 
             return camelCase;

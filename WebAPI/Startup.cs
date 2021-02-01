@@ -33,10 +33,12 @@ namespace WebAPI
 
             //Enable MVC
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
-                .AddNewtonsoftJson();
+                .AddNewtonsoftJson()
+                .AddJsonOptions(c => c.JsonSerializerOptions.PropertyNameCaseInsensitive = true);
+            //
 
             services.AddHttpClient(string.Empty)
-                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler() 
+                .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
                 {
                     AllowAutoRedirect = false,
                     UseDefaultCredentials = true,
@@ -109,14 +111,16 @@ namespace WebAPI
                 options.Navigtion = true;
                 options.Testing = true;
             })
-            //.UseJsonOptions(options =>
-            //{
-            //    options.PropertyNamingPolicy = null;
-            //})
-            //.UseNewtonsoftJson(options =>
-            //{
-            //    options.ContractResolver = null;
-            //})
+            .UseJsonOptions(options =>
+            {
+                //options.PropertyNamingPolicy = null;
+            })
+            .UseNewtonsoftJson(options =>
+            {
+                //options.ContractResolver = null;
+                //var resolver = options.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+                //resolver.NamingStrategy = Utils.NewtonsoftCamelCaseNamingStrategy.Instance;
+            })
             .UseMessagePack(options => options.WithCompression(MessagePack.MessagePackCompression.Lz4Block))
             .UseResultType(typeof(MyResultObject<>))//use ResultObject
             .UseWebSocket(options =>
