@@ -356,6 +356,11 @@
             Environment
             </summary>
         </member>
+        <member name="P:Business.AspNet.Hosting.ServiceProvider">
+            <summary>
+            Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
+            </summary>
+        </member>
         <member name="P:Business.AspNet.Hosting.Environment">
             <summary>
             Provides information about the web hosting environment an application is running in.
@@ -376,9 +381,9 @@
             Allows consumers to be notified of application lifetime events.
             </summary>
         </member>
-        <member name="P:Business.AspNet.Hosting.ServiceProvider">
+        <member name="P:Business.AspNet.Hosting.HttpClientFactory">
             <summary>
-            Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
+            A factory abstraction for a component that can create System.Net.Http.HttpClient  instances with custom configuration for a given logical name.
             </summary>
         </member>
         <member name="P:Business.AspNet.Hosting.LogPath">

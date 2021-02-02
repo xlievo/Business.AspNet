@@ -677,6 +677,11 @@ namespace Business.AspNet
     public class Hosting
     {
         /// <summary>
+        /// Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
+        /// </summary>
+        public IServiceProvider ServiceProvider { get; internal set; }
+
+        /// <summary>
         /// Provides information about the web hosting environment an application is running in.
         /// </summary>
 #if NETSTANDARD2_0
@@ -701,9 +706,9 @@ namespace Business.AspNet
         public IHostApplicationLifetime AppLifetime { get; internal set; }
 
         /// <summary>
-        /// Defines a mechanism for retrieving a service object; that is, an object that provides custom support to other objects.
+        /// A factory abstraction for a component that can create System.Net.Http.HttpClient  instances with custom configuration for a given logical name.
         /// </summary>
-        public IServiceProvider ServiceProvider { get; internal set; }
+        public IHttpClientFactory HttpClientFactory { get; internal set; }
 
         /// <summary>
         /// Combine(DirectorySeparatorChar + data + AppDomain.CurrentDomain.FriendlyName.log.txt)
@@ -1586,6 +1591,7 @@ namespace Business.AspNet
             Hosting.Environment = app.ApplicationServices.GetService<Microsoft.AspNetCore.Hosting.IWebHostEnvironment>();
 #endif
             Hosting.AppLifetime = app.ApplicationServices.GetService<IHostApplicationLifetime>();
+            Hosting.HttpClientFactory = app.ApplicationServices.GetService<IHttpClientFactory>();
 
             //Console.WriteLine($"Addresses: {string.Join(" ", Hosting.Addresses)}");
             if (Hosting.logOptions.StartupInfo)
