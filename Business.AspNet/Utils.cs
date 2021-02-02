@@ -1422,7 +1422,13 @@ namespace Business.AspNet
                 using (var response = await httpClient.SendAsync(request, cancellationToken))
                 {
                     response.EnsureSuccessStatusCode();
+
+#if NETSTANDARD2_0
                     return await response.Content.ReadAsStringAsync();
+#else
+                    return await response.Content.ReadAsStringAsync(cancellationToken);
+#endif
+
                 }
             }
         }
