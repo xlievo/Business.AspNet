@@ -540,11 +540,6 @@
             <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
             </summary>
         </member>
-        <member name="M:Business.AspNet.BusinessBase.#ctor">
-            <summary>
-            Default constructor
-            </summary>
-        </member>
         <member name="M:Business.AspNet.BusinessBase.GetToken(Microsoft.AspNetCore.Http.HttpContext,Business.AspNet.Token)">
             <summary>
             Get the requested token

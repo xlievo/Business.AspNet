@@ -930,6 +930,7 @@ namespace Business.AspNet
     [Logger(Group = Utils.GroupWebSocket, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : Core.BusinessBase, IBusiness
     {
+        /*
         /// <summary>
         /// Default constructor
         /// </summary>
@@ -939,7 +940,7 @@ namespace Business.AspNet
             //Help.Console(x.ToString());
             return default;
         });
-
+        */
         /// <summary>
         /// Get the requested token
         /// </summary>
@@ -1634,7 +1635,7 @@ namespace Business.AspNet
 
                     if (null == strap.Config.UseDoc.Options)
                     {
-                        strap.Config.UseDoc.Options = new Options { Group = GroupJson, Debug = true, Benchmark = true };
+                        strap.Config.UseDoc.Options = new Options();// { Group = GroupJson, Debug = true, Benchmark = true };
                     }
 
                     if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Options.Group))

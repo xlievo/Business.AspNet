@@ -88,7 +88,7 @@ namespace WebAPI50
             {
                 logOptions.Log = (type, message) =>
                 {
-                    //all non business information
+                    //Log interface
                     switch (type)
                     {
                         case LogType.Info:
@@ -105,8 +105,6 @@ namespace WebAPI50
             }, "test123")
             .UseDoc(options =>
             {
-                options.Debug = true;
-                options.Benchmark = true;
                 options.Navigtion = true;
                 options.Testing = true;
             })
@@ -159,6 +157,10 @@ namespace WebAPI50
                 Utils.GroupWebSocket => Utils.MessagePackDeserialize(data, parametersType),
                 _ => null,
             })
+            .UseLogger(new Logger(async (Logger.LoggerData x) =>
+            {
+                x.Log();
+            }))
             .Build();
         }
     }

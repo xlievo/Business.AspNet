@@ -232,18 +232,18 @@ namespace WebAPI50
             //LogClient.BaseAddress = new Uri("http://xx:8000/Log");
         }
 
-        public BusinessBase()
-        {
-            this.Logger = new Logger(async (Logger.LoggerData log) =>
-            {
-                log.Log();
-                //Utils.Hosting.Log?.Invoke(LogType.Info, log.ToString());
-                //var result = await LogClient.Log(log);
+        //public BusinessBase()
+        //{
+        //    this.Logger = new Logger(async (Logger.LoggerData log) =>
+        //    {
+        //        log.Log();
+        //        //Utils.Hosting.Log?.Invoke(LogType.Info, log.ToString());
+        //        //var result = await LogClient.Log(log);
 
-                //Console.WriteLine(log.ToString());
-                //Help.Console(log.ToString());
-            });
-        }
+        //        //Console.WriteLine(log.ToString());
+        //        //Help.Console(log.ToString());
+        //    });
+        //}
 
         public sealed override async ValueTask<IToken> GetToken(HttpContext context, Business.AspNet.Token token) => new Token
         {
