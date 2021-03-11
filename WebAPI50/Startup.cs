@@ -157,9 +157,21 @@ namespace WebAPI50
                 Utils.GroupWebSocket => Utils.MessagePackDeserialize(data, parametersType),
                 _ => null,
             })
-            .UseLogger(new Logger(async (Logger.LoggerData x) =>
+            //.UseLogger(new Logger(async (Logger.LoggerData x) =>
+            //{
+
+            //}))
+            .UseLogger(new Logger(async x =>
             {
-                x.Log();
+                x.Count().ToString().Log();
+                //foreach (var item in x)
+                //{
+                //    item.Log();
+                //}
+            }, new Logger.BatchOptions
+            {
+                Interval = TimeSpan.FromSeconds(6),
+                MaxNumber = 2000
             }))
             .Build();
         }
