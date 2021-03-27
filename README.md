@@ -134,7 +134,7 @@ public class MyBusiness : Business.AspNet.BusinessBase
     //My first business logic
     //Logical method must be public virtual!
     //If inherited Business.AspNet.BusinessBase Base class, you just need to concentrate on writing logical methods!
-    public virtual async Task<IResult<MyLogicArg>> MyLogic(Token token, MyLogicArg arg)
+    public virtual async ValueTask<IResult<MyLogicArg>> MyLogic(Token token, MyLogicArg arg)
     {
         return this.ResultCreate(arg);
     }
