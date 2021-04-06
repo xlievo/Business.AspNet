@@ -145,9 +145,9 @@ namespace WebAPI50
             })
             .UseRouteCTD(options =>
             {
-                options.C = "c";
-                options.T = "t";
-                options.D = "d";
+                options.C = "command";
+                options.T = "token";
+                options.D = "data";
             })
             .UseMultipleParameterDeserialize((parametersType, group, data) =>
             group switch

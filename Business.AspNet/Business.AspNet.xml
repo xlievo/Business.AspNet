@@ -411,26 +411,6 @@
             Socket type
             </summary>
         </member>
-        <member name="T:Business.AspNet.RouteCTD">
-            <summary>
-            Custom route "c", "t", "d" parameter name.
-            </summary>
-        </member>
-        <member name="P:Business.AspNet.RouteCTD.C">
-            <summary>
-            Default value "c". command
-            </summary>
-        </member>
-        <member name="P:Business.AspNet.RouteCTD.T">
-            <summary>
-            Default value "t". token
-            </summary>
-        </member>
-        <member name="P:Business.AspNet.RouteCTD.D">
-            <summary>
-            Default value "d". data
-            </summary>
-        </member>
         <member name="T:Business.AspNet.Server">
             <summary>
             Sets the specified limits to the Microsoft.AspNetCore.Http server.
@@ -796,7 +776,7 @@
             <param name="options"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.UseRouteCTD(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Business.AspNet.RouteCTD})">
+        <member name="M:Business.AspNet.Utils.UseRouteCTD(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Business.Core.Document.RouteCTD})">
             <summary>
             Custom route "c", "t", "d" parameter name.
             </summary>

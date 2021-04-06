@@ -786,27 +786,6 @@ namespace Business.AspNet
     }
 
     /// <summary>
-    /// Custom route "c", "t", "d" parameter name.
-    /// </summary>
-    public class RouteCTD
-    {
-        /// <summary>
-        /// Default value "c". command
-        /// </summary>
-        public string C { get; set; } = "c";
-
-        /// <summary>
-        /// Default value "t". token
-        /// </summary>
-        public string T { get; set; } = "t";
-
-        /// <summary>
-        /// Default value "d". data
-        /// </summary>
-        public string D { get; set; } = "d";
-    }
-
-    /// <summary>
     /// Sets the specified limits to the Microsoft.AspNetCore.Http server.
     /// </summary>
     public class Server
@@ -1658,6 +1637,9 @@ namespace Business.AspNet
                     {
                         strap.Config.UseDoc.Options.Config.Add("MessagePackCompression", MessagePack.MessagePackSerializer.DefaultOptions.Compression.GetName());
                     }
+
+                    //set route c, t, d
+                    strap.Config.UseDoc.Options.RouteCTD = Hosting.routeCTD;
 
                     //writ url to page
                     DocUI.Write(documentDir, docFileName: Configer.documentFileName);
