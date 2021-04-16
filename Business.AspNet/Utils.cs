@@ -33,6 +33,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
 using System;
 using System.Collections.Generic;
@@ -399,7 +400,7 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public MessagePackAttribute(int state = -13, string message = null, System.Type type = null) : base(state, message, type)
+        public MessagePackAttribute(int state = -13, string message = null, Type type = null) : base(state, message, type)
         {
             this.CanNull = false;
             this.Description = "MessagePackArg Binary parsing";
@@ -566,7 +567,7 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, System.Type type = null) : base(state, message, type)
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
         {
             this.CanNull = false;
             this.Description = "NewtonsoftJson parsing";
@@ -995,7 +996,7 @@ namespace Business.AspNet
                     {
                         var v2 = (string)v.Value;
                         return !string.IsNullOrEmpty(v2) ? v2 : null;
-                    });
+                    }, StringComparer.InvariantCultureIgnoreCase);
                     c = route.Command ?? (parameters.TryGetValue(ctd.C, out value) ? value : null);
                     t = parameters.TryGetValue(ctd.T, out value) ? value : null;
                     d = parameters.TryGetValue(ctd.D, out value) ? value : null;
@@ -1008,7 +1009,7 @@ namespace Business.AspNet
                             {
                                 var v2 = (string)v.Value;
                                 return !string.IsNullOrEmpty(v2) ? v2 : null;
-                            });
+                            }, StringComparer.InvariantCultureIgnoreCase);
                             c = route.Command ?? (parameters.TryGetValue(ctd.C, out value) ? value : null);
                             t = parameters.TryGetValue(ctd.T, out value) ? value : null;
                             d = parameters.TryGetValue(ctd.D, out value) ? value : null;
@@ -1026,6 +1027,8 @@ namespace Business.AspNet
                         return this.NotFound();
                     }
             }
+
+            var hasParameters = null != route.Command && null != parameters;
 
             #endregion
 
@@ -1069,12 +1072,12 @@ namespace Business.AspNet
             var token = await business.GetToken(this.HttpContext, new Token //token
             {
                 Origin = Token.OriginValue.Http,
-                Key = t,
-                Remote = new Remote(this.HttpContext.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out Microsoft.Extensions.Primitives.StringValues remote2) ? remote2.ToString() : this.HttpContext.Connection.RemoteIpAddress.ToString(), this.HttpContext.Connection.RemotePort),
+                Key = hasParameters ? (this.Request.Query.TryGetValue(ctd.T, out StringValues value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null)) : t,
+                Remote = new Remote(this.HttpContext.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out StringValues remote2) ? remote2.ToString() : this.HttpContext.Connection.RemoteIpAddress.ToString(), this.HttpContext.Connection.RemotePort),
                 Path = this.Request.Path.Value,
             });
 
-            var result = null != route.Command && null != parameters ?
+            var result = hasParameters ?
                     // Normal routing mode
                     await cmd.AsyncCall(
                         //the data of this request, allow null.
@@ -2168,7 +2171,7 @@ namespace Business.AspNet
                 WebSocketContainer.WebSockets.TryAdd(reply.Token, webSocket);
 
                 //var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
-                var remote = new Remote(context.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out Microsoft.Extensions.Primitives.StringValues remote2) ? remote2.ToString() : context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
+                var remote = new Remote(context.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out StringValues remote2) ? remote2.ToString() : context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
 
                 var buffer = new byte[Hosting.webSocketOptions.ReceiveBufferSize];
                 WebSocketReceiveResult socketResult;

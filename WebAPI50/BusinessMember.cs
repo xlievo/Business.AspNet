@@ -222,6 +222,20 @@ namespace WebAPI50
             }
         }
 
+        public class SourceAddArg
+        {
+            [Size(Min = 1, Max = 128)]
+            public string Name { get; set; }
+
+            [Size(Max = 512)]
+            public string Remark { get; set; }
+        }
+
+        public virtual async ValueTask<dynamic> SourceAdd(Token token, [Parameters] SourceAddArg arg)
+        {
+            return this.ResultCreate(new { token, arg });
+        }
+
         /// <summary>
         /// test doc Test001
         /// and Test001
