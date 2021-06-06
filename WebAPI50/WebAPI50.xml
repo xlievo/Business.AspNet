@@ -112,7 +112,7 @@
             rrrrrr2
             </returns>
         </member>
-        <member name="M:WebAPI50.BusinessMember.Test010(WebAPI50.Test0011,System.Int32,System.String[])">
+        <member name="M:WebAPI50.BusinessMember.Test010(WebAPI50.Session,WebAPI50.Token,WebAPI50.Test0011,System.Int32,System.String[])">
             <summary>
             Test010!
             </summary>

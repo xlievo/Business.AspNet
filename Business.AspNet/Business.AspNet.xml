@@ -155,6 +155,7 @@
             <summary>
             ProtoBuf,MessagePack or Other
             </summary>
+            <param name="dataBytes"></param>
             <returns></returns>
         </member>
         <member name="T:Business.AspNet.WebSocketAcceptReply">
@@ -831,17 +832,16 @@
             WebSocket container
             </summary>
         </member>
-        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendObjectAsync``1(``0,System.String,System.Boolean,System.String[])">
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync``1(``0,System.String,System.String[])">
             <summary>
             Send socket object
             </summary>
             <typeparam name="Data"></typeparam>
             <param name="data"></param>
             <param name="callback"></param>
-            <param name="dataBytes"></param>
             <param name="id"></param>
         </member>
-        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.String[])">
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendBytesAsync(System.Byte[],System.String[])">
             <summary>
             Send socket message
             </summary>
@@ -849,7 +849,7 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.Int32,System.String[])">
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendBytesAsync(System.Byte[],System.Int32,System.String[])">
             <summary>
             Send socket message
             </summary>
@@ -858,7 +858,7 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Int32,System.String[])">
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendBytesAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Int32,System.String[])">
             <summary>
             Send socket message
             </summary>
@@ -868,7 +868,7 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Boolean,System.Int32,System.String[])">
+        <member name="M:Business.AspNet.Utils.WebSocketContainer.SendBytesAsync(System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Boolean,System.Int32,System.String[])">
             <summary>
             Send socket message
             </summary>
@@ -879,7 +879,7 @@
             <param name="id"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.SendObjectAsync``1(System.Net.WebSockets.WebSocket,``0,System.String,System.Boolean,System.Net.WebSockets.WebSocketMessageType)">
+        <member name="M:Business.AspNet.Utils.SendAsync``1(System.Net.WebSockets.WebSocket,``0,System.String,System.Net.WebSockets.WebSocketMessageType)">
             <summary>
             WebSocket SendAsync object
             </summary>
@@ -887,11 +887,10 @@
             <param name="webSocket"></param>
             <param name="data"></param>
             <param name="callback"></param>
-            <param name="dataBytes"></param>
             <param name="messageType"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.SendAsync(System.Net.WebSockets.WebSocket,System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Boolean)">
+        <member name="M:Business.AspNet.Utils.SendBytesAsync(System.Net.WebSockets.WebSocket,System.Byte[],System.Net.WebSockets.WebSocketMessageType,System.Boolean)">
             <summary>
             WebSocket SendAsync
             </summary>
@@ -903,10 +902,20 @@
         </member>
         <member name="M:Business.AspNet.Utils.SendAsync(Business.AspNet.IBusiness,System.Object[],System.String[],System.String)">
             <summary>
-            Send webSocket object
+            Send webSocket objects
             </summary>
             <param name="business"></param>
             <param name="args"></param>
+            <param name="id"></param>
+            <param name="method"></param>
+        </member>
+        <member name="M:Business.AspNet.Utils.SendAsync``1(Business.AspNet.IBusiness,``0,System.String[],System.String)">
+            <summary>
+            Send webSocket object
+            </summary>
+            <typeparam name="Data"></typeparam>
+            <param name="business"></param>
+            <param name="data"></param>
             <param name="id"></param>
             <param name="method"></param>
         </member>

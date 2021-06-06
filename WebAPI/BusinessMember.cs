@@ -284,7 +284,7 @@ namespace WebAPI
 
             await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
 
-            webSocket.SendObjectAsync("sssssssssss", "123456", false);
+            webSocket.SendAsync("sssssssssss", "123456");
 
             //await webSocket.CloseAsync();
 

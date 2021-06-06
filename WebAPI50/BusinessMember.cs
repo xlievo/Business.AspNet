@@ -297,9 +297,11 @@ namespace WebAPI50
 
             //this.SendAsync(WebSockets, new object[] { new Test0011 { C31 = "aaaadd111111111111" }, 2233 }, null, "Test010");
 
-            await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
+            this.SendAsync(new Test0011 { C31 = "aaaadd22222222222222" });
 
-            webSocket.SendObjectAsync("sssssssssss", "123456", false);
+            //await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
+
+            webSocket.SendAsync("sssssssssss", "123456");
 
             //await webSocket.CloseAsync();
 
@@ -359,7 +361,7 @@ namespace WebAPI50
         /// <param name="id"></param>
         /// <returns></returns>
         [Push]
-        public virtual async Task Test010(Test0011 test, int b, [Ignore(IgnoreMode.Arg)] params string[] id) => this.SendAsync(new object[] { test, b }, id);
+        public virtual async Task Test010(Session session, Token token, Test0011 test, int b, [Ignore(IgnoreMode.Arg)] params string[] id) => this.SendAsync(new object[] { test, b }, id);
 
         public virtual async Task<List<string>> Test011(string a, string b)
         {
