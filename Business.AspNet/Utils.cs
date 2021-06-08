@@ -2385,7 +2385,7 @@ namespace Business.AspNet
         /// <param name="endOfMessage"></param>
         /// <returns></returns>
         public static bool SendBytesAsync(this WebSocket webSocket, byte[] data = null, WebSocketMessageType messageType = WebSocketMessageType.Binary, bool endOfMessage = true) => Hosting.webSocketSendQueue.TryAdd(new Hosting.WebSocketData(webSocket, null == data ? new ArraySegment<byte>(new byte[0]) : new ArraySegment<byte>(data), messageType, endOfMessage));
-
+        /*
         /// <summary>
         /// Send webSocket objects
         /// </summary>
@@ -2425,7 +2425,7 @@ namespace Business.AspNet
 
             //SendObjectAsync(arg?.MessagePackSerialize(cmd.ParametersType), null, new BusinessInfo(business.Configer.Info.BusinessName, method), id);
         }
-
+        */
         /// <summary>
         /// Send webSocket object
         /// </summary>

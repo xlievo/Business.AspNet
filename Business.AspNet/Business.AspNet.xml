@@ -900,15 +900,6 @@
             <param name="endOfMessage"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.SendAsync(Business.AspNet.IBusiness,System.Object[],System.String[],System.String)">
-            <summary>
-            Send webSocket objects
-            </summary>
-            <param name="business"></param>
-            <param name="args"></param>
-            <param name="id"></param>
-            <param name="method"></param>
-        </member>
         <member name="M:Business.AspNet.Utils.SendAsync``1(Business.AspNet.IBusiness,``0,System.String[],System.String)">
             <summary>
             Send webSocket object

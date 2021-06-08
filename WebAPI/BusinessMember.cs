@@ -282,7 +282,7 @@ namespace WebAPI
 
             //this.SendAsync(WebSockets, new object[] { new Test0011 { C31 = "aaaadd111111111111" }, 2233 }, null, "Test010");
 
-            await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
+            //await Test010(new Test0011 { C31 = "aaaadd22222222222222" }, 2233);
 
             webSocket.SendAsync("sssssssssss", "123456");
 
@@ -336,15 +336,15 @@ namespace WebAPI
             return new List<Test0011> { new Test0011 { AAA = new List<string> { "sssss" } } };
         }
 
-        /// <summary>
-        /// Test010!
-        /// </summary>
-        /// <param name="test">Test004XTest004XTest004XTest004X</param>
-        /// <param name="b"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        [Push]
-        public virtual async Task Test010(Test0011 test, int b, [Ignore(IgnoreMode.Arg)] params string[] id) => this.SendAsync(new object[] { test, b }, id);
+        ///// <summary>
+        ///// Test010!
+        ///// </summary>
+        ///// <param name="test">Test004XTest004XTest004XTest004X</param>
+        ///// <param name="b"></param>
+        ///// <param name="id"></param>
+        ///// <returns></returns>
+        //[Push]
+        //public virtual async Task Test010(Test0011 test, int b, [Ignore(IgnoreMode.Arg)] params string[] id) => this.SendAsync(new object[] { test, b }, id);
 
         public virtual async Task<List<string>> Test011(string a, string b)
         {
