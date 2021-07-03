@@ -623,7 +623,7 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(Core.Annotations.JsonArgAttribute))
         {
             this.CanNull = false;
             this.Description = "NewtonsoftJson parsing";
@@ -828,9 +828,9 @@ namespace Business.AspNet
             }
         };
 
-        internal Action<JsonSerializerOptions, JsonSerializerOptions> useJsonOptions;
+        internal Action<JsonSerializerOptions, JsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings> useJsonOptions;
 
-        internal Action<Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJsonOptions;
+        //internal Action<Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJsonOptions;
 
         internal JsonOptions jsonOptions;
 
@@ -2044,7 +2044,7 @@ namespace Business.AspNet
         /// <param name="bootstrap"></param>
         /// <param name="options">An System.Action to configure the Microsoft.AspNetCore.Mvc.JsonOptions.</param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> UseJsonOptions(this BootstrapAll<IBusiness> bootstrap, Action<JsonSerializerOptions, JsonSerializerOptions> options = null)
+        public static BootstrapAll<IBusiness> UseJsonOptions(this BootstrapAll<IBusiness> bootstrap, Action<JsonSerializerOptions, JsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings> options = null)
         {
             if (null != options)
             {
@@ -2052,20 +2052,20 @@ namespace Business.AspNet
             }
             return bootstrap;
         }
-        /// <summary>
-        /// UseNewtonsoftJson
-        /// </summary>
-        /// <param name="bootstrap"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        public static BootstrapAll<IBusiness> UseNewtonsoftJson(this BootstrapAll<IBusiness> bootstrap, Action<Newtonsoft.Json.JsonSerializerSettings> options = null)
-        {
-            if (null != options)
-            {
-                Hosting.useNewtonsoftJsonOptions = options;
-            }
-            return bootstrap;
-        }
+        ///// <summary>
+        ///// UseNewtonsoftJson
+        ///// </summary>
+        ///// <param name="bootstrap"></param>
+        ///// <param name="options"></param>
+        ///// <returns></returns>
+        //public static BootstrapAll<IBusiness> UseNewtonsoftJson(this BootstrapAll<IBusiness> bootstrap, Action<Newtonsoft.Json.JsonSerializerSettings> options = null)
+        //{
+        //    if (null != options)
+        //    {
+        //        Hosting.useNewtonsoftJsonOptions = options;
+        //    }
+        //    return bootstrap;
+        //}
 
         static Func<string, string> UseJson(IApplicationBuilder app)
         {
@@ -2105,7 +2105,7 @@ namespace Business.AspNet
                     #endregion
                 }
 
-                Hosting.useJsonOptions?.Invoke(inTextJsonSerializerOptions, outTextJsonSerializerOptions);
+                //Hosting.useJsonOptions?.Invoke(inTextJsonSerializerOptions, outTextJsonSerializerOptions);
             }
             else //NewtonsoftJson
             {
@@ -2127,14 +2127,16 @@ namespace Business.AspNet
 
                 #endregion
 
-                Hosting.useNewtonsoftJsonOptions?.Invoke(newtonsoftJsonSerializerSettings);
+                //Hosting.useNewtonsoftJsonOptions?.Invoke(newtonsoftJsonSerializerSettings);
 
                 resolver = newtonsoftJsonSerializerSettings?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
 
                 camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
             }
 
-            Hosting.jsonOptions = new Hosting.JsonOptions((null != outTextJsonSerializerOptions && null != inTextJsonSerializerOptions), inTextJsonSerializerOptions, outTextJsonSerializerOptions, newtonsoftJsonSerializerSettings);
+            Hosting.useJsonOptions?.Invoke(inTextJsonSerializerOptions, outTextJsonSerializerOptions, newtonsoftJsonSerializerSettings);
+
+            Hosting.jsonOptions = new Hosting.JsonOptions(null != outTextJsonSerializerOptions && null != inTextJsonSerializerOptions, inTextJsonSerializerOptions, outTextJsonSerializerOptions, newtonsoftJsonSerializerSettings);
 
             return camelCase;
         }

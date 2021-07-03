@@ -248,6 +248,21 @@ namespace WebAPI50
 
         public virtual async ValueTask<IResult<(Test0010? aaa, string bbb)>> TestAnonymous(Test0010? arg, string aaa) => this.ResultCreate((arg, aaa));
 
+        public struct TestJsonArg
+        {
+            public string A { get; set; }
+
+            public int B { get; set; }
+
+            public int C { get; set; }
+        }
+
+        [Testing("test2", "{\"arg\":{\"A\":\"00112233\",\"B\":333,\"C\":666}}")]
+        public virtual async ValueTask<dynamic> TestJson(TestJsonArg arg)
+        {
+            return this.ResultCreate(arg);
+        }
+
         /// <summary>
         /// test doc Test001
         /// and Test001

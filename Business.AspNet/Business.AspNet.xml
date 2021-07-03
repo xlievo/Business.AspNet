@@ -830,20 +830,12 @@
             <param name="options"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.UseJsonOptions(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{System.Text.Json.JsonSerializerOptions,System.Text.Json.JsonSerializerOptions})">
+        <member name="M:Business.AspNet.Utils.UseJsonOptions(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{System.Text.Json.JsonSerializerOptions,System.Text.Json.JsonSerializerOptions,Newtonsoft.Json.JsonSerializerSettings})">
             <summary>
             Configures Microsoft.AspNetCore.Mvc.JsonOptions for the specified builder.
             </summary>
             <param name="bootstrap"></param>
             <param name="options">An System.Action to configure the Microsoft.AspNetCore.Mvc.JsonOptions.</param>
-            <returns></returns>
-        </member>
-        <member name="M:Business.AspNet.Utils.UseNewtonsoftJson(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Newtonsoft.Json.JsonSerializerSettings})">
-            <summary>
-            UseNewtonsoftJson
-            </summary>
-            <param name="bootstrap"></param>
-            <param name="options"></param>
             <returns></returns>
         </member>
         <member name="M:Business.AspNet.Utils.UseMessagePack(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Func{MessagePack.MessagePackSerializerOptions,MessagePack.MessagePackSerializerOptions})">
