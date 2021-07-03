@@ -10,12 +10,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Security.AccessControl;
 using System.Threading;
 using System.Threading.Tasks;
+using static WebAPI50.Test004X;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WebAPI50
 {
@@ -61,8 +68,11 @@ namespace WebAPI50
 
         HttpClient httpClient;
 
-        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, ILogger<BusinessMember> logger, string test123)
+        Microsoft.AspNetCore.Builder.IApplicationBuilder app;
+
+        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, ILogger<BusinessMember> logger, string test123, Microsoft.AspNetCore.Builder.ApplicationBuilder app)
         {
+            this.app = app;
             logger.LogInformation(test123);
 
             httpClient = httpClientFactory.CreateClient();
@@ -236,6 +246,8 @@ namespace WebAPI50
             return this.ResultCreate(new { token, arg });
         }
 
+        public virtual async ValueTask<IResult<(Test0010? aaa, string bbb)>> TestAnonymous(Test0010? arg, string aaa) => this.ResultCreate((arg, aaa));
+
         /// <summary>
         /// test doc Test001
         /// and Test001
@@ -270,6 +282,9 @@ namespace WebAPI50
         "{\"arg\":{\"menu_item\":\"\",\"bbbb\":\"\",\"bbb\":\"\",\"aaa\":[\"aa\",\"bb\"],\"a\":\"http://127.0.0.1:5000/doc/index.html\",\"b\":\"\",\"c\":{\"c1\":\"ok\",\"c2\":\"😀😭\",\"c3\":[{\"c31\":\"cc1\",\"c32\":\"cc2\",\"aaa\":[]},{\"c31\":\"cc3\",\"c32\":\"cc4\",\"aaa\":[]},{\"c31\":\"cc5\",\"c32\":\"cc6\",\"aaa\":[]}]},\"d\":19,\"e\":false,\"f\":\"2019-12-02T06:24\",\"myEnum\":4},\"dateTime\":\"2019-12-02T08:24\",\"mm\":111.0123456,\"fff\":555,\"bbb\":true}")]
         public virtual async ValueTask<IResult<Test004>> Test001(Session session, Token token, Test004 arg, [CheckNull(CheckValueType = true)] DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
         {
+
+            var r = Utils.Hosting;
+
             context?.Response.Headers.TryAdd("sss", "qqq");
 
             var ss = System.Text.Encoding.UTF8.GetBytes("a1");
@@ -285,6 +300,16 @@ namespace WebAPI50
             {
                 return this.ResultCreate(-911, "dsddsa");
             }
+
+            var files2 = await httpFile.GetFileAsync();
+            var files3 = await httpFile.GetFileAsync("db2.sh");
+            var files4 = httpFile.GetFilesAsync();
+
+            await foreach (var item in files4)
+            {
+                item.Key.Log();
+            }
+
 
             var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 

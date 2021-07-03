@@ -111,15 +111,6 @@
             rrrrrr2
             </returns>
         </member>
-        <member name="M:WebAPI.BusinessMember.Test010(WebAPI.Test0011,System.Int32,System.String[])">
-            <summary>
-            Test010!
-            </summary>
-            <param name="test">Test004XTest004XTest004XTest004X</param>
-            <param name="b"></param>
-            <param name="id"></param>
-            <returns></returns>
-        </member>
         <member name="M:WebAPI.BusinessMember.Test012">
             <summary>
             Test012Test012Test012Test012

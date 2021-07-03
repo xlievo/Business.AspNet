@@ -4,6 +4,16 @@
         <name>WebAPI50</name>
     </assembly>
     <members>
+        <member name="T:WebAPI50.Annotations.JsonArgAttribute">
+            <summary>
+            JsonArgAttribute
+            </summary>
+        </member>
+        <member name="M:WebAPI50.Annotations.JsonArgAttribute.#ctor">
+            <summary>
+            JsonArgAttribute
+            </summary>
+        </member>
         <member name="P:WebAPI50.BusinessMember.Test001_Arg.Test004.BBBB">
             <summary>
             Test004 BBBBBBBBbbbbbbbbbbbbbbbbbBBBBBBBBBBBBBBBBBB@@@
@@ -111,15 +121,6 @@
             rrrrrr
             rrrrrr2
             </returns>
-        </member>
-        <member name="M:WebAPI50.BusinessMember.Test010(WebAPI50.Session,WebAPI50.Token,WebAPI50.Test0011,System.Int32,System.String[])">
-            <summary>
-            Test010!
-            </summary>
-            <param name="test">Test004XTest004XTest004XTest004X</param>
-            <param name="b"></param>
-            <param name="id"></param>
-            <returns></returns>
         </member>
         <member name="M:WebAPI50.BusinessMember.Test012">
             <summary>

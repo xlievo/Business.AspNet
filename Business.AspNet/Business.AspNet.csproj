@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.9.5.6</Version>
+    <Version>0.9.5.7</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>https://github.com/xlievo/Business.AspNet</Description>
     <Copyright>Copyright ©  2014~2021 Business Project - http://www.tmopen.com</Copyright>
@@ -14,9 +14,10 @@
     <PackageTags>Business.Core, Business.AspNet</PackageTags>
     <Authors>xlievo</Authors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyVersion>0.9.5.6</AssemblyVersion>
+    <AssemblyVersion>0.9.5.7</AssemblyVersion>
     <Company>www.tmopen.com</Company>
-    <FileVersion>0.9.5.6</FileVersion>
+    <FileVersion>0.9.5.7</FileVersion>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
-    <PackageReference Include="Business.Core" Version="1.7.2.4" />
+    <PackageReference Include="Business.Core" Version="1.7.2.7" />
     <PackageReference Include="Business.DocUI" Version="1.3.4" />
     <PackageReference Include="MessagePack" Version="2.2.85" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.2.0" />
@@ -52,13 +53,14 @@
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="5.0.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net5.0'">
-    <PackageReference Include="Business.Core" Version="1.7.2.4" />
+    <PackageReference Include="Business.Core" Version="1.7.2.7" />
     <PackageReference Include="Business.DocUI" Version="1.3.4" />
     <PackageReference Include="MessagePack" Version="2.2.85" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="5.0.7" />
   </ItemGroup>
 
 </Project>

@@ -161,7 +161,7 @@ namespace WebAPI50
         /// Json format
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => Help.JsonSerialize(this);
+        public override string ToString() => Utils.NewtonsoftJsonSerialize(this); //this.JsonSerialize();
 
         /// <summary>
         /// ProtoBuf,MessagePack or Other
@@ -218,7 +218,8 @@ namespace WebAPI50
         }
     }
 
-    [MyJsonArg(Group = Utils.GroupJson)]
+    //[MyJsonArg(Group = Utils.GroupJson)]
+    [Annotations.JsonArg(Group = Utils.GroupJson)]
     public abstract class BusinessBase : Business.AspNet.BusinessBase
     {
         ///// <summary>

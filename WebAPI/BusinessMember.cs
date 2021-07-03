@@ -222,6 +222,18 @@ namespace WebAPI
             }
         }
 
+        public virtual async Task<dynamic> UpLoadFiles([Use] Microsoft.AspNetCore.Mvc.Controller controller, Context context, HttpFile httpFile = default)
+        {
+            var list = new List<string>();
+
+            foreach (var file in controller.HttpContext.Request.Form.Files)
+            {
+                list.Add(file.Name);
+            }
+
+            return this.ResultCreate(list);
+        }
+
         /// <summary>
         /// test doc Test001
         /// and Test001
@@ -270,6 +282,13 @@ namespace WebAPI
             {
                 return this.ResultCreate(-911, "dsddsa");
             }
+
+            var files2 = await httpFile.GetFileAsync();
+            var files3 = await httpFile.GetFileAsync("db2.sh");
+            var files4 = httpFile.GetFilesAsync("db2.sh", null, "business.log.txt");
+
+            await files4.ForEachAsync(c => c.Key.Log());
+
 
             var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 

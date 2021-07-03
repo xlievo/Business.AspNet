@@ -14,8 +14,8 @@ using Microsoft.AspNetCore.Mvc;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http.Features;
 using Serilog;
-using Serilog.Core;
 using System.Net.Http;
+using Business.Core;
 
 namespace WebAPI
 {
@@ -33,7 +33,7 @@ namespace WebAPI
 
             //Enable MVC
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
-                .AddNewtonsoftJson()
+                //.AddNewtonsoftJson()
                 .AddJsonOptions(c => c.JsonSerializerOptions.PropertyNameCaseInsensitive = true);
             //
 
@@ -111,16 +111,16 @@ namespace WebAPI
                 options.Navigtion = true;
                 options.Testing = true;
             })
-            .UseJsonOptions(options =>
-            {
-                //options.PropertyNamingPolicy = null;
-            })
-            .UseNewtonsoftJson(options =>
-            {
-                //options.ContractResolver = null;
-                //var resolver = options.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
-                //resolver.NamingStrategy = Utils.NewtonsoftCamelCaseNamingStrategy.Instance;
-            })
+            //.UseJsonOptions(options =>
+            //{
+            //    //options.PropertyNamingPolicy = null;
+            //})
+            //.UseNewtonsoftJson(options =>
+            //{
+            //    //options.ContractResolver = null;
+            //    //var resolver = options.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+            //    //resolver.NamingStrategy = Utils.NewtonsoftCamelCaseNamingStrategy.Instance;
+            //})
             .UseMessagePack(options => options.WithCompression(MessagePack.MessagePackCompression.Lz4Block))
             .UseResultType(typeof(MyResultObject<>))//use ResultObject
             .UseWebSocket(options =>
@@ -148,20 +148,31 @@ namespace WebAPI
                     server.KestrelOptions.Limits.MaxRequestBodySize = null;
                 }
             })
-            .UseRouteCTD(options =>
-            {
-                options.C = "c";
-                options.T = "t";
-                options.D = "d";
-            })
+            //.UseRouteCTD(options =>
+            //{
+            //    options.C = "c";
+            //    options.T = "t";
+            //    options.D = "d";
+            //})
             .UseMultipleParameterDeserialize((parametersType, group, data) =>
             group switch
             {
                 //Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
-                Utils.GroupJson => Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.NewtonsoftJsonOptions),
+                Utils.GroupJson => Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.newtonsoftJsonOptions),
                 Utils.GroupWebSocket => Utils.MessagePackDeserialize(data, parametersType),
                 _ => null,
             })
+            .UseLogger(new Logger(async x =>
+            {
+                Parallel.ForEach(x, c =>
+                {
+                    c.Log();
+                });
+            }, new Logger.BatchOptions
+            {
+                Interval = TimeSpan.FromSeconds(6),
+                MaxNumber = 2000
+            }))
             .Build();
         }
     }

@@ -7,6 +7,25 @@ using System.Threading.Tasks;
 
 namespace WebAPI50.Annotations
 {
+    /// <summary>
+    /// JsonArgAttribute
+    /// </summary>
+    public class JsonArgAttribute : Business.Core.Annotations.JsonArgAttribute
+    {
+        /// <summary>
+        /// JsonArgAttribute
+        /// </summary>
+        public JsonArgAttribute() : base()
+        {
+            Description = "Json format";
+        }
+
+        public override async ValueTask<IResult> Proces<Type>(dynamic value)
+        {
+            return await base.Proces<Type>(value as object);
+        }
+    }
+
     public class TokenCheck : ArgumentAttribute
     {
         public TokenCheck(int state = -80, string message = null) : base(state, message) { }
