@@ -204,14 +204,45 @@
             <param name="message"></param>
             <param name="type"></param>
         </member>
-        <member name="P:Business.AspNet.MessagePackAttribute.CheckValueType">
-            <summary>
-            Check whether the defined value type is the default value, (top-level object commit), Default true
-            </summary>
-        </member>
         <member name="M:Business.AspNet.MessagePackAttribute.Proces``1(System.Object)">
             <summary>
             processing method
+            </summary>
+            <typeparam name="Type"></typeparam>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Business.AspNet.JsonArgAttribute">
+            <summary>
+            JsonArgAttribute
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.JsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
+            <summary>
+            JsonArgAttribute
+            </summary>
+        </member>
+        <member name="T:Business.AspNet.NewtonsoftJsonArgAttribute">
+            <summary>
+            NewtonsoftJsonArg
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
+            <summary>
+            NewtonsoftJsonArg
+            </summary>
+            <param name="state"></param>
+            <param name="message"></param>
+            <param name="type"></param>
+        </member>
+        <member name="F:Business.AspNet.NewtonsoftJsonArgAttribute.newtonsoftJsonSettings">
+            <summary>
+            The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.Proces``1(System.Object)">
+            <summary>
+            Proces
             </summary>
             <typeparam name="Type"></typeparam>
             <param name="value"></param>
@@ -264,47 +295,6 @@
             <param name="message"></param>
         </member>
         <member name="M:Business.AspNet.HttpFileAttribute.Proces``1(System.Object)">
-            <summary>
-            Proces
-            </summary>
-            <typeparam name="Type"></typeparam>
-            <param name="value"></param>
-            <returns></returns>
-        </member>
-        <member name="T:Business.AspNet.JsonArgAttribute">
-            <summary>
-            JsonArgAttribute
-            </summary>
-        </member>
-        <member name="M:Business.AspNet.JsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
-            <summary>
-            JsonArgAttribute
-            </summary>
-        </member>
-        <member name="T:Business.AspNet.NewtonsoftJsonArgAttribute">
-            <summary>
-            NewtonsoftJsonArg
-            </summary>
-        </member>
-        <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
-            <summary>
-            NewtonsoftJsonArg
-            </summary>
-            <param name="state"></param>
-            <param name="message"></param>
-            <param name="type"></param>
-        </member>
-        <member name="F:Business.AspNet.NewtonsoftJsonArgAttribute.newtonsoftJsonSettings">
-            <summary>
-            The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
-            </summary>
-        </member>
-        <member name="P:Business.AspNet.NewtonsoftJsonArgAttribute.CheckValueType">
-            <summary>
-            Check whether the defined value type is the default value, (top-level object commit), Default true
-            </summary>
-        </member>
-        <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.Proces``1(System.Object)">
             <summary>
             Proces
             </summary>

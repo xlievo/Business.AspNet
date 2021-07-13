@@ -22,7 +22,9 @@ namespace WebAPI50.Annotations
 
         public override async ValueTask<IResult> Proces<Type>(dynamic value)
         {
-            return await base.Proces<Type>(value as object);
+            var opt = this.textJsonOptions;
+            var data = await base.Proces<Type>(value as object);
+            return data;
         }
     }
 

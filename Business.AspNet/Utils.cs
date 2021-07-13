@@ -409,11 +409,6 @@ namespace Business.AspNet
         }
 
         /// <summary>
-        /// Check whether the defined value type is the default value, (top-level object commit), Default true
-        /// </summary>
-        public bool CheckValueType { get; set; } = true;
-
-        /// <summary>
         /// processing method
         /// </summary>
         /// <typeparam name="Type"></typeparam>
@@ -423,9 +418,6 @@ namespace Business.AspNet
         {
             var result = CheckNull(this, value);
             if (!result.HasData) { return new ValueTask<IResult>(result); }
-
-            result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
 
             try
             {
@@ -437,6 +429,65 @@ namespace Business.AspNet
             }
         }
     }
+
+    /// <summary>
+    /// JsonArgAttribute
+    /// </summary>
+    public class JsonArgAttribute : Core.Annotations.JsonArgAttribute
+    {
+        /// <summary>
+        /// JsonArgAttribute
+        /// </summary>
+        public JsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
+        {
+            Description = "Json format";
+            if (null != Utils.Hosting.jsonOptions.InJsonSerializerOptions)
+            {
+                textJsonOptions = Utils.Hosting.jsonOptions.InJsonSerializerOptions;
+            }
+        }
+    }
+
+    /// <summary>
+    /// NewtonsoftJsonArg
+    /// </summary>
+    public class NewtonsoftJsonArgAttribute : ArgumentDeserialize
+    {
+        /// <summary>
+        /// NewtonsoftJsonArg
+        /// </summary>
+        /// <param name="state"></param>
+        /// <param name="message"></param>
+        /// <param name="type"></param>
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute)) => this.Description = "NewtonsoftJson parsing";
+
+        /// <summary>
+        /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
+        /// </summary>
+        public Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = Utils.Hosting.jsonOptions.InNewtonsoftJsonSerializerSettings;
+
+        /// <summary>
+        /// Proces
+        /// </summary>
+        /// <typeparam name="Type"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public override ValueTask<IResult> Proces<Type>(dynamic value)
+        {
+            var result = CheckNull(this, value);
+            if (!result.HasData) { return new ValueTask<IResult>(result); }
+
+            try
+            {
+                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonSettings)));
+            }
+            catch (Exception ex)
+            {
+                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} NewtonsoftJson deserialize error. {ex.Message}"));
+            }
+        }
+    }
+
 
     ///// <summary>
     ///// WebSocket grouping
@@ -595,70 +646,6 @@ namespace Business.AspNet
     }
 
     #endregion
-
-    /// <summary>
-    /// JsonArgAttribute
-    /// </summary>
-    public class JsonArgAttribute : Core.Annotations.JsonArgAttribute
-    {
-        /// <summary>
-        /// JsonArgAttribute
-        /// </summary>
-        public JsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
-        {
-            Description = "Json format";
-            textJsonOptions = Utils.Hosting.jsonOptions.InJsonSerializerOptions;
-        }
-    }
-
-    /// <summary>
-    /// NewtonsoftJsonArg
-    /// </summary>
-    public class NewtonsoftJsonArgAttribute : ArgumentDeserialize
-    {
-        /// <summary>
-        /// NewtonsoftJsonArg
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="message"></param>
-        /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(Core.Annotations.JsonArgAttribute)) => this.Description = "NewtonsoftJson parsing";
-
-        /// <summary>
-        /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
-        /// </summary>
-        public Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = Utils.Hosting.jsonOptions.InNewtonsoftJsonSerializerSettings;
-
-        /// <summary>
-        /// Check whether the defined value type is the default value, (top-level object commit), Default true
-        /// </summary>
-        public bool CheckValueType { get; set; } = true;
-
-        /// <summary>
-        /// Proces
-        /// </summary>
-        /// <typeparam name="Type"></typeparam>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public override ValueTask<IResult> Proces<Type>(dynamic value)
-        {
-            var result = CheckNull(this, value);
-            if (!result.HasData) { return new ValueTask<IResult>(result); }
-
-            //Check whether the defined value type is the default value, (top-level object commit)
-            result = CheckDefinitionValueType(this, value, CheckValueType);
-            if (!Equals(null, result)) { return new ValueTask<IResult>(result); }
-
-            try
-            {
-                return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonSettings)));
-            }
-            catch (Exception ex)
-            {
-                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} NewtonsoftJson deserialize error. {ex.Message}"));
-            }
-        }
-    }
 
     struct Logs
     {
