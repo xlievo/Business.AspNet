@@ -10,14 +10,14 @@ namespace WebAPI50.Annotations
     /// <summary>
     /// JsonArgAttribute
     /// </summary>
-    public class JsonArgAttribute : Business.Core.Annotations.JsonArgAttribute
+    public class JsonArgAttribute : Business.AspNet.JsonArgAttribute
     {
         /// <summary>
         /// JsonArgAttribute
         /// </summary>
         public JsonArgAttribute() : base()
         {
-            Description = "Json format";
+            Description = "Json2 format";
         }
 
         public override async ValueTask<IResult> Proces<Type>(dynamic value)

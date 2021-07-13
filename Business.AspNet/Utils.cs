@@ -394,7 +394,7 @@ namespace Business.AspNet
     /// Deserialization of binary format
     /// </summary>
     //[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
-    public class MessagePackAttribute : ArgumentAttribute
+    public class MessagePackAttribute : ArgumentDeserialize
     {
         /// <summary>
         /// Default constructor
@@ -404,9 +404,8 @@ namespace Business.AspNet
         /// <param name="type"></param>
         public MessagePackAttribute(int state = -13, string message = null, Type type = null) : base(state, message, type)
         {
-            this.CanNull = false;
             this.Description = "MessagePackArg Binary parsing";
-            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => !hasDefinition && !this.ArgMeta.Arg.HasCollection || ignoreArg;
+            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg, bool dynamicObject) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection && !dynamicObject) || ignoreArg;
         }
 
         /// <summary>
@@ -475,22 +474,22 @@ namespace Business.AspNet
         public new string Group { get => base.Group; }
     }
 
-    /// <summary>
-    /// Json command
-    /// </summary>
-    public class JsonCommandAttribute : CommandAttribute
-    {
-        /// <summary>
-        /// Command attribute on a method, for multiple sources to invoke the method
-        /// </summary>
-        /// <param name="onlyName"></param>
-        public JsonCommandAttribute(string onlyName = null) : base(onlyName) => base.Group = Utils.GroupJson;
+    ///// <summary>
+    ///// Json command
+    ///// </summary>
+    //public class JsonCommandAttribute : CommandAttribute
+    //{
+    //    /// <summary>
+    //    /// Command attribute on a method, for multiple sources to invoke the method
+    //    /// </summary>
+    //    /// <param name="onlyName"></param>
+    //    public JsonCommandAttribute(string onlyName = null) : base(onlyName) => base.Group = Utils.GroupJson;
 
-        /// <summary>
-        /// Used for the command group
-        /// </summary>
-        public new string Group { get => base.Group; }
-    }
+    //    /// <summary>
+    //    /// Used for the command group
+    //    /// </summary>
+    //    public new string Group { get => base.Group; }
+    //}
 
     /// <summary>
     /// Simple asp.net HTTP request file
@@ -615,7 +614,7 @@ namespace Business.AspNet
     /// <summary>
     /// NewtonsoftJsonArg
     /// </summary>
-    public class NewtonsoftJsonArgAttribute : ArgumentAttribute
+    public class NewtonsoftJsonArgAttribute : ArgumentDeserialize
     {
         /// <summary>
         /// NewtonsoftJsonArg
@@ -623,17 +622,12 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(Core.Annotations.JsonArgAttribute))
-        {
-            this.CanNull = false;
-            this.Description = "NewtonsoftJson parsing";
-            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection) || this.ArgMeta.Arg.Parameters || ignoreArg;
-        }
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(Core.Annotations.JsonArgAttribute)) => this.Description = "NewtonsoftJson parsing";
 
         /// <summary>
         /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
         /// </summary>
-        public Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = Utils.Hosting.jsonOptions.NewtonsoftJsonSerializerSettings;
+        public Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSettings = Utils.Hosting.jsonOptions.InNewtonsoftJsonSerializerSettings;
 
         /// <summary>
         /// Check whether the defined value type is the default value, (top-level object commit), Default true
@@ -668,7 +662,7 @@ namespace Business.AspNet
 
     struct Logs
     {
-        public IEnumerable<Logger.LoggerData> Data { get; set; }
+        public IEnumerable<string> Data { get; set; }
 
         public string Index { get; set; }
     }
@@ -819,9 +813,10 @@ namespace Business.AspNet
                 case Utils.GroupJson:
                     if (Utils.Hosting.jsonOptions.UseTextJson)
                     {
-                        return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
+                        var data2 = Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
+                        return data2;
                     }
-                    return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.NewtonsoftJsonSerializerSettings);
+                    return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
                 case Utils.GroupWebSocket:
                     return Utils.MessagePackDeserialize(data, parametersType);
                 default: return null;
@@ -830,7 +825,7 @@ namespace Business.AspNet
 
         internal Action<JsonSerializerOptions, JsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings> useJsonOptions;
 
-        //internal Action<Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJsonOptions;
+        //internal Action<Newtonsoft.Json.JsonSerializerSettings, Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJsonOptions;
 
         internal JsonOptions jsonOptions;
 
@@ -842,13 +837,15 @@ namespace Business.AspNet
             /// <param name="useTextJson"></param>
             /// <param name="inJsonSerializerOptions"></param>
             /// <param name="outJsonSerializerOptions"></param>
-            /// <param name="newtonsoftJsonSerializerSettings"></param>
-            public JsonOptions(bool useTextJson, JsonSerializerOptions inJsonSerializerOptions, JsonSerializerOptions outJsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSerializerSettings)
+            /// <param name="inNewtonsoftJsonSerializerSettings"></param>
+            /// <param name="outNewtonsoftJsonSerializerSettings"></param>
+            public JsonOptions(bool useTextJson, JsonSerializerOptions inJsonSerializerOptions, JsonSerializerOptions outJsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings inNewtonsoftJsonSerializerSettings, Newtonsoft.Json.JsonSerializerSettings outNewtonsoftJsonSerializerSettings)
             {
                 UseTextJson = useTextJson;
                 InJsonSerializerOptions = inJsonSerializerOptions;
                 OutJsonSerializerOptions = outJsonSerializerOptions;
-                NewtonsoftJsonSerializerSettings = newtonsoftJsonSerializerSettings;
+                InNewtonsoftJsonSerializerSettings = inNewtonsoftJsonSerializerSettings;
+                OutNewtonsoftJsonSerializerSettings = outNewtonsoftJsonSerializerSettings;
             }
 
             /// <summary>
@@ -857,19 +854,24 @@ namespace Business.AspNet
             public bool UseTextJson { get; }
 
             /// <summary>
-            /// Text.Json JsonSerializerOptions
+            /// Text.Json Input JsonSerializerOptions
             /// </summary>
             public JsonSerializerOptions InJsonSerializerOptions { get; }
 
             /// <summary>
-            /// Text.Json JsonSerializerOptions
+            /// Text.Json Out JsonSerializerOptions
             /// </summary>
             public JsonSerializerOptions OutJsonSerializerOptions { get; }
 
             /// <summary>
-            /// Newtonsoft.Json JsonSerializerSettings
+            /// Newtonsoft.Json Input JsonSerializerSettings
             /// </summary>
-            public Newtonsoft.Json.JsonSerializerSettings NewtonsoftJsonSerializerSettings { get; }
+            public Newtonsoft.Json.JsonSerializerSettings InNewtonsoftJsonSerializerSettings { get; }
+
+            /// <summary>
+            /// Newtonsoft.Json Out JsonSerializerSettings
+            /// </summary>
+            public Newtonsoft.Json.JsonSerializerSettings OutNewtonsoftJsonSerializerSettings { get; }
         }
 
         internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
@@ -1185,6 +1187,7 @@ namespace Business.AspNet
                     await cmd.AsyncCall(
                         //the data of this request, allow null.
                         cmd.HasArgSingle ? new object[] { d } : cmd.GetParametersObjects(Utils.Hosting.multipleParameterDeserialize(cmd.ParametersType, g, d)),
+                        !cmd.HasArgSingle,
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
@@ -1443,10 +1446,8 @@ namespace Business.AspNet
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == keyValues) { throw new ArgumentNullException(nameof(keyValues)); }
 
-            using (var content = new FormUrlEncodedContent(keyValues))
-            {
-                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri), cancellationToken: cancellationToken);
-            }
+            using var content = new FormUrlEncodedContent(keyValues);
+            return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri), cancellationToken: cancellationToken);
         }
         /// <summary>
         /// Called in POST "application/json" format
@@ -1462,10 +1463,8 @@ namespace Business.AspNet
             if (null == httpClient) { throw new ArgumentNullException(nameof(httpClient)); }
             if (null == data) { throw new ArgumentNullException(nameof(data)); }
 
-            using (var content = new StringContent(data, System.Text.Encoding.UTF8, mediaType))
-            {
-                return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri), cancellationToken: cancellationToken);
-            }
+            using var content = new StringContent(data, System.Text.Encoding.UTF8, mediaType);
+            return await httpClient.HttpCall(content, uri: null == uri ? null : new Uri(uri), cancellationToken: cancellationToken);
         }
         /// <summary>
         /// HTTP call
@@ -1478,37 +1477,33 @@ namespace Business.AspNet
         /// <returns></returns>
         public static async ValueTask<string> HttpCall(this HttpClient httpClient, HttpContent content, HttpMethod method = null, Uri uri = null, CancellationToken cancellationToken = default)
         {
-            using (var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content })
+            using var request = new HttpRequestMessage { Method = method ?? HttpMethod.Post, Content = content };
+            if (null != uri)
             {
-                if (null != uri)
-                {
-                    request.RequestUri = uri;
-                }
+                request.RequestUri = uri;
+            }
 
-                /* .net 5.0 Microsoft.Extensions.Http.Polly ?
-                using (var cts = new CancellationTokenSource())
-                {
-                    cts.CancelAfter(TimeSpan.FromSeconds(3));
-                    using (var response = await httpClient.SendAsync(request, cts.Token))
-                    {
-                        response.EnsureSuccessStatusCode();
-                        return await response.Content.ReadAsStringAsync(cts.Token);
-                    }
-                }
-                */
-
-                using (var response = await httpClient.SendAsync(request, cancellationToken))
+            /* .net 5.0 Microsoft.Extensions.Http.Polly ?
+            using (var cts = new CancellationTokenSource())
+            {
+                cts.CancelAfter(TimeSpan.FromSeconds(3));
+                using (var response = await httpClient.SendAsync(request, cts.Token))
                 {
                     response.EnsureSuccessStatusCode();
-
-#if NETSTANDARD2_0
-                    return await response.Content.ReadAsStringAsync();
-#else
-                    return await response.Content.ReadAsStringAsync(cancellationToken);
-#endif
-
+                    return await response.Content.ReadAsStringAsync(cts.Token);
                 }
             }
+            */
+
+            using var response = await httpClient.SendAsync(request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+#if NETSTANDARD2_0
+            return await response.Content.ReadAsStringAsync();
+#else
+            return await response.Content.ReadAsStringAsync(cancellationToken);
+#endif
+
         }
 
         #endregion
@@ -1600,6 +1595,16 @@ namespace Business.AspNet
         /// <param name="c"></param>
         /// <returns></returns>
         public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
+
+        /// <summary>
+        /// Write out the Elasticsearch default log
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="data"></param>
+        /// <param name="index"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static async ValueTask<string> Log(this HttpClient httpClient, IEnumerable<Logger.LoggerData> data, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Logs { Index = index, Data = data.Select(c => c.ToString()) }.JsonSerialize());
 
         /// <summary>
         /// Configure Business.Core in the startup class configure method
@@ -1712,15 +1717,31 @@ namespace Business.AspNet
                         strap.Config.UseDoc.Options.Group = GroupJson;
                     }
 
-                    //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Config.Host))
+                    //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Options.Host))
                     //{
                     //    if (0 < Environment.Addresses.Length)
                     //    {
-                    //        bootstrap.Config.UseDoc.Config.Host = Environment.Addresses[0];
+                    //        bootstrap.Config.UseDoc.Options.Host = Environment.Addresses[0];
                     //    }
                     //}
 
-                    strap.Config.UseDoc.Options.CamelCase = UseJson(app);
+                    #region GetJson
+
+                    Hosting.jsonOptions = GetJson(app);
+
+                    Hosting.useJsonOptions?.Invoke(Hosting.jsonOptions.InJsonSerializerOptions, Hosting.jsonOptions.OutJsonSerializerOptions, Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
+
+                    //if (Hosting.jsonOptions.UseTextJson)
+                    //{
+                    //    strap.Config.UseDoc.Options.CamelCase = c => Hosting.jsonOptions.OutJsonSerializerOptions.PropertyNamingPolicy?.ConvertName(c);
+                    //}
+                    //else
+                    //{
+                    //    var resolver = Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+                    //    strap.Config.UseDoc.Options.CamelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
+                    //}
+
+                    #endregion
 
                     if (null == strap.Config.UseDoc.Options.Config) { strap.Config.UseDoc.Options.Config = new Dictionary<string, object>(); }
                     if (MessagePack.MessagePackCompression.None != MessagePack.MessagePackSerializer.DefaultOptions.Compression)
@@ -1780,10 +1801,8 @@ namespace Business.AspNet
                     {
                         if (context.WebSockets.IsWebSocketRequest)
                         {
-                            using (var webSocket = await context.WebSockets.AcceptWebSocketAsync())
-                            {
-                                await Keep(context, webSocket);
-                            }
+                            using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                            await Keep(context, webSocket);
                         }
                         else
                         {
@@ -2052,13 +2071,14 @@ namespace Business.AspNet
             }
             return bootstrap;
         }
+
         ///// <summary>
         ///// UseNewtonsoftJson
         ///// </summary>
         ///// <param name="bootstrap"></param>
         ///// <param name="options"></param>
         ///// <returns></returns>
-        //public static BootstrapAll<IBusiness> UseNewtonsoftJson(this BootstrapAll<IBusiness> bootstrap, Action<Newtonsoft.Json.JsonSerializerSettings> options = null)
+        //public static BootstrapAll<IBusiness> UseNewtonsoftJson(this BootstrapAll<IBusiness> bootstrap, Action<Newtonsoft.Json.JsonSerializerSettings, Newtonsoft.Json.JsonSerializerSettings> options = null)
         //{
         //    if (null != options)
         //    {
@@ -2067,33 +2087,36 @@ namespace Business.AspNet
         //    return bootstrap;
         //}
 
-        static Func<string, string> UseJson(IApplicationBuilder app)
+        static Hosting.JsonOptions GetJson(IApplicationBuilder app)
         {
-            Func<string, string> camelCase = null;
-
             var formatFilter = app.ApplicationServices.GetService<Microsoft.AspNetCore.Mvc.Formatters.FormatFilter>();
             var options = formatFilter.GetType().GetField("_options", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(formatFilter) as MvcOptions;
 
-            dynamic textJsonOutput = options.OutputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonOutputFormatter".Equals(c.GetType().FullName));
-            JsonSerializerOptions outTextJsonSerializerOptions = textJsonOutput?.SerializerOptions;
+            dynamic output = options.OutputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonOutputFormatter".Equals(c.GetType().FullName));
+            JsonSerializerOptions outTextJsonSerializerOptions = output?.SerializerOptions;
             JsonSerializerOptions inTextJsonSerializerOptions = null;
-            Newtonsoft.Json.JsonSerializerSettings newtonsoftJsonSerializerSettings = null;
+            Newtonsoft.Json.JsonSerializerSettings outNewtonsoftJsonSerializerSettings = null;
+            Newtonsoft.Json.JsonSerializerSettings inNewtonsoftJsonSerializerSettings = null;
+            //Func<string, string> camelCase = null;
+
             if (null != outTextJsonSerializerOptions)
             {
                 if (null != outTextJsonSerializerOptions.PropertyNamingPolicy)
                 {
                     outTextJsonSerializerOptions.PropertyNamingPolicy = Help.JsonNamingPolicyCamelCase.Instance;
                 }
+                outTextJsonSerializerOptions.IncludeFields = true;
 
-                camelCase = c => outTextJsonSerializerOptions.PropertyNamingPolicy?.ConvertName(c);
+                //camelCase = c => outTextJsonSerializerOptions.PropertyNamingPolicy?.ConvertName(c);
 
                 //input
-                dynamic textJsonInput = options.InputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonInputFormatter".Equals(c.GetType().FullName));
-                inTextJsonSerializerOptions = textJsonInput?.SerializerOptions;
+                dynamic input = options.InputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.SystemTextJsonInputFormatter".Equals(c.GetType().FullName));
+                inTextJsonSerializerOptions = input?.SerializerOptions;
                 if (null != inTextJsonSerializerOptions)
                 {
                     #region set
 
+                    inTextJsonSerializerOptions.IncludeFields = true;
                     inTextJsonSerializerOptions.PropertyNameCaseInsensitive = true;
                     inTextJsonSerializerOptions.AllowTrailingCommas = true;
                     inTextJsonSerializerOptions.IgnoreNullValues = true;
@@ -2104,41 +2127,38 @@ namespace Business.AspNet
 
                     #endregion
                 }
-
-                //Hosting.useJsonOptions?.Invoke(inTextJsonSerializerOptions, outTextJsonSerializerOptions);
             }
             else //NewtonsoftJson
             {
-                var newtonsoftJsonOutput = options.OutputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter".Equals(c.GetType().FullName));
-                newtonsoftJsonSerializerSettings = newtonsoftJsonOutput.GetType().GetProperty("SerializerSettings", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(newtonsoftJsonOutput) as Newtonsoft.Json.JsonSerializerSettings;
+                var output2 = options.OutputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonOutputFormatter".Equals(c.GetType().FullName));
+                outNewtonsoftJsonSerializerSettings = output2.GetType().GetProperty("SerializerSettings", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(output2) as Newtonsoft.Json.JsonSerializerSettings;
 
-                if (newtonsoftJsonSerializerSettings?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
+                if (outNewtonsoftJsonSerializerSettings?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
                 {
                     resolver.NamingStrategy = NewtonsoftCamelCaseNamingStrategy.Instance;
                 }
 
-                #region set
+                //resolver = outNewtonsoftJsonSerializerSettings?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
+                //camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
 
-                newtonsoftJsonSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
-                newtonsoftJsonSerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ss";
-                newtonsoftJsonSerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Local;
-                newtonsoftJsonSerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
-                newtonsoftJsonSerializerSettings.Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter() };
+                //input
+                var input = options.InputFormatters.FirstOrDefault(c => "Microsoft.AspNetCore.Mvc.Formatters.NewtonsoftJsonInputFormatter".Equals(c.GetType().FullName));
+                inNewtonsoftJsonSerializerSettings = input.GetType().GetProperty("SerializerSettings", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)?.GetValue(input) as Newtonsoft.Json.JsonSerializerSettings; //input?.SerializerSettings;
+                if (null != inNewtonsoftJsonSerializerSettings)
+                {
+                    #region set
 
-                #endregion
+                    inNewtonsoftJsonSerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                    inNewtonsoftJsonSerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ss";
+                    inNewtonsoftJsonSerializerSettings.DateTimeZoneHandling = Newtonsoft.Json.DateTimeZoneHandling.Local;
+                    inNewtonsoftJsonSerializerSettings.NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore;
+                    inNewtonsoftJsonSerializerSettings.Converters = new List<Newtonsoft.Json.JsonConverter> { new Newtonsoft.Json.Converters.StringEnumConverter() };
 
-                //Hosting.useNewtonsoftJsonOptions?.Invoke(newtonsoftJsonSerializerSettings);
-
-                resolver = newtonsoftJsonSerializerSettings?.ContractResolver as Newtonsoft.Json.Serialization.DefaultContractResolver;
-
-                camelCase = c => resolver?.NamingStrategy?.GetPropertyName(c, false);
+                    #endregion
+                }
             }
 
-            Hosting.useJsonOptions?.Invoke(inTextJsonSerializerOptions, outTextJsonSerializerOptions, newtonsoftJsonSerializerSettings);
-
-            Hosting.jsonOptions = new Hosting.JsonOptions(null != outTextJsonSerializerOptions && null != inTextJsonSerializerOptions, inTextJsonSerializerOptions, outTextJsonSerializerOptions, newtonsoftJsonSerializerSettings);
-
-            return camelCase;
+            return new Hosting.JsonOptions(null != outTextJsonSerializerOptions && null != inTextJsonSerializerOptions, inTextJsonSerializerOptions, outTextJsonSerializerOptions, inNewtonsoftJsonSerializerSettings, outNewtonsoftJsonSerializerSettings);
         }
 
         /// <summary>
@@ -2608,7 +2628,7 @@ namespace Business.AspNet
 
             try
             {
-                return Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, options ?? Hosting.jsonOptions.NewtonsoftJsonSerializerSettings);
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, options ?? Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
             }
             catch
             {
@@ -2632,7 +2652,7 @@ namespace Business.AspNet
 
             try
             {
-                return Newtonsoft.Json.JsonConvert.DeserializeObject(value, type, options ?? Hosting.jsonOptions.NewtonsoftJsonSerializerSettings);
+                return Newtonsoft.Json.JsonConvert.DeserializeObject(value, type, options ?? Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
             }
             catch (Exception)
             {
@@ -2649,7 +2669,7 @@ namespace Business.AspNet
         /// <returns></returns>
         public static string NewtonsoftJsonSerialize<Type>(Type value, Newtonsoft.Json.JsonSerializerSettings options = null)
         {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(value, options ?? Hosting.jsonOptions.NewtonsoftJsonSerializerSettings);
+            return Newtonsoft.Json.JsonConvert.SerializeObject(value, options ?? Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
         }
         /*
         readonly struct LoggerDataJson

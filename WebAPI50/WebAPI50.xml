@@ -104,6 +104,86 @@
             MyEnum C
             </summary>
         </member>
+        <member name="T:WebAPI50.BusinessMember.Test00122">
+            <summary>
+            Test0011Test0011Test0011Test0011
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test00122.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test00122.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test00122.C33">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test00122.Test0013.C311">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test00122.Test0013.C322">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="T:WebAPI50.BusinessMember.Test001222">
+            <summary>
+            Test0011Test0011Test0011Test0011
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001222.C31">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001222.C32">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001222.C322">
+            <summary>
+            C322C322C322C322C322
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001222.C333">
+            <summary>
+            C333C333C333C333C333C333
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001222.C33">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001222.Test0013.C311">
+            <summary>
+            C31C31C31C31C31C31
+            </summary>
+        </member>
+        <member name="F:WebAPI50.BusinessMember.Test001222.Test0013.C322">
+            <summary>
+            C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001222.TeamMember.UserId">
+            <summary>
+            UserId
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Test001222.TeamMember.UserImg">
+            <summary>
+            UserImg
+            </summary>
+        </member>
         <member name="M:WebAPI50.BusinessMember.Test001(WebAPI50.Session,WebAPI50.Token,WebAPI50.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
             <summary>
             test doc Test001

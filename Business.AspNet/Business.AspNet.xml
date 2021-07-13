@@ -233,22 +233,6 @@
             Used for the command group
             </summary>
         </member>
-        <member name="T:Business.AspNet.JsonCommandAttribute">
-            <summary>
-            Json command
-            </summary>
-        </member>
-        <member name="M:Business.AspNet.JsonCommandAttribute.#ctor(System.String)">
-            <summary>
-            Command attribute on a method, for multiple sources to invoke the method
-            </summary>
-            <param name="onlyName"></param>
-        </member>
-        <member name="P:Business.AspNet.JsonCommandAttribute.Group">
-            <summary>
-            Used for the command group
-            </summary>
-        </member>
         <member name="T:Business.AspNet.HttpFile">
             <summary>
             Simple asp.net HTTP request file
@@ -423,14 +407,15 @@
             Configuration options for the WebSocketMiddleware
             </summary>
         </member>
-        <member name="M:Business.AspNet.Hosting.JsonOptions.#ctor(System.Boolean,System.Text.Json.JsonSerializerOptions,System.Text.Json.JsonSerializerOptions,Newtonsoft.Json.JsonSerializerSettings)">
+        <member name="M:Business.AspNet.Hosting.JsonOptions.#ctor(System.Boolean,System.Text.Json.JsonSerializerOptions,System.Text.Json.JsonSerializerOptions,Newtonsoft.Json.JsonSerializerSettings,Newtonsoft.Json.JsonSerializerSettings)">
             <summary>
             JsonOptions
             </summary>
             <param name="useTextJson"></param>
             <param name="inJsonSerializerOptions"></param>
             <param name="outJsonSerializerOptions"></param>
-            <param name="newtonsoftJsonSerializerSettings"></param>
+            <param name="inNewtonsoftJsonSerializerSettings"></param>
+            <param name="outNewtonsoftJsonSerializerSettings"></param>
         </member>
         <member name="P:Business.AspNet.Hosting.JsonOptions.UseTextJson">
             <summary>
@@ -439,17 +424,22 @@
         </member>
         <member name="P:Business.AspNet.Hosting.JsonOptions.InJsonSerializerOptions">
             <summary>
-            Text.Json JsonSerializerOptions
+            Text.Json Input JsonSerializerOptions
             </summary>
         </member>
         <member name="P:Business.AspNet.Hosting.JsonOptions.OutJsonSerializerOptions">
             <summary>
-            Text.Json JsonSerializerOptions
+            Text.Json Out JsonSerializerOptions
             </summary>
         </member>
-        <member name="P:Business.AspNet.Hosting.JsonOptions.NewtonsoftJsonSerializerSettings">
+        <member name="P:Business.AspNet.Hosting.JsonOptions.InNewtonsoftJsonSerializerSettings">
             <summary>
-            Newtonsoft.Json JsonSerializerSettings
+            Newtonsoft.Json Input JsonSerializerSettings
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.Hosting.JsonOptions.OutNewtonsoftJsonSerializerSettings">
+            <summary>
+            Newtonsoft.Json Out JsonSerializerSettings
             </summary>
         </member>
         <member name="F:Business.AspNet.Hosting.socketType">
@@ -788,6 +778,16 @@
             Write out the Elasticsearch default log
             </summary>
             <param name="httpClient">Elasticsearch httpClient</param>
+            <param name="data"></param>
+            <param name="index"></param>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.Log(System.Net.Http.HttpClient,System.Collections.Generic.IEnumerable{Business.Core.Logger.LoggerData},System.String,System.String)">
+            <summary>
+            Write out the Elasticsearch default log
+            </summary>
+            <param name="httpClient"></param>
             <param name="data"></param>
             <param name="index"></param>
             <param name="c"></param>

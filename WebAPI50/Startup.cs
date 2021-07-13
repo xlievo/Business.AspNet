@@ -28,14 +28,13 @@ namespace WebAPI50
             });
 
             //Enable MVC
-            services.AddControllers(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
-                .AddJsonOptions(options => { })
+            services.AddControllers(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
             //.AddJsonOptions(c =>
             //{
             //    //c.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             //    //c.JsonSerializerOptions.PropertyNamingPolicy = Business.Core.Utils.Help.JsonNamingPolicyCamelCase.Instance;
             //});
-            .AddNewtonsoftJson();
+            //.AddNewtonsoftJson();
 
             services.AddHttpClient(string.Empty)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()
@@ -73,8 +72,11 @@ namespace WebAPI50
             //Document pages need to be accessed across domains
             app.UseCors("any");
 
-            Business.Core.Utils.Help.JsonOptions.NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString | System.Text.Json.Serialization.JsonNumberHandling.WriteAsString;
+            var logClient = app.ApplicationServices.GetService<IHttpClientFactory>().CreateClient("log");
+            logClient.BaseAddress = new Uri("http://localhost:5200/api");
 
+            Business.Core.Configer.JsonOptionsDoc.IncludeFields = true;
+            
             //Override the original global log directory
             Utils.Hosting.LogPath = "/data/mylog.txt";
 
@@ -109,13 +111,14 @@ namespace WebAPI50
             .UseDoc(options =>
             {
                 options.Navigtion = true;
+                //options.CamelCase = null;
             })
             .UseJsonOptions((textJsonInOpt, textJsonOutOpt, newtonsoftJsonOpt) =>
             {
                 //textJsonOutOpt.PropertyNamingPolicy = null;
                 //newtonsoftJsonOpt.ContractResolver = null;
             })
-            //.UseNewtonsoftJson(options =>
+            //.UseNewtonsoftJson((newtonsoftJsonInOpt, newtonsoftJsonOutOpt) =>
             //{
             //    //options.ContractResolver = null;
             //})
@@ -156,17 +159,27 @@ namespace WebAPI50
             //{
 
             //}))
-            .UseLogger(new Logger(async x =>
+            .UseLogger(new Logger(async logs =>
             {
                 //x.Count().ToString().Log();
                 //foreach (var item in x)
                 //{
                 //    item.Log();
                 //}
-                Parallel.ForEach(x, c =>
+                //logs.AsParallel().ForAll(log =>
+                //{
+                //    log.Log();
+                //    logClient.Log(log);
+                //});
+                //var result = await logClient.Log(logs);
+                //result.Log();
+                
+                await logs.ToAsyncEnumerable().ForEachAsync(async log =>
                 {
-                    c.Log();
+                    log.Log();
+                    //await logClient.Log(log);
                 });
+                logs.Count().ToString().Log();
             }, new Logger.BatchOptions
             {
                 Interval = TimeSpan.FromSeconds(6),

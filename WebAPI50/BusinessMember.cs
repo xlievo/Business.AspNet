@@ -1,5 +1,5 @@
 ﻿using Business.AspNet;
-using Business.Core;
+//using Business.Core;
 using Business.Core.Annotations;
 using Business.Core.Result;
 using Business.Core.Utils;
@@ -259,6 +259,120 @@ namespace WebAPI50
 
         [Testing("test2", "{\"arg\":{\"A\":\"00112233\",\"B\":333,\"C\":666}}")]
         public virtual async ValueTask<dynamic> TestJson(TestJsonArg arg)
+        {
+            return this.ResultCreate(arg);
+        }
+
+        /// <summary>
+        /// Test0011Test0011Test0011Test0011
+        /// </summary>
+        [DynamicObject]
+        public class Test00122
+        {
+            /// <summary>
+            /// C31C31C31C31C31C31
+            /// </summary>
+            public string C31 { get; set; }
+
+            /// <summary>
+            /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            /// </summary>
+            public int C32 { get; set; }
+
+            /// <summary>
+            /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            /// </summary>
+            [DynamicObject]
+            public IEnumerable<Test0013> C33 { get; set; }
+
+            public struct Test0013
+            {
+                /// <summary>
+                /// C31C31C31C31C31C31
+                /// </summary>
+                public string C311 { get; set; }
+
+                /// <summary>
+                /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+                /// </summary>
+                public int C322 { get; set; }
+            }
+        }
+        //[{\\\"C311\\\":\\\"222\\\",\\\"C322\\\":555},{\\\"C311\\\":\\\"333\\\",\\\"C322\\\":666}]
+        [Testing("test2", "{\"arg\":[\"{\\\"C31\\\":\\\"222\\\",\\\"C32\\\":555,\\\"C33\\\":[{\\\"C311\\\":\\\"222\\\",\\\"C322\\\":555},{\\\"C311\\\":\\\"333\\\",\\\"C322\\\":666}]}\"," +
+            "\"{\\\"C31\\\":\\\"333\\\",\\\"C32\\\":666}\"]," +
+            "" +
+            "\"arg2\":{\"C31\":\"222\",\"C32\":555,\"C33\":[\"{\\\"C311\\\":\\\"222\\\",\\\"C322\\\":555}\",\"{\\\"C311\\\":\\\"333\\\",\\\"C322\\\":666}\"]}}")]
+        [Testing("test3", "{\"arg2\":{\"C31\":\"222\",\"C32\":555,\"C33\":[\"{\\\"C311\\\":\\\"222\\\",\\\"C322\\\":555}\",\"{\\\"C311\\\":\\\"333\\\",\\\"C322\\\":666}\"]}}")]//,\"C33\":[\"{\\\"C311\\\":\\\"333\\\",\\\"C322\\\":666}\"]
+        [Doc(Group = "Module 1")]
+        public virtual async ValueTask<dynamic> Test00555(IEnumerable<Test00122> arg, Test00122 arg2, [DynamicObject] dynamic arg3)
+        {
+            //var dd = new Test00122 { C31 = "222", C32 = 555, C33 = new List<string> { new Test00122.Test0013 { C311 = "222", C322 = 555 }.JsonSerialize(), new Test00122.Test0013 { C311 = "333", C322 = 666 }.JsonSerialize() } }.JsonSerialize().JsonSerialize();
+            //var dd = new Test00122 { C31 = "222", C32 = 555, C33 = new List<Test00122.Test0013> { new Test00122.Test0013 { C311 = "222", C322 = 555 }, new Test00122.Test0013 { C311 = "333", C322 = 666 } } }.JsonSerialize();
+
+            //var dd3 = arg.JsonSerialize().TryJsonDeserialize<IList<Test00122>>();
+
+            return this.ResultCreate(new { arg, arg2, arg3 });
+        }
+
+        /// <summary>
+        /// Test0011Test0011Test0011Test0011
+        /// </summary>
+        public class Test001222
+        {
+            /// <summary>
+            /// C31C31C31C31C31C31
+            /// </summary>
+            public string C31 { get; set; }
+
+            /// <summary>
+            /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            /// </summary>
+            public int C32 { get; set; }
+
+            /// <summary>
+            /// C322C322C322C322C322
+            /// </summary>
+            public int C322;
+
+            /// <summary>
+            /// C333C333C333C333C333C333
+            /// </summary>
+            public IEnumerable<TeamMember> C333;
+
+            /// <summary>
+            /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+            /// </summary>
+            public IEnumerable<Test0013> C33;
+
+            public class Test0013
+            {
+                /// <summary>
+                /// C31C31C31C31C31C31
+                /// </summary>
+                public IEnumerable<TeamMember> C311;
+
+                /// <summary>
+                /// C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32C32
+                /// </summary>
+                public int C322;
+            }
+
+            public class TeamMember
+            {
+                /// <summary>
+                /// UserId
+                /// </summary>
+                public string UserId { get; set; }
+                /// <summary>
+                /// UserImg
+                /// </summary>
+                public string UserImg { get; set; }
+            }
+        }
+
+        [Doc(Group = "Module 1")]
+        public virtual async ValueTask<IResult<Test001222>> TestDoc00555(Test001222 arg)
         {
             return this.ResultCreate(arg);
         }

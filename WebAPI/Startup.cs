@@ -35,6 +35,7 @@ namespace WebAPI
             services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
                 //.AddNewtonsoftJson()
                 .AddJsonOptions(c => c.JsonSerializerOptions.PropertyNameCaseInsensitive = true);
+                //.AddNewtonsoftJson();
             //
 
             services.AddHttpClient(string.Empty)
@@ -111,10 +112,11 @@ namespace WebAPI
                 options.Navigtion = true;
                 options.Testing = true;
             })
-            //.UseJsonOptions(options =>
-            //{
-            //    //options.PropertyNamingPolicy = null;
-            //})
+            .UseJsonOptions((textJsonInOpt, textJsonOutOpt, newtonsoftJsonOpt) =>
+            {
+                //textJsonOutOpt.PropertyNamingPolicy = null;
+                newtonsoftJsonOpt.ContractResolver = null;
+            })
             //.UseNewtonsoftJson(options =>
             //{
             //    //options.ContractResolver = null;
@@ -154,14 +156,6 @@ namespace WebAPI
             //    options.T = "t";
             //    options.D = "d";
             //})
-            .UseMultipleParameterDeserialize((parametersType, group, data) =>
-            group switch
-            {
-                //Utils.GroupJson => Help.TryJsonDeserialize(data, parametersType, Business.Core.Configer.JsonOptionsMultipleParameter),
-                Utils.GroupJson => Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.newtonsoftJsonOptions),
-                Utils.GroupWebSocket => Utils.MessagePackDeserialize(data, parametersType),
-                _ => null,
-            })
             .UseLogger(new Logger(async x =>
             {
                 Parallel.ForEach(x, c =>
