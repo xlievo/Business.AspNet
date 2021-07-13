@@ -404,6 +404,7 @@ namespace Business.AspNet
         /// <param name="type"></param>
         public MessagePackAttribute(int state = -13, string message = null, Type type = null) : base(state, message, type)
         {
+            Group = Utils.GroupWebSocket;
             this.Description = "MessagePackArg Binary parsing";
             this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg, bool dynamicObject) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection && !dynamicObject) || ignoreArg;
         }
@@ -440,6 +441,7 @@ namespace Business.AspNet
         /// </summary>
         public JsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
         {
+            Group = Utils.GroupJson;
             Description = "Json format";
             if (null != Utils.Hosting.jsonOptions.InJsonSerializerOptions)
             {
@@ -459,7 +461,11 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute)) => this.Description = "NewtonsoftJson parsing";
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute))
+        {
+            Group = Utils.GroupJson;
+            this.Description = "NewtonsoftJson parsing";
+        }
 
         /// <summary>
         /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
@@ -986,10 +992,10 @@ namespace Business.AspNet
     /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
     [Command(Group = Utils.GroupJson)]
-    [JsonArg(Group = Utils.GroupJson)]
+    [JsonArg]
     //[NewtonsoftJsonArg(Group = Utils.GroupJson)]
     [Command(Group = Utils.GroupWebSocket)]
-    [MessagePack(Group = Utils.GroupWebSocket)]
+    [MessagePack]
     [Logger(Group = Utils.GroupJson)]
     [Logger(Group = Utils.GroupWebSocket, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : Core.BusinessBase, IBusiness

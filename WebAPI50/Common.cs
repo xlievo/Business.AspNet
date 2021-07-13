@@ -219,7 +219,8 @@ namespace WebAPI50
     }
 
     //[MyJsonArg(Group = Utils.GroupJson)]
-    [Annotations.JsonArg(Group = Utils.GroupJson)]
+    [Annotations.JsonArg]
+    //[NewtonsoftJsonArg]
     public abstract class BusinessBase : Business.AspNet.BusinessBase
     {
         ///// <summary>
