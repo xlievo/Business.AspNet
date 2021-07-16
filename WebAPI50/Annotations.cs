@@ -17,7 +17,6 @@ namespace WebAPI50.Annotations
         /// </summary>
         public JsonArgAttribute() : base()
         {
-            var g = this.Group;
             Description = "Json2 format";
         }
 

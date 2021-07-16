@@ -214,7 +214,7 @@
         </member>
         <member name="T:Business.AspNet.JsonArgAttribute">
             <summary>
-            JsonArgAttribute
+            Text.Json arg Attribute
             </summary>
         </member>
         <member name="M:Business.AspNet.JsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
@@ -224,7 +224,7 @@
         </member>
         <member name="T:Business.AspNet.NewtonsoftJsonArgAttribute">
             <summary>
-            NewtonsoftJsonArg
+            Newtonsoft.Json arg Attribute
             </summary>
         </member>
         <member name="M:Business.AspNet.NewtonsoftJsonArgAttribute.#ctor(System.Int32,System.String,System.Type)">
@@ -598,14 +598,19 @@
             "Context", "HttpFile", "WebSocket" 
             </summary>
         </member>
-        <member name="F:Business.AspNet.Utils.GroupJson">
+        <member name="F:Business.AspNet.Utils.GroupTextJson">
             <summary>
-            Default JSON format grouping
+            Text.Json format grouping
             </summary>
         </member>
         <member name="F:Business.AspNet.Utils.GroupWebSocket">
             <summary>
-            Default WebSocket format grouping
+            WebSocket format grouping
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Utils.GroupNewtonsoftJson">
+            <summary>
+            Newtonsoft.Json format grouping
             </summary>
         </member>
         <member name="F:Business.AspNet.Utils.Hosting">

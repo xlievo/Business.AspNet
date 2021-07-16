@@ -432,7 +432,7 @@ namespace Business.AspNet
     }
 
     /// <summary>
-    /// JsonArgAttribute
+    /// Text.Json arg Attribute
     /// </summary>
     public class JsonArgAttribute : Core.Annotations.JsonArgAttribute
     {
@@ -441,17 +441,18 @@ namespace Business.AspNet
         /// </summary>
         public JsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
         {
-            Group = Utils.GroupJson;
+            Group = Utils.GroupTextJson;
             Description = "Json format";
-            if (null != Utils.Hosting.jsonOptions.InJsonSerializerOptions)
-            {
-                textJsonOptions = Utils.Hosting.jsonOptions.InJsonSerializerOptions;
-            }
+            //if (Utils.Hosting.jsonOptions.UseTextJson && null != Utils.Hosting.jsonOptions.InJsonSerializerOptions)
+            //{
+            //    textJsonOptions = Utils.Hosting.jsonOptions.InJsonSerializerOptions;
+            //}
+            textJsonOptions = Utils.Hosting.jsonOptions.InJsonSerializerOptions;
         }
     }
 
     /// <summary>
-    /// NewtonsoftJsonArg
+    /// Newtonsoft.Json arg Attribute
     /// </summary>
     public class NewtonsoftJsonArgAttribute : ArgumentDeserialize
     {
@@ -463,7 +464,7 @@ namespace Business.AspNet
         /// <param name="type"></param>
         public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute))
         {
-            Group = Utils.GroupJson;
+            Group = Utils.GroupNewtonsoftJson;
             this.Description = "NewtonsoftJson parsing";
         }
 
@@ -799,16 +800,27 @@ namespace Business.AspNet
 
         internal readonly RouteCTD routeCTD = new RouteCTD();
 
+        //public enum Group
+        //{
+        //    TextJson,
+        //    NewtonsoftJson,
+        //    WebSocket,
+        //}
+
+        internal readonly struct Grouping
+        {
+            public string Group { get; }
+
+            public ArgumentDeserialize In { get; }
+        }
+
         internal Func<Type, string, dynamic, object> multipleParameterDeserialize = (parametersType, group, data) =>
         {
             switch (group)
             {
-                case Utils.GroupJson:
-                    if (Utils.Hosting.jsonOptions.UseTextJson)
-                    {
-                        var data2 = Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
-                        return data2;
-                    }
+                case Utils.GroupTextJson:
+                    return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
+                case Utils.GroupNewtonsoftJson:
                     return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
                 case Utils.GroupWebSocket:
                     return Utils.MessagePackDeserialize(data, parametersType);
@@ -991,12 +1003,14 @@ namespace Business.AspNet
     /// Business base class for ASP.Net Core
     /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
-    [Command(Group = Utils.GroupJson)]
+    [Command(Group = Utils.GroupTextJson)]
     [JsonArg]
-    //[NewtonsoftJsonArg(Group = Utils.GroupJson)]
+    [Command(Group = Utils.GroupNewtonsoftJson)]
+    [NewtonsoftJsonArg]
     [Command(Group = Utils.GroupWebSocket)]
     [MessagePack]
-    [Logger(Group = Utils.GroupJson)]
+    [Logger(Group = Utils.GroupTextJson)]
+    [Logger(Group = Utils.GroupNewtonsoftJson)]
     [Logger(Group = Utils.GroupWebSocket, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : Core.BusinessBase, IBusiness
     {
@@ -1063,7 +1077,8 @@ namespace Business.AspNet
         {
             #region route fixed grouping
 
-            var g = Utils.GroupJson;//fixed grouping
+            //var g = Utils.GroupTextJson;//fixed grouping
+            var g = Utils.Hosting.jsonOptions.UseTextJson ? Utils.GroupTextJson : Utils.GroupNewtonsoftJson;
             var path = this.Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business))
             {
@@ -1211,17 +1226,21 @@ namespace Business.AspNet
         internal static string httpAddress = null;
 
         /// <summary>
-        /// Default JSON format grouping
+        /// Text.Json format grouping
         /// </summary>
-        public const string GroupJson = "j";
+        public const string GroupTextJson = "j";
         /// <summary>
-        /// Default WebSocket format grouping
+        /// WebSocket format grouping
         /// </summary>
         public const string GroupWebSocket = "w";
+        /// <summary>
+        /// Newtonsoft.Json format grouping
+        /// </summary>
+        public const string GroupNewtonsoftJson = "n";
         ///// <summary>
-        ///// Default binary format grouping
+        ///// UDP format grouping
         ///// </summary>
-        //public const string BusinessUDPGroup = "u";
+        //public const string GroupUDP = "u";
 
         /// <summary>
         /// Host environment instance
@@ -1542,6 +1561,8 @@ namespace Business.AspNet
 
         #endregion
 
+        #region Log
+
         /// <summary>
         /// call Hosting.Log(Logger.Type.Record, message)
         /// </summary>
@@ -1599,6 +1620,7 @@ namespace Business.AspNet
         /// <returns></returns>
         public static async ValueTask<string> Log(this HttpClient httpClient, IEnumerable<Logger.LoggerData> data, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Logs { Index = index, Data = data.Select(c => c.ToString()) }.JsonSerialize());
 
+        #endregion
         /// <summary>
         /// Configure Business.Core in the startup class configure method
         /// <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>
@@ -1707,7 +1729,7 @@ namespace Business.AspNet
 
                     if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Options.Group))
                     {
-                        strap.Config.UseDoc.Options.Group = GroupJson;
+                        strap.Config.UseDoc.Options.Group = Hosting.jsonOptions.UseTextJson ? GroupTextJson : GroupNewtonsoftJson;
                     }
 
                     //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Options.Host))
@@ -1839,6 +1861,8 @@ namespace Business.AspNet
 
             return bootstrap;
         }
+
+        #region Use
 
         static string UseStaticDir(this IApplicationBuilder app, string staticDir)
         {
@@ -2169,6 +2193,14 @@ namespace Business.AspNet
             }
             return bootstrap;
         }
+
+        #endregion
+
+        //IBusiness
+        //public static BootstrapAll<IBusiness> UseMessagePack(this BootstrapAll<IBusiness> bootstrap, Func<MessagePack.MessagePackSerializerOptions, MessagePack.MessagePackSerializerOptions> options = null)
+        //{
+
+        //}
 
         /*
         /// <summary>
