@@ -202,6 +202,31 @@
             rrrrrr2
             </returns>
         </member>
+        <member name="T:WebAPI50.BusinessMember.MyLogicArg">
+            <summary>
+            MyLogicArg!
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.MyLogicArg.A">
+            <summary>
+            AAA
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.MyLogicArg.B">
+            <summary>
+            BBB
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.WebSocketPushLogicResult.C">
+            <summary>
+            CCC
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.WebSocketPushLogicResult.D">
+            <summary>
+            DDD
+            </summary>
+        </member>
         <member name="M:WebAPI50.BusinessMember.Test012">
             <summary>
             Test012Test012Test012Test012

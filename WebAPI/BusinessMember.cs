@@ -324,7 +324,7 @@ namespace WebAPI
             //return this.ResultCreate(new { session, arg, files });
         }
 
-        [Command("abc", Group = Utils.GroupWebSocket)]
+        [Command("abc", Group = Grouping.WebSocket)]
         public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null)
         {
             return this.ResultCreate(new { token, arg, State = token.Remote, context.Request.Headers }, "aaaa!@#$");

@@ -342,6 +342,21 @@
             Info
             </summary>
         </member>
+        <member name="F:Business.AspNet.Grouping.TextJson">
+            <summary>
+            Text.Json format grouping
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Grouping.WebSocket">
+            <summary>
+            WebSocket format grouping
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.Grouping.NewtonsoftJson">
+            <summary>
+            Newtonsoft.Json format grouping
+            </summary>
+        </member>
         <member name="T:Business.AspNet.Hosting">
             <summary>
             Environment
@@ -596,21 +611,6 @@
         <member name="F:Business.AspNet.Utils.contextParameterTypes">
             <summary>
             "Context", "HttpFile", "WebSocket" 
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.Utils.GroupTextJson">
-            <summary>
-            Text.Json format grouping
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.Utils.GroupWebSocket">
-            <summary>
-            WebSocket format grouping
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.Utils.GroupNewtonsoftJson">
-            <summary>
-            Newtonsoft.Json format grouping
             </summary>
         </member>
         <member name="F:Business.AspNet.Utils.Hosting">

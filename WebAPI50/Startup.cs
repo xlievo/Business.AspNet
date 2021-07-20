@@ -28,13 +28,13 @@ namespace WebAPI50
             });
 
             //Enable MVC
-            services.AddControllers(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest)
+            services.AddControllers(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Latest);
             //.AddJsonOptions(c =>
             //{
             //    //c.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             //    //c.JsonSerializerOptions.PropertyNamingPolicy = Business.Core.Utils.Help.JsonNamingPolicyCamelCase.Instance;
             //});
-            .AddNewtonsoftJson();
+            //.AddNewtonsoftJson();
 
             services.AddHttpClient(string.Empty)
                 .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler()

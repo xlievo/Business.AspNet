@@ -476,7 +476,7 @@ namespace WebAPI50
             //return this.ResultCreate(new { session, arg, files });
         }
 
-        [Command("abc", Group = Utils.GroupWebSocket)]
+        [Command("abc", Group = Grouping.WebSocket)]
         public virtual async Task<dynamic> Test004(Session session, Token token, List<Test001> arg, Context context = null, WebSocket socket = null)
         {
             return this.ResultCreate(new { token, arg, State = token.Remote, context.Request.Headers }, "aaaa!@#$");
@@ -516,6 +516,49 @@ namespace WebAPI50
         ///// <returns></returns>
         //[Push]
         //public virtual async Task Test010(Session session, Token token, Test0011 test, int b, [Ignore(IgnoreMode.Arg)] params string[] id) => this.SendAsync(new object[] { test, b }, id);
+
+        /// <summary>
+        /// MyLogicArg!
+        /// </summary>
+        public struct MyLogicArg
+        {
+            /// <summary>
+            /// AAA
+            /// </summary>
+            [CheckNull]
+            public string A { get; set; }
+
+            /// <summary>
+            /// BBB
+            /// </summary>
+            public string B { get; set; }
+        }
+        public struct WebSocketPushLogicResult
+        {
+            /// <summary>
+            /// CCC
+            /// </summary>
+            public string C { get; set; }
+
+            /// <summary>
+            /// DDD
+            /// </summary>
+            public string D { get; set; }
+        }
+
+        [Push]
+        public virtual async ValueTask<IResult<WebSocketPushLogicResult>> WebSocketPushLogic(Token token, MyLogicArg arg, [Ignore(IgnoreMode.Arg)] params string[] id)
+        {
+            var pushResult = new WebSocketPushLogicResult { C = arg.A, D = arg.B };
+
+            this.SendAsync(pushResult, id);// The push data must be consistent with the return object
+
+            return this.ResultCreate(pushResult);// Used as a return standard convention
+        }
+        public virtual async ValueTask<IResult<MyLogicArg>> MyLogic(Token token, Context context, HttpFile files, MyLogicArg arg)
+        {
+            return this.ResultCreate(arg);
+        }
 
         public virtual async Task<List<string>> Test011(string a, string b)
         {
