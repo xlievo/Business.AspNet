@@ -342,6 +342,11 @@
             Info
             </summary>
         </member>
+        <member name="T:Business.AspNet.Grouping">
+            <summary>
+            Grouping
+            </summary>
+        </member>
         <member name="F:Business.AspNet.Grouping.TextJson">
             <summary>
             Text.Json format grouping

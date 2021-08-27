@@ -417,7 +417,7 @@ namespace Business.AspNet
         /// <returns></returns>
         public override ValueTask<IResult> Proces<Type>(dynamic value)
         {
-            var result = CheckNull(this, value);
+            //var result = CheckNull(this, value);
             if (!result.HasData) { return new ValueTask<IResult>(result); }
 
             try
@@ -715,6 +715,9 @@ namespace Business.AspNet
     //    WebSocket,
     //}
 
+    /// <summary>
+    /// Grouping
+    /// </summary>
     public readonly struct Grouping
     {
         /// <summary>
@@ -734,29 +737,29 @@ namespace Business.AspNet
         ///// </summary>
         //public const string GroupUDP = "u";
 
-        public string Group { get; }
+        //public string Group { get; }
 
-        public ArgumentDeserialize In { get; }
+        //public ArgumentDeserialize In { get; }
 
-        public static object MultipleParameterDeserialize(Type parametersType, string group, dynamic data)
-        {
-            if (Utils.Hosting.grouping.TryGetValue(group, out Grouping grouping))
-            {
-                //return grouping.In.GetP
-            }
+        //public static object MultipleParameterDeserialize(Type parametersType, string group, dynamic data)
+        //{
+        //    if (Utils.Hosting.grouping.TryGetValue(group, out Grouping grouping))
+        //    {
+        //        //return grouping.In.GetP
+        //    }
 
-            switch (group)
-            {
-                case TextJson:
-                    //var r = grouping.In.ArgMeta.p..Proces<object>(data);
-                    return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
-                case NewtonsoftJson:
-                    return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
-                case WebSocket:
-                    return Utils.MessagePackDeserialize(data, parametersType);
-                default: return null;
-            }
-        }
+        //    switch (group)
+        //    {
+        //        case TextJson:
+        //            //var r = grouping.In.ArgMeta.p..Proces<object>(data);
+        //            return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
+        //        case NewtonsoftJson:
+        //            return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
+        //        case WebSocket:
+        //            return Utils.MessagePackDeserialize(data, parametersType);
+        //        default: return null;
+        //    }
+        //}
     }
 
     /// <summary>
@@ -1129,6 +1132,7 @@ namespace Business.AspNet
             string t = null;
             string d = null;
             string value = null;
+            StringValues value2;
             //g = route.Group;
             IDictionary<string, string> parameters = null;
             var ctd = Utils.Hosting.routeCTD;
@@ -1155,13 +1159,14 @@ namespace Business.AspNet
                                 return !string.IsNullOrEmpty(v2) ? v2 : null;
                             }, StringComparer.InvariantCultureIgnoreCase);
                             c = route.Command ?? (parameters.TryGetValue(ctd.C, out value) ? value : null);
-                            t = parameters.TryGetValue(ctd.T, out value) ? value : null;
+                            t = this.Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null);
                             d = parameters.TryGetValue(ctd.D, out value) ? value : null;
                         }
                         else
                         {
                             c = route.Command;
                             d = System.Web.HttpUtility.UrlDecode(await this.Request.Body.StreamReadStringAsync(), System.Text.Encoding.UTF8);
+                            t = this.Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : null;
                         }
                     }
                     break;
@@ -1216,7 +1221,7 @@ namespace Business.AspNet
             var token = await business.GetToken(this.HttpContext, new Token //token
             {
                 Origin = Token.OriginValue.Http,
-                Key = hasParameters ? (this.Request.Query.TryGetValue(ctd.T, out StringValues value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null)) : t,
+                Key = hasParameters ? (this.Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null)) : t,
                 Remote = new Remote(this.HttpContext.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out StringValues remote2) ? remote2.ToString() : this.HttpContext.Connection.RemoteIpAddress.ToString(), this.HttpContext.Connection.RemotePort),
                 Path = this.Request.Path.Value,
             });
@@ -1226,6 +1231,7 @@ namespace Business.AspNet
                     await cmd.AsyncCall(
                         //the data of this request, allow null.
                         parameters,
+                        token,
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
@@ -1234,6 +1240,7 @@ namespace Business.AspNet
                     await cmd.AsyncCallFull(
                         //the data of this request, allow null.
                         d,
+                        token,
                         //the incoming use object
                         //new UseEntry(this.HttpContext), //context
                         new UseEntry(this), //context
@@ -2318,6 +2325,7 @@ namespace Business.AspNet
             //the data of this request, allow null.
             //cmd.HasArgSingle ? new object[] { receive.Result.Data } : cmd.GetParametersObjects(Hosting.multipleParameterDeserialize(cmd.ParametersType, Grouping.WebSocket, receive.Result.Data)),
             receive.Result.Data,
+            null,
             //the incoming use object
             //new UseEntry(receive.HttpContext, "context"), //context
             new UseEntry(receive.WebSocket), //webSocket
