@@ -166,16 +166,16 @@ namespace Business.AspNet
         /// <param name="hasDataResult"></param>
         public ResultObject(System.Type dataType, Type data, int state = 1, string message = null, string callback = null, System.Type genericDefinition = null, bool checkData = true, bool hasData = false, bool hasDataResult = false)
         {
-            this.DataType = dataType;
-            this.Data = data;
-            this.State = state;
-            this.Message = message;
-            this.HasData = checkData ? !Equals(null, data) : hasData;
+            DataType = dataType;
+            Data = data;
+            State = state;
+            Message = message;
+            HasData = checkData ? !Equals(null, data) : hasData;
 
-            this.Callback = callback;
-            this.Business = default;
-            this.GenericDefinition = genericDefinition;
-            this.HasDataResult = hasDataResult;
+            Callback = callback;
+            Business = default;
+            GenericDefinition = genericDefinition;
+            HasDataResult = hasDataResult;
         }
 
         /// <summary>
@@ -187,16 +187,16 @@ namespace Business.AspNet
         /// <param name="hasData"></param>
         public ResultObject(Type data, int state, string message, bool hasData)
         {
-            this.Data = data;
-            this.State = state;
-            this.Message = message;
-            this.HasData = hasData;
+            Data = data;
+            State = state;
+            Message = message;
+            HasData = hasData;
 
-            this.Callback = null;
-            this.Business = default;
-            this.DataType = null;
-            this.GenericDefinition = null;
-            this.HasDataResult = false;
+            Callback = null;
+            Business = default;
+            DataType = null;
+            GenericDefinition = null;
+            HasDataResult = false;
         }
 
         /// <summary>
@@ -404,9 +404,9 @@ namespace Business.AspNet
         /// <param name="type"></param>
         public MessagePackAttribute(int state = -13, string message = null, Type type = null) : base(state, message, type)
         {
-            Group = Grouping.WebSocket;
-            this.Description = "MessagePackArg Binary parsing";
-            this.ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg, bool dynamicObject) => (!hasDefinition && !this.ArgMeta.Arg.HasCollection && !dynamicObject) || ignoreArg;
+            Group = Grouping.MessagePack;
+            Description = "MessagePackArg Binary parsing";
+            ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg, bool dynamicObject) => (!hasDefinition && !ArgMeta.Arg.HasCollection && !dynamicObject) || ignoreArg;
         }
 
         /// <summary>
@@ -417,16 +417,13 @@ namespace Business.AspNet
         /// <returns></returns>
         public override ValueTask<IResult> Proces<Type>(dynamic value)
         {
-            //var result = CheckNull(this, value);
-            if (!result.HasData) { return new ValueTask<IResult>(result); }
-
             try
             {
                 return new ValueTask<IResult>(this.ResultCreate(Utils.MessagePackDeserialize<Type>(value)));
             }
             catch (Exception ex)
             {
-                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} MessagePack deserialize error. {ex.Message}"));
+                return new ValueTask<IResult>(ResultCreate(State, Message ?? $"{Alias} MessagePack deserialize error. {ex.Message}"));
             }
         }
     }
@@ -465,7 +462,7 @@ namespace Business.AspNet
         public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute))
         {
             Group = Grouping.NewtonsoftJson;
-            this.Description = "NewtonsoftJson parsing";
+            Description = "NewtonsoftJson parsing";
         }
 
         /// <summary>
@@ -481,16 +478,13 @@ namespace Business.AspNet
         /// <returns></returns>
         public override ValueTask<IResult> Proces<Type>(dynamic value)
         {
-            var result = CheckNull(this, value);
-            if (!result.HasData) { return new ValueTask<IResult>(result); }
-
             try
             {
                 return new ValueTask<IResult>(this.ResultCreate(Newtonsoft.Json.JsonConvert.DeserializeObject<Type>(value, newtonsoftJsonSettings)));
             }
             catch (Exception ex)
             {
-                return new ValueTask<IResult>(this.ResultCreate(State, Message ?? $"Arguments {this.Alias} NewtonsoftJson deserialize error. {ex.Message}"));
+                return new ValueTask<IResult>(ResultCreate(State, Message ?? $"{Alias} NewtonsoftJson deserialize error. {ex.Message}"));
             }
         }
     }
@@ -515,22 +509,22 @@ namespace Business.AspNet
     //    }
     //}
 
-    /// <summary>
-    /// WebSocket command
-    /// </summary>
-    public class WebSocketCommandAttribute : CommandAttribute
-    {
-        /// <summary>
-        /// Command attribute on a method, for multiple sources to invoke the method
-        /// </summary>
-        /// <param name="onlyName"></param>
-        public WebSocketCommandAttribute(string onlyName = null) : base(onlyName) => base.Group = Grouping.WebSocket;
+    ///// <summary>
+    ///// WebSocket command
+    ///// </summary>
+    //public class WebSocketCommandAttribute : CommandAttribute
+    //{
+    //    /// <summary>
+    //    /// Command attribute on a method, for multiple sources to invoke the method
+    //    /// </summary>
+    //    /// <param name="onlyName"></param>
+    //    public WebSocketCommandAttribute(string onlyName = null) : base(onlyName) => base.Group = Grouping.MessagePack;
 
-        /// <summary>
-        /// Used for the command group
-        /// </summary>
-        public new string Group { get => base.Group; }
-    }
+    //    /// <summary>
+    //    /// Used for the command group
+    //    /// </summary>
+    //    public new string Group { get => base.Group; }
+    //}
 
     ///// <summary>
     ///// Json command
@@ -565,7 +559,7 @@ namespace Business.AspNet
         {
             if (string.IsNullOrEmpty(name))
             {
-                if (0 == this.Count)
+                if (0 == Count)
                 {
                     return default;
                 }
@@ -575,7 +569,7 @@ namespace Business.AspNet
                 return new KeyValuePair<string, byte[]>(item.Key, await item.Value.OpenReadStream().StreamCopyByteAsync());
             }
 
-            if (!this.TryGetValue(name, out IFormFile formFile))
+            if (!TryGetValue(name, out IFormFile formFile))
             {
                 return default;
             }
@@ -602,7 +596,7 @@ namespace Business.AspNet
                 {
                     if (string.IsNullOrEmpty(item)) { continue; }
 
-                    if (this.TryGetValue(item, out IFormFile file))
+                    if (TryGetValue(item, out IFormFile file))
                     {
                         yield return new KeyValuePair<string, byte[]>(item, await file.OpenReadStream().StreamCopyByteAsync());
                     }
@@ -635,7 +629,7 @@ namespace Business.AspNet
 
             if (Equals(null, context) || !context.Request.HasFormContentType)
             {
-                return new ValueTask<IResult>(this.ResultCreate<Type>(default));
+                return new ValueTask<IResult>(ResultCreate<Type>(default));
             }
 
             var httpFile = new HttpFile();
@@ -648,24 +642,23 @@ namespace Business.AspNet
                 }
             }
 
-            return new ValueTask<IResult>(this.ResultCreate(httpFile));
+            return new ValueTask<IResult>(ResultCreate(httpFile));
         }
     }
 
     #endregion
 
-    struct Logs
+    readonly struct Log
     {
-        public IEnumerable<string> Data { get; set; }
+        public Log(string index, string data)
+        {
+            Index = index;
+            Data = data;
+        }
 
-        public string Index { get; set; }
-    }
+        public string Index { get; }
 
-    struct Log
-    {
-        public string Data { get; set; }
-
-        public string Index { get; set; }
+        public string Data { get; }
     }
 
     /// <summary>
@@ -725,13 +718,17 @@ namespace Business.AspNet
         /// </summary>
         public const string TextJson = "j";
         /// <summary>
-        /// WebSocket format grouping
-        /// </summary>
-        public const string WebSocket = "w";
-        /// <summary>
         /// Newtonsoft.Json format grouping
         /// </summary>
         public const string NewtonsoftJson = "n";
+        /// <summary>
+        /// WebSocket format grouping
+        /// </summary>
+        public const string MessagePack = "m";
+        ///// <summary>
+        ///// Text.Json format grouping
+        ///// </summary>
+        //public const string XML = "x";
         ///// <summary>
         ///// UDP format grouping
         ///// </summary>
@@ -854,21 +851,21 @@ namespace Business.AspNet
 
         internal readonly RouteCTD routeCTD = new RouteCTD();
 
-        internal ConcurrentReadOnlyDictionary<string, Grouping> grouping = new ConcurrentReadOnlyDictionary<string, Grouping>();
+        //internal ConcurrentReadOnlyDictionary<string, Grouping> grouping = new ConcurrentReadOnlyDictionary<string, Grouping>();
 
-        internal Func<Type, string, dynamic, object> multipleParameterDeserialize = (parametersType, group, data) =>
-        {
-            switch (group)
-            {
-                case Grouping.TextJson:
-                    return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
-                case Grouping.NewtonsoftJson:
-                    return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
-                case Grouping.WebSocket:
-                    return Utils.MessagePackDeserialize(data, parametersType);
-                default: return null;
-            }
-        };
+        //internal Func<Type, string, dynamic, object> multipleParameterDeserialize = (parametersType, group, data) =>
+        //{
+        //    switch (group)
+        //    {
+        //        case Grouping.TextJson:
+        //            return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
+        //        case Grouping.NewtonsoftJson:
+        //            return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
+        //        case Grouping.MessagePack:
+        //            return Utils.MessagePackDeserialize(data, parametersType);
+        //        default: return null;
+        //    }
+        //};
 
         internal Action<JsonSerializerOptions, JsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings> useJsonOptions;
 
@@ -881,24 +878,29 @@ namespace Business.AspNet
             /// <summary>
             /// JsonOptions
             /// </summary>
-            /// <param name="useTextJson"></param>
+            /// <param name="grouping"></param>
             /// <param name="inJsonSerializerOptions"></param>
             /// <param name="outJsonSerializerOptions"></param>
             /// <param name="inNewtonsoftJsonSerializerSettings"></param>
             /// <param name="outNewtonsoftJsonSerializerSettings"></param>
-            public JsonOptions(bool useTextJson, JsonSerializerOptions inJsonSerializerOptions, JsonSerializerOptions outJsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings inNewtonsoftJsonSerializerSettings, Newtonsoft.Json.JsonSerializerSettings outNewtonsoftJsonSerializerSettings)
+            public JsonOptions(string grouping, JsonSerializerOptions inJsonSerializerOptions, JsonSerializerOptions outJsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings inNewtonsoftJsonSerializerSettings, Newtonsoft.Json.JsonSerializerSettings outNewtonsoftJsonSerializerSettings)
             {
-                UseTextJson = useTextJson;
+                Group = grouping;
                 InJsonSerializerOptions = inJsonSerializerOptions;
                 OutJsonSerializerOptions = outJsonSerializerOptions;
                 InNewtonsoftJsonSerializerSettings = inNewtonsoftJsonSerializerSettings;
                 OutNewtonsoftJsonSerializerSettings = outNewtonsoftJsonSerializerSettings;
             }
 
+            ///// <summary>
+            ///// Whether to use Text.Json middleware
+            ///// </summary>
+            //public bool UseTextJson { get; }
+
             /// <summary>
-            /// Whether to use Text.Json middleware
+            /// Json grouping
             /// </summary>
-            public bool UseTextJson { get; }
+            public string Group { get; }
 
             /// <summary>
             /// Text.Json Input JsonSerializerOptions
@@ -996,9 +998,17 @@ namespace Business.AspNet
             /// </summary>
             Http,
             /// <summary>
+            /// HTTPs request
+            /// </summary>
+            Https,
+            /// <summary>
             /// WebSocket request
             /// </summary>
-            WebSocket
+            WS,
+            /// <summary>
+            /// WebSocket request
+            /// </summary>
+            WSS
         }
     }
 
@@ -1045,15 +1055,6 @@ namespace Business.AspNet
     /// Business base class for ASP.Net Core
     /// <para>fixed group: BusinessJsonGroup = j, BusinessWebSocketGroup = w</para>
     /// </summary>
-    //[Command(Group = Grouping.TextJson)]
-    //[JsonArg]
-    //[Command(Group = Grouping.NewtonsoftJson)]
-    //[NewtonsoftJsonArg]
-    //[Command(Group = Grouping.WebSocket)]
-    //[MessagePack]
-    //[Logger(Group = Grouping.TextJson)]
-    //[Logger(Group = Grouping.NewtonsoftJson)]
-    //[Logger(Group = Grouping.WebSocket, ValueType = Logger.ValueType.Out)]
     public abstract class BusinessBase : Core.BusinessBase, IBusiness
     {
         /*
@@ -1120,12 +1121,12 @@ namespace Business.AspNet
             #region route fixed grouping
 
             //var g = Utils.GroupTextJson;//fixed grouping
-            var g = Utils.Hosting.jsonOptions.UseTextJson ? Grouping.TextJson : Grouping.NewtonsoftJson;
-            var path = this.Request.Path.Value.TrimStart('/');
+            var g = Utils.Hosting.jsonOptions.Group;
+            var path = Request.Path.Value.TrimStart('/');
             if (!(Configer.Routes.TryGetValue(path, out Configer.Route route) || Configer.Routes.TryGetValue($"{path}/{g}", out route)) || !Utils.bootstrap.BusinessList.TryGetValue(route.Business, out IBusiness business))
             {
-                $"404 {this.Request.Path.Value}".Log(LogType.Error);
-                return this.NotFound();
+                $"404 {Request.Path.Value}".Log(LogType.Error);
+                return NotFound();
             }
 
             string c = null;
@@ -1137,10 +1138,10 @@ namespace Business.AspNet
             IDictionary<string, string> parameters = null;
             var ctd = Utils.Hosting.routeCTD;
 
-            switch (this.Request.Method)
+            switch (Request.Method)
             {
                 case "GET":
-                    parameters = this.Request.Query.ToDictionary(k => k.Key, v =>
+                    parameters = Request.Query.ToDictionary(k => k.Key, v =>
                     {
                         var v2 = (string)v.Value;
                         return !string.IsNullOrEmpty(v2) ? v2 : null;
@@ -1151,32 +1152,33 @@ namespace Business.AspNet
                     break;
                 case "POST":
                     {
-                        if (this.Request.HasFormContentType)
+                        if (Request.HasFormContentType)
                         {
-                            parameters = (await this.Request.ReadFormAsync()).ToDictionary(k => k.Key, v =>
+                            parameters = (await Request.ReadFormAsync()).ToDictionary(k => k.Key, v =>
                             {
                                 var v2 = (string)v.Value;
                                 return !string.IsNullOrEmpty(v2) ? v2 : null;
                             }, StringComparer.InvariantCultureIgnoreCase);
                             c = route.Command ?? (parameters.TryGetValue(ctd.C, out value) ? value : null);
-                            t = this.Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null);
+                            t = Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null);
                             d = parameters.TryGetValue(ctd.D, out value) ? value : null;
                         }
                         else
                         {
                             c = route.Command;
-                            d = System.Web.HttpUtility.UrlDecode(await this.Request.Body.StreamReadStringAsync(), System.Text.Encoding.UTF8);
-                            t = this.Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : null;
+                            d = System.Web.HttpUtility.UrlDecode(await Request.Body.StreamReadStringAsync(), System.Text.Encoding.UTF8);
+                            t = Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : null;
                         }
                     }
                     break;
                 default:
                     {
-                        $"404 {this.Request.Path.Value}".Log(LogType.Error);
-                        return this.NotFound();
+                        $"404 {Request.Path.Value}".Log(LogType.Error);
+                        return NotFound();
                     }
             }
 
+            parameters?.Remove(string.Empty);
             var hasParameters = null != route.Command && null != parameters;
 
             #endregion
@@ -1198,6 +1200,12 @@ namespace Business.AspNet
                     //arg.host = $"{Utils.Environment.Addresses[0]}/{business.Configer.Info.BusinessName}";
                     arg.host = $"{Utils.httpAddress}/{business.Configer.Info.BusinessName}";
                 }
+
+                if (!string.IsNullOrWhiteSpace(arg.cmd))
+                {
+                    arg.host += "/" + arg.cmd;
+                }
+
                 return await DocUI.Benchmark(arg);
             }
 
@@ -1218,12 +1226,12 @@ namespace Business.AspNet
                 return errorCmd;
             }
 
-            var token = await business.GetToken(this.HttpContext, new Token //token
+            var token = await business.GetToken(HttpContext, new Token //token
             {
-                Origin = Token.OriginValue.Http,
-                Key = hasParameters ? (this.Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null)) : t,
-                Remote = new Remote(this.HttpContext.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out StringValues remote2) ? remote2.ToString() : this.HttpContext.Connection.RemoteIpAddress.ToString(), this.HttpContext.Connection.RemotePort),
-                Path = this.Request.Path.Value,
+                Origin = Request.IsHttps ? Token.OriginValue.Https : Token.OriginValue.Http,
+                Key = hasParameters ? (Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : (parameters.TryGetValue(ctd.T, out value) ? value : null)) : t,
+                Remote = new Remote(HttpContext.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out StringValues remote2) ? remote2.ToString() : HttpContext.Connection.RemoteIpAddress.ToString(), HttpContext.Connection.RemotePort),
+                Path = Request.Path.Value,
             });
 
             var result = hasParameters ?
@@ -1609,7 +1617,7 @@ namespace Business.AspNet
         /// call Hosting.Log(log.Type, log.ToString()), All and Record = LogType.Info
         /// </summary>
         /// <param name="log"></param>
-        public static void Log(this Logger.LoggerData log) => Log(log.Type, log.ToString());
+        public static void Log(this Logger.LoggerData log) => Log(log.Type, log.JsonSerialize());
 
         static void Log(Logger.Type logType, string message)
         {
@@ -1636,7 +1644,7 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log { Index = index, Data = data.ToString() }.JsonSerialize());
+        public static async ValueTask<string> Log(this HttpClient httpClient, Logger.LoggerData data, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log(index, data.JsonSerialize()).JsonSerialize());
 
         /// <summary>
         /// Write out the Elasticsearch default log
@@ -1646,7 +1654,7 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Log(this HttpClient httpClient, IEnumerable<Logger.LoggerData> data, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Logs { Index = index, Data = data.Select(c => c.ToString()) }.JsonSerialize());
+        public static async ValueTask<string> Log(this HttpClient httpClient, IEnumerable<Logger.LoggerData> data, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Log(index, data.JsonSerialize()).JsonSerialize());
 
         #endregion
 
@@ -1764,22 +1772,22 @@ namespace Business.AspNet
                 //[NewtonsoftJsonArg]
                 //[Command(Group = Grouping.WebSocket)]
                 //[MessagePack]
-                //[Logger(Group = Grouping.TextJson)]
-                //[Logger(Group = Grouping.NewtonsoftJson)]
+                //[Logger(Group = Grouping.TextJson, ValueType = Logger.ValueType.In)]
+                //[Logger(Group = Grouping.NewtonsoftJson, ValueType = Logger.ValueType.In)]
                 //[Logger(Group = Grouping.WebSocket, ValueType = Logger.ValueType.Out)]
                 bootstrap.Config.Attributes = new List<GroupAttribute>
                 {
                     new CommandAttribute{ Group = Grouping.TextJson },
                     new CommandAttribute{ Group = Grouping.NewtonsoftJson },
-                    new CommandAttribute{ Group = Grouping.WebSocket },
+                    new CommandAttribute{ Group = Grouping.MessagePack },
 
                     new JsonArgAttribute{ Group = Grouping.TextJson  },
                     new NewtonsoftJsonArgAttribute{ Group = Grouping.NewtonsoftJson },
-                    new MessagePackAttribute{ Group = Grouping.WebSocket },
+                    new MessagePackAttribute{ Group = Grouping.MessagePack },
 
-                    new LoggerAttribute{ Group = Grouping.TextJson },
-                    new LoggerAttribute{ Group = Grouping.NewtonsoftJson },
-                    new LoggerAttribute{ Group = Grouping.WebSocket, ValueType = Logger.ValueType.Out },
+                    new LoggerAttribute{ Group = Grouping.TextJson, ValueType = Logger.ValueType.In },
+                    new LoggerAttribute{ Group = Grouping.NewtonsoftJson, ValueType = Logger.ValueType.In },
+                    new LoggerAttribute{ Group = Grouping.MessagePack },
                 };
 
                 #endregion
@@ -1804,7 +1812,7 @@ namespace Business.AspNet
 
                     if (string.IsNullOrWhiteSpace(strap.Config.UseDoc.Options.Group))
                     {
-                        strap.Config.UseDoc.Options.Group = Hosting.jsonOptions.UseTextJson ? Grouping.TextJson : Grouping.NewtonsoftJson;
+                        strap.Config.UseDoc.Options.Group = Hosting.jsonOptions.Group;
                     }
 
                     //if (string.IsNullOrWhiteSpace(bootstrap.Config.UseDoc.Options.Host))
@@ -2232,7 +2240,7 @@ namespace Business.AspNet
                 }
             }
 
-            return new Hosting.JsonOptions(null != outTextJsonSerializerOptions && null != inTextJsonSerializerOptions, inTextJsonSerializerOptions, outTextJsonSerializerOptions, inNewtonsoftJsonSerializerSettings, outNewtonsoftJsonSerializerSettings);
+            return new Hosting.JsonOptions(null != outTextJsonSerializerOptions && null != inTextJsonSerializerOptions ? Grouping.TextJson : Grouping.NewtonsoftJson, inTextJsonSerializerOptions, outTextJsonSerializerOptions, inNewtonsoftJsonSerializerSettings, outNewtonsoftJsonSerializerSettings);
         }
 
         /// <summary>
@@ -2319,13 +2327,13 @@ namespace Business.AspNet
 
         static async Task WebSocketCall(WebSocketReceive receive)
         {
-            var cmd = receive.Business.Command.GetCommand(receive.Result.Business.Command, Grouping.WebSocket);
+            var cmd = receive.Business.Command.GetCommand(receive.Result.Business.Command, Grouping.MessagePack);
 
             var result = await cmd.AsyncCallFull(
             //the data of this request, allow null.
             //cmd.HasArgSingle ? new object[] { receive.Result.Data } : cmd.GetParametersObjects(Hosting.multipleParameterDeserialize(cmd.ParametersType, Grouping.WebSocket, receive.Result.Data)),
             receive.Result.Data,
-            null,
+            receive.Token,
             //the incoming use object
             //new UseEntry(receive.HttpContext, "context"), //context
             new UseEntry(receive.WebSocket), //webSocket
@@ -2423,10 +2431,10 @@ namespace Business.AspNet
                             {
                                 c2.Exception.Log($"{Convert.ToString(c2.Exception)}{Environment.NewLine}   [Token:{reply.Token}]");
                             }
-                        })
-                        , new WebSocketReceive(await business.GetToken(context, new Token //token
+                        }),
+                        new WebSocketReceive(await business.GetToken(context, new Token //token
                         {
-                            Origin = Token.OriginValue.WebSocket,
+                            Origin = context.Request.IsHttps ? Token.OriginValue.WSS : Token.OriginValue.WS,
                             Key = reply.Token,
                             //Key = System.Text.Encoding.UTF8.GetString(receiveData.t),
                             Remote = remote,

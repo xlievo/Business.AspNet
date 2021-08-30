@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Http;
 using Serilog;
 using Business.Core;
+using Business.Core.Utils;
 
 namespace WebAPI50
 {
@@ -163,6 +164,7 @@ namespace WebAPI50
             //}))
             .UseLogger(new Logger(async logs =>
             {
+                logs.JsonSerialize().Log();
                 //x.Count().ToString().Log();
                 //foreach (var item in x)
                 //{
@@ -175,13 +177,15 @@ namespace WebAPI50
                 //});
                 //var result = await logClient.Log(logs);
                 //result.Log();
-                
-                await logs.ToAsyncEnumerable().ForEachAsync(async log =>
-                {
-                    log.Log();
-                    //await logClient.Log(log);
-                });
+
+                //await logs.ToAsyncEnumerable().ForEachAsync(async log =>
+                //{
+                //    log.Log();
+                //    //await logClient.Log(log);
+                //});
+
                 logs.Count().ToString().Log();
+
             }, new Logger.BatchOptions
             {
                 Interval = TimeSpan.FromSeconds(6),

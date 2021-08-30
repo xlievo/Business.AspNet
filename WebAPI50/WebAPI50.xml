@@ -184,7 +184,7 @@
             UserImg
             </summary>
         </member>
-        <member name="M:WebAPI50.BusinessMember.Test001(WebAPI50.Session,WebAPI50.Token,WebAPI50.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
+        <member name="M:WebAPI50.BusinessMember.Test001(WebAPI50.Session,WebAPI50.Test004,System.Nullable{System.DateTime},Business.AspNet.HttpFile,System.Decimal,System.Int32,System.Boolean,Business.AspNet.Context,System.Net.WebSockets.WebSocket)">
             <summary>
             test doc Test001
             and Test001

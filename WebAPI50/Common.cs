@@ -200,9 +200,12 @@ namespace WebAPI50
     /// </summary>
     [SessionCheck]
     [Use(typeof(Token))]
-    public struct Session
+    public struct Session : IToken
     {
         public string Account { get; set; }
+        public string Key { get; set; }
+        public Remote Remote { get; set; }
+        public string Callback { get; set; }
     }
 
     public class MyJsonArgAttribute : NewtonsoftJsonArgAttribute
