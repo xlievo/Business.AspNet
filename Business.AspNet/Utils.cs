@@ -404,7 +404,6 @@ namespace Business.AspNet
         /// <param name="type"></param>
         public MessagePackAttribute(int state = -13, string message = null, Type type = null) : base(state, message, type)
         {
-            Group = Grouping.MessagePack;
             Description = "MessagePackArg Binary parsing";
             ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg, bool dynamicObject) => (!hasDefinition && !ArgMeta.Arg.HasCollection && !dynamicObject) || ignoreArg;
         }
@@ -438,7 +437,6 @@ namespace Business.AspNet
         /// </summary>
         public JsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
         {
-            Group = Grouping.TextJson;
             Description = "Json format";
             //if (Utils.Hosting.jsonOptions.UseTextJson && null != Utils.Hosting.jsonOptions.InJsonSerializerOptions)
             //{
@@ -459,11 +457,7 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute))
-        {
-            Group = Grouping.NewtonsoftJson;
-            Description = "NewtonsoftJson parsing";
-        }
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute)) => Description = "NewtonsoftJson parsing";
 
         /// <summary>
         /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
@@ -701,13 +695,6 @@ namespace Business.AspNet
         Info = 1,
     }
 
-    //public enum Group
-    //{
-    //    TextJson,
-    //    NewtonsoftJson,
-    //    WebSocket,
-    //}
-
     /// <summary>
     /// Grouping
     /// </summary>
@@ -733,30 +720,6 @@ namespace Business.AspNet
         ///// UDP format grouping
         ///// </summary>
         //public const string GroupUDP = "u";
-
-        //public string Group { get; }
-
-        //public ArgumentDeserialize In { get; }
-
-        //public static object MultipleParameterDeserialize(Type parametersType, string group, dynamic data)
-        //{
-        //    if (Utils.Hosting.grouping.TryGetValue(group, out Grouping grouping))
-        //    {
-        //        //return grouping.In.GetP
-        //    }
-
-        //    switch (group)
-        //    {
-        //        case TextJson:
-        //            //var r = grouping.In.ArgMeta.p..Proces<object>(data);
-        //            return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
-        //        case NewtonsoftJson:
-        //            return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
-        //        case WebSocket:
-        //            return Utils.MessagePackDeserialize(data, parametersType);
-        //        default: return null;
-        //    }
-        //}
     }
 
     /// <summary>
@@ -851,22 +814,6 @@ namespace Business.AspNet
 
         internal readonly RouteCTD routeCTD = new RouteCTD();
 
-        //internal ConcurrentReadOnlyDictionary<string, Grouping> grouping = new ConcurrentReadOnlyDictionary<string, Grouping>();
-
-        //internal Func<Type, string, dynamic, object> multipleParameterDeserialize = (parametersType, group, data) =>
-        //{
-        //    switch (group)
-        //    {
-        //        case Grouping.TextJson:
-        //            return Help.TryJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.InJsonSerializerOptions);
-        //        case Grouping.NewtonsoftJson:
-        //            return Utils.TryNewtonsoftJsonDeserialize(data, parametersType, Utils.Hosting.jsonOptions.OutNewtonsoftJsonSerializerSettings);
-        //        case Grouping.MessagePack:
-        //            return Utils.MessagePackDeserialize(data, parametersType);
-        //        default: return null;
-        //    }
-        //};
-
         internal Action<JsonSerializerOptions, JsonSerializerOptions, Newtonsoft.Json.JsonSerializerSettings> useJsonOptions;
 
         //internal Action<Newtonsoft.Json.JsonSerializerSettings, Newtonsoft.Json.JsonSerializerSettings> useNewtonsoftJsonOptions;
@@ -929,7 +876,61 @@ namespace Business.AspNet
         /// Socket type
         /// </summary>
         internal Type socketType = typeof(ResultObject<byte[]>);
+
+        internal Func<IEnumerable<BusinessGroup>> useBusinessGroups;
+        internal Func<BusinessGroup> useBusinessGroup;
     }
+
+    /// <summary>
+    /// BusinessGroup
+    /// </summary>
+    public readonly struct BusinessGroup
+    {
+        /// <summary>
+        /// default
+        /// </summary>
+        internal static readonly BusinessGroup defaultValue = default(BusinessGroup);
+
+        /// <summary>
+        /// BusinessGroup
+        /// </summary>
+        /// <param name="group"></param>
+        /// <param name="command"></param>
+        /// <param name="deserialize"></param>
+        /// <param name="logger"></param>
+        public BusinessGroup(string group, ArgumentDeserialize deserialize, CommandAttribute command = null, LoggerAttribute logger = null)
+        {
+            if (string.IsNullOrWhiteSpace(group))
+            {
+                throw new ArgumentNullException(nameof(group));
+            }
+
+            Deserialize = deserialize ?? throw new ArgumentNullException(nameof(deserialize));
+
+            Command = command ?? new CommandAttribute();
+            Logger = logger ?? new LoggerAttribute();
+
+            Command.Group = group;
+            Deserialize.Group = group;
+            Logger.Group = group;
+        }
+
+        /// <summary>
+        /// Command
+        /// </summary>
+        public CommandAttribute Command { get; }
+
+        /// <summary>
+        /// Deserialize
+        /// </summary>
+        public ArgumentDeserialize Deserialize { get; }
+
+        /// <summary>
+        /// Logger
+        /// </summary>
+        public LoggerAttribute Logger { get; }
+    }
+
 
     /// <summary>
     /// Sets the specified limits to the Microsoft.AspNetCore.Http server.
@@ -1266,11 +1267,6 @@ namespace Business.AspNet
         internal static BootstrapAll<IBusiness> bootstrap;
         internal static IBusiness businessFirst;
 
-        ///// <summary>
-        ///// "context", "httpFile" 
-        ///// </summary>
-        //internal static readonly string[] contextParameterNames = new string[] { "context", "httpFile" };
-
         /// <summary>
         /// "Context", "HttpFile", "WebSocket" 
         /// </summary>
@@ -1282,11 +1278,6 @@ namespace Business.AspNet
         /// Host environment instance
         /// </summary>
         public static readonly Hosting Hosting = new Hosting();
-
-        ///// <summary>
-        ///// Log client
-        ///// </summary>
-        //public readonly static HttpClient LogClient;
 
         static Utils()
         {
@@ -1775,20 +1766,45 @@ namespace Business.AspNet
                 //[Logger(Group = Grouping.TextJson, ValueType = Logger.ValueType.In)]
                 //[Logger(Group = Grouping.NewtonsoftJson, ValueType = Logger.ValueType.In)]
                 //[Logger(Group = Grouping.WebSocket, ValueType = Logger.ValueType.Out)]
-                bootstrap.Config.Attributes = new List<GroupAttribute>
+
+                var businessGroup = new List<BusinessGroup>
                 {
-                    new CommandAttribute{ Group = Grouping.TextJson },
-                    new CommandAttribute{ Group = Grouping.NewtonsoftJson },
-                    new CommandAttribute{ Group = Grouping.MessagePack },
-
-                    new JsonArgAttribute{ Group = Grouping.TextJson  },
-                    new NewtonsoftJsonArgAttribute{ Group = Grouping.NewtonsoftJson },
-                    new MessagePackAttribute{ Group = Grouping.MessagePack },
-
-                    new LoggerAttribute{ Group = Grouping.TextJson, ValueType = Logger.ValueType.In },
-                    new LoggerAttribute{ Group = Grouping.NewtonsoftJson, ValueType = Logger.ValueType.In },
-                    new LoggerAttribute{ Group = Grouping.MessagePack },
+                    new BusinessGroup(Grouping.TextJson, new JsonArgAttribute(), new CommandAttribute(), new LoggerAttribute { ValueType = Logger.ValueType.In }),
+                    new BusinessGroup(Grouping.NewtonsoftJson, new NewtonsoftJsonArgAttribute(), new CommandAttribute(), new LoggerAttribute { ValueType = Logger.ValueType.In }),
+                    new BusinessGroup(Grouping.MessagePack, new MessagePackAttribute(), new CommandAttribute(), new LoggerAttribute())
                 };
+
+                var groups = Hosting.useBusinessGroups?.Invoke();
+
+                if (null != groups)
+                {
+                    foreach (var item in groups)
+                    {
+                        if (BusinessGroup.defaultValue.Equals(item))
+                        {
+                            continue;
+                        }
+
+                        businessGroup.Add(item);
+                    }
+                }
+
+                var groupList = Hosting.useBusinessGroup?.GetInvocationList();
+
+                if (null != groupList)
+                {
+                    foreach (Func<BusinessGroup> item in groupList)
+                    {
+                        var group = item?.Invoke();
+
+                        if (group.HasValue && !BusinessGroup.defaultValue.Equals(group.Value))
+                        {
+                            businessGroup.Add(group.Value);
+                        }
+                    }
+                }
+
+                bootstrap.Config.Attributes = businessGroup.SelectMany(c => new List<GroupAttribute> { c.Command, c.Deserialize, c.Logger });
 
                 #endregion
 
@@ -1909,19 +1925,7 @@ namespace Business.AspNet
                     }, TaskCreationOptions.LongRunning);
                 }
 
-                //Task.Factory.StartNew(() =>
-                //{
-                //    foreach (var item in WebSocketQueue.GetConsumingEnumerable())
-                //    {
-                //        Task.Run(async () => await WebSocketCall(item).ContinueWith(c => c.Exception?.Console()));
-                //    }
-                //}, TaskCreationOptions.LongRunning);
-
                 #endregion
-
-                //AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.error?.Invoke(Convert.ToString((e.ExceptionObject as Exception)?.ExceptionWrite()));
-
-                //return app;
             };
 
             return bootstrap;
@@ -2124,21 +2128,6 @@ namespace Business.AspNet
             return bootstrap;
         }
 
-        ///// <summary>
-        ///// Deserialize of multiple parameters submitted
-        ///// </summary>
-        ///// <param name="bootstrap"></param>
-        ///// <param name="options"></param>
-        ///// <returns></returns>
-        //public static BootstrapAll<IBusiness> UseMultipleParameterDeserialize(this BootstrapAll<IBusiness> bootstrap, Func<Type, string, dynamic, object> options = null)
-        //{
-        //    if (null != options)
-        //    {
-        //        Hosting.multipleParameterDeserialize = options;
-        //    }
-        //    return bootstrap;
-        //}
-
         /// <summary>
         /// Configures Microsoft.AspNetCore.Mvc.JsonOptions for the specified builder.
         /// </summary>
@@ -2259,59 +2248,42 @@ namespace Business.AspNet
             return bootstrap;
         }
 
-        #endregion
-
-        //IBusiness
-        //public static BootstrapAll<IBusiness> UseMessagePack(this BootstrapAll<IBusiness> bootstrap, Func<MessagePack.MessagePackSerializerOptions, MessagePack.MessagePackSerializerOptions> options = null)
+        ///// <summary>
+        ///// added Business grouping
+        ///// </summary>
+        ///// <param name="group"></param>
+        ///// <param name="attributes"></param>
+        //public static void SetBusinessGroup(BusinessGroup group, params GroupAttribute[] attributes)
         //{
-
+        //    var b = new BusinessGroup("yyy", new MessagePackAttribute());
+        //    b.Logger.ValueType = Logger.ValueType.In;
         //}
 
-        /*
         /// <summary>
-        /// ToEndPoint
+        /// added Business grouping
         /// </summary>
-        /// <param name="endPoint"></param>
+        /// <param name="bootstrap"></param>
+        /// <param name="group"></param>
         /// <returns></returns>
-        public static IPEndPoint ToEndPoint(this System.Net.IPEndPoint endPoint)
+        public static BootstrapAll<IBusiness> UseBusinessGroup(this BootstrapAll<IBusiness> bootstrap, Func<IEnumerable<BusinessGroup>> group)
         {
-            if (endPoint is null)
-            {
-                throw new ArgumentNullException(nameof(endPoint));
-            }
-
-            return new IPEndPoint(endPoint.Address, endPoint.Port);
+            Hosting.useBusinessGroups = group;
+            return bootstrap;
         }
-        */
-        //static System.Collections.Concurrent.ConcurrentDictionary<IPEndPoint, string> EndPoints = new System.Collections.Concurrent.ConcurrentDictionary<IPEndPoint, string>();
 
-        ///// <summary>
-        ///// udp port to listen
-        ///// </summary>
-        ///// <param name="bootstrap"></param>
-        ///// <param name="port"></param>
-        ///// <param name="natPort"></param>
-        ///// <returns></returns>
-        //public static BootstrapAll<IBusiness> UseLiteNetLibHost(this BootstrapAll<IBusiness> bootstrap, int port = 65000, int natPort = 65001)
-        //{
-        //    NatPunch.Instance.Run(port, natPort);
+        /// <summary>
+        /// added Business grouping
+        /// </summary>
+        /// <param name="bootstrap"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseBusinessGroup(this BootstrapAll<IBusiness> bootstrap, Func<BusinessGroup> group)
+        {
+            Hosting.useBusinessGroup += group;
+            return bootstrap;
+        }
 
-        //    return bootstrap;
-        //}
-
-        ///// <summary>
-        ///// Use ISocket type object
-        ///// </summary>
-        ///// <typeparam name="Type"></typeparam>
-        ///// <param name="bootstrap"></param>
-        ///// <returns></returns>
-        //public static BootstrapAll<IBusiness> UseSocketType<Type>(this BootstrapAll<IBusiness> bootstrap)
-        //    where Type : ISocket, new()
-        //{
-        //    Hosting.socketType = typeof(Type);
-
-        //    return bootstrap;
-        //}
+        #endregion
 
         #region WebSocket
 
@@ -2364,18 +2336,6 @@ namespace Business.AspNet
 
             try
             {
-                //string token = null;
-                //var hasBusiness = true;
-                //var a = context.Request.Headers["business"].ToString();
-                //if (!string.IsNullOrWhiteSpace(a))
-                //{
-                //    hasBusiness = bootstrap.BusinessList.TryGetValue(a, out acceptBusiness);
-                //}
-
-                //if (hasBusiness)
-                //{
-                //    token = await acceptBusiness.WebSocketAccept(context, webSocket);
-                //}
                 reply = await acceptBusiness.WebSocketAccept(context);
 
                 if (string.IsNullOrEmpty(reply.Token))

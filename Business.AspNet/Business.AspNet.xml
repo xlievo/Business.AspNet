@@ -441,6 +441,40 @@
             Socket type
             </summary>
         </member>
+        <member name="T:Business.AspNet.BusinessGroup">
+            <summary>
+            BusinessGroup
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.BusinessGroup.defaultValue">
+            <summary>
+            default
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.BusinessGroup.#ctor(System.String,Business.Core.Annotations.ArgumentDeserialize,Business.Core.Annotations.CommandAttribute,Business.Core.Annotations.LoggerAttribute)">
+            <summary>
+            BusinessGroup
+            </summary>
+            <param name="group"></param>
+            <param name="command"></param>
+            <param name="deserialize"></param>
+            <param name="logger"></param>
+        </member>
+        <member name="P:Business.AspNet.BusinessGroup.Command">
+            <summary>
+            Command
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.BusinessGroup.Deserialize">
+            <summary>
+            Deserialize
+            </summary>
+        </member>
+        <member name="P:Business.AspNet.BusinessGroup.Logger">
+            <summary>
+            Logger
+            </summary>
+        </member>
         <member name="T:Business.AspNet.Server">
             <summary>
             Sets the specified limits to the Microsoft.AspNetCore.Http server.
@@ -838,6 +872,22 @@
             </summary>
             <param name="bootstrap"></param>
             <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseBusinessGroup(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Func{System.Collections.Generic.IEnumerable{Business.AspNet.BusinessGroup}})">
+            <summary>
+            added Business grouping
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="group"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseBusinessGroup(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Func{Business.AspNet.BusinessGroup})">
+            <summary>
+            added Business grouping
+            </summary>
+            <param name="bootstrap"></param>
+            <param name="group"></param>
             <returns></returns>
         </member>
         <member name="M:Business.AspNet.Utils.WebSocketCall(Business.AspNet.WebSocketReceive)">

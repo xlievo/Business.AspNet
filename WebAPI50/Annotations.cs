@@ -17,6 +17,7 @@ namespace WebAPI50.Annotations
         /// </summary>
         public JsonArgAttribute() : base()
         {
+            Group = Business.AspNet.Grouping.TextJson;
             Description = "Json2 format";
         }
 
