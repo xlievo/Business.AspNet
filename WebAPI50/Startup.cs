@@ -77,7 +77,7 @@ namespace WebAPI50
             logClient.BaseAddress = new Uri("http://localhost:5200/api");
 
             Business.Core.Configer.JsonOptionsDoc.IncludeFields = true;
-            
+
             //Override the original global log directory
             Utils.Hosting.LogPath = "/data/mylog.txt";
 

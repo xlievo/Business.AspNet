@@ -404,6 +404,7 @@ namespace Business.AspNet
         /// <param name="type"></param>
         public MessagePackAttribute(int state = -13, string message = null, Type type = null) : base(state, message, type)
         {
+            Group = Grouping.MessagePack;
             Description = "MessagePackArg Binary parsing";
             ArgMeta.Skip = (bool hasUse, bool hasDefinition, AttributeBase.MetaData.DeclaringType declaring, IEnumerable<ArgumentAttribute> arguments, bool ignoreArg, bool dynamicObject) => (!hasDefinition && !ArgMeta.Arg.HasCollection && !dynamicObject) || ignoreArg;
         }
@@ -437,6 +438,7 @@ namespace Business.AspNet
         /// </summary>
         public JsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type)
         {
+            Group = Grouping.TextJson;
             Description = "Json format";
             //if (Utils.Hosting.jsonOptions.UseTextJson && null != Utils.Hosting.jsonOptions.InJsonSerializerOptions)
             //{
@@ -457,7 +459,11 @@ namespace Business.AspNet
         /// <param name="state"></param>
         /// <param name="message"></param>
         /// <param name="type"></param>
-        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute)) => Description = "NewtonsoftJson parsing";
+        public NewtonsoftJsonArgAttribute(int state = -12, string message = null, Type type = null) : base(state, message, type ?? typeof(JsonArgAttribute))
+        {
+            Group = Grouping.NewtonsoftJson;
+            Description = "NewtonsoftJson parsing";
+        }
 
         /// <summary>
         /// The Newtonsoft.Json.JsonSerializerSettings used to deserialize the object. If this is null, default serialization settings will be used.
@@ -609,7 +615,7 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="state"></param>
         /// <param name="message"></param>
-        public HttpFileAttribute(int state = 830, string message = null) : base(state, message) { }
+        public HttpFileAttribute(int state = 830, string message = null) : base(state, message) => CanNull = true;
 
         /// <summary>
         /// Proces
@@ -870,7 +876,7 @@ namespace Business.AspNet
             public Newtonsoft.Json.JsonSerializerSettings OutNewtonsoftJsonSerializerSettings { get; }
         }
 
-        internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
+        internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
 
         /// <summary>
         /// Socket type
@@ -2233,7 +2239,7 @@ namespace Business.AspNet
         }
 
         /// <summary>
-        /// UseMessagePack
+        /// MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance
         /// </summary>
         /// <param name="bootstrap"></param>
         /// <param name="options"></param>

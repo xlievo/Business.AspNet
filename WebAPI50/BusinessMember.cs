@@ -430,17 +430,20 @@ namespace WebAPI50
                 return this.ResultCreate(-911, "dsddsa");
             }
 
-            var files2 = await httpFile.GetFileAsync();
-            var files3 = await httpFile.GetFileAsync("db2.sh");
-            var files4 = httpFile.GetFilesAsync();
-
-            await foreach (var item in files4)
+            if (null != httpFile)
             {
-                item.Key.Log();
+                var files2 = await httpFile.GetFileAsync();
+                var files3 = await httpFile.GetFileAsync("db2.sh");
+                var files4 = httpFile.GetFilesAsync();
+
+                await foreach (var item in files4)
+                {
+                    item.Key.Log();
+                }
+
+
+                var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
             }
-
-
-            var files = httpFile?.Select(c => new { key = c.Key, length = c.Value.Length }).ToList();
 
             //await receive.WebSocket?.SendAsync(new ArraySegment<byte>(data), WebSocketMessageType.Binary, true, CancellationToken.None);
             //var data = this.GetSocketObject(new object[] { arg, dateTime, mm, fff, bbb }).ToBytes();
