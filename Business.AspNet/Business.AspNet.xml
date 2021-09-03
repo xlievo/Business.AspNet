@@ -868,7 +868,7 @@
         </member>
         <member name="M:Business.AspNet.Utils.UseMessagePack(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Func{MessagePack.MessagePackSerializerOptions,MessagePack.MessagePackSerializerOptions})">
             <summary>
-            UseMessagePack
+            MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance
             </summary>
             <param name="bootstrap"></param>
             <param name="options"></param>

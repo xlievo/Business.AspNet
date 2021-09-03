@@ -661,6 +661,19 @@ namespace Business.AspNet
         public string Data { get; }
     }
 
+    readonly struct Logs
+    {
+        public Logs(string index, IEnumerable<Logger.LoggerData> data)
+        {
+            Index = index;
+            Data = data;
+        }
+
+        public string Index { get; }
+
+        public IEnumerable<Logger.LoggerData> Data { get; }
+    }
+
     /// <summary>
     /// LogOptions
     /// </summary>
@@ -1633,6 +1646,7 @@ namespace Business.AspNet
             }
         }
 
+        /*
         /// <summary>
         /// Write out the Elasticsearch default log
         /// </summary>
@@ -1651,7 +1665,28 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Log(this HttpClient httpClient, IEnumerable<Logger.LoggerData> data, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Log(index, data.JsonSerialize()).JsonSerialize());
+        public static async ValueTask<string> Log(this HttpClient httpClient, IEnumerable<Logger.LoggerData> data, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Logs(index, data).JsonSerialize());
+        */
+
+        /// <summary>
+        /// Write out the Elasticsearch default log
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="httpClient"></param>
+        /// <param name="index"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static async ValueTask<string> Log(this Logger.LoggerData data, HttpClient httpClient, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log(index, data.JsonSerialize()).JsonSerialize());
+
+        /// <summary>
+        /// Write out the Elasticsearch default log
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="httpClient"></param>
+        /// <param name="index"></param>
+        /// <param name="c"></param>
+        /// <returns></returns>
+        public static async ValueTask<string> Log(this IEnumerable<Logger.LoggerData> data, HttpClient httpClient, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Logs(index, data).JsonSerialize());
 
         #endregion
 

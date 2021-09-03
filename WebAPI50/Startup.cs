@@ -165,6 +165,9 @@ namespace WebAPI50
             .UseLogger(new Logger(async logs =>
             {
                 logs.JsonSerialize().Log();
+
+                await logs.Log(logClient);
+
                 //x.Count().ToString().Log();
                 //foreach (var item in x)
                 //{
