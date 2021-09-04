@@ -801,22 +801,22 @@
             </summary>
             <param name="log"></param>
         </member>
-        <member name="M:Business.AspNet.Utils.Log(System.Net.Http.HttpClient,Business.Core.Logger.LoggerData,System.String,System.String)">
+        <member name="M:Business.AspNet.Utils.Log(Business.Core.Logger.LoggerData,System.Net.Http.HttpClient,System.String,System.String)">
             <summary>
             Write out the Elasticsearch default log
             </summary>
-            <param name="httpClient">Elasticsearch httpClient</param>
             <param name="data"></param>
+            <param name="httpClient"></param>
             <param name="index"></param>
             <param name="c"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.Log(System.Net.Http.HttpClient,System.Collections.Generic.IEnumerable{Business.Core.Logger.LoggerData},System.String,System.String)">
+        <member name="M:Business.AspNet.Utils.Log(System.Collections.Generic.IEnumerable{Business.Core.Logger.LoggerData},System.Net.Http.HttpClient,System.String,System.String)">
             <summary>
             Write out the Elasticsearch default log
             </summary>
-            <param name="httpClient"></param>
             <param name="data"></param>
+            <param name="httpClient"></param>
             <param name="index"></param>
             <param name="c"></param>
             <returns></returns>

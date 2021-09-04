@@ -393,7 +393,6 @@ namespace Business.AspNet
     /// <summary>
     /// Deserialization of binary format
     /// </summary>
-    //[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class MessagePackAttribute : ArgumentDeserialize
     {
         /// <summary>
@@ -650,7 +649,7 @@ namespace Business.AspNet
 
     readonly struct Log
     {
-        public Log(string index, string data)
+        public Log(string index, Logger.LoggerData data)
         {
             Index = index;
             Data = data;
@@ -658,7 +657,7 @@ namespace Business.AspNet
 
         public string Index { get; }
 
-        public string Data { get; }
+        public Logger.LoggerData Data { get; }
     }
 
     readonly struct Logs
@@ -1298,32 +1297,32 @@ namespace Business.AspNet
         /// </summary>
         public static readonly Hosting Hosting = new Hosting();
 
-        static Utils()
-        {
-            //if (NewtonsoftJsonOptions?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
-            //{
-            //    resolver.NamingStrategy = NewtonsoftCamelCaseNamingStrategy.Instance;
-            //}
-            //Hosting.Exception = ex => ex?.ExceptionWrite(true, true, Hosting.LocalLogPath);
+        //static Utils()
+        //{
+        //    //if (NewtonsoftJsonOptions?.ContractResolver is Newtonsoft.Json.Serialization.DefaultContractResolver resolver && null != resolver)
+        //    //{
+        //    //    resolver.NamingStrategy = NewtonsoftCamelCaseNamingStrategy.Instance;
+        //    //}
+        //    //Hosting.Exception = ex => ex?.ExceptionWrite(true, true, Hosting.LocalLogPath);
 
-            //Console.WriteLine($"Date: {DateTimeOffset.Now}");
-            //Console.WriteLine(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
-            //Console.WriteLine($"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
+        //    //Console.WriteLine($"Date: {DateTimeOffset.Now}");
+        //    //Console.WriteLine(System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription);
+        //    //Console.WriteLine($"BaseDirectory: {AppDomain.CurrentDomain.BaseDirectory}");
 
-            //AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.Exception?.Invoke(e.ExceptionObject as Exception);
-            //ThreadPool.SetMinThreads(50, 50);
-            //ThreadPool.GetMinThreads(out int workerThreads, out int completionPortThreads);
-            //ThreadPool.GetMaxThreads(out int workerThreads2, out int completionPortThreads2);
+        //    //AppDomain.CurrentDomain.UnhandledException += (sender, e) => Hosting.Exception?.Invoke(e.ExceptionObject as Exception);
+        //    //ThreadPool.SetMinThreads(50, 50);
+        //    //ThreadPool.GetMinThreads(out int workerThreads, out int completionPortThreads);
+        //    //ThreadPool.GetMaxThreads(out int workerThreads2, out int completionPortThreads2);
 
-            //Console.WriteLine($"Min {workerThreads}, {completionPortThreads}");
-            //Console.WriteLine($"Max {workerThreads2}, {completionPortThreads2}");
+        //    //Console.WriteLine($"Min {workerThreads}, {completionPortThreads}");
+        //    //Console.WriteLine($"Max {workerThreads2}, {completionPortThreads2}");
 
-            //AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
-            //Console.WriteLine("System.Net.Http.UseSocketsHttpHandler: false");
+        //    //AppContext.SetSwitch("System.Net.Http.UseSocketsHttpHandler", false);
+        //    //Console.WriteLine("System.Net.Http.UseSocketsHttpHandler: false");
 
-            //LogClient = Environment.HttpClientFactory.CreateClient("log");
-            //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
-        }
+        //    //LogClient = Environment.HttpClientFactory.CreateClient("log");
+        //    //AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+        //}
 
         static void Logo()
         {
@@ -1676,7 +1675,7 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Log(this Logger.LoggerData data, HttpClient httpClient, string index = "log", string c = "Write") => await httpClient.HttpCallctd(c, null, new Log(index, data.JsonSerialize()).JsonSerialize());
+        public static async ValueTask<string> Log(this Logger.LoggerData data, HttpClient httpClient, string index = "log", string c = "WriteObject") => await httpClient.HttpCallctd(c, null, new Log(index, data).JsonSerialize());
 
         /// <summary>
         /// Write out the Elasticsearch default log
@@ -1686,7 +1685,7 @@ namespace Business.AspNet
         /// <param name="index"></param>
         /// <param name="c"></param>
         /// <returns></returns>
-        public static async ValueTask<string> Log(this IEnumerable<Logger.LoggerData> data, HttpClient httpClient, string index = "log", string c = "Writes") => await httpClient.HttpCallctd(c, null, new Logs(index, data).JsonSerialize());
+        public static async ValueTask<string> Log(this IEnumerable<Logger.LoggerData> data, HttpClient httpClient, string index = "log", string c = "WritesObject") => await httpClient.HttpCallctd(c, null, new Logs(index, data).JsonSerialize());
 
         #endregion
 
