@@ -164,7 +164,7 @@ namespace WebAPI50
             //}))
             .UseLogger(new Logger(async logs =>
             {
-                logs.JsonSerialize().Log();
+                //logs.JsonSerialize().Log();
 
                 await logs.Log(logClient);
 
