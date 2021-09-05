@@ -66,6 +66,7 @@ namespace WebAPI50
 
         static readonly string guids = string.Join(",", Enumerable.Range(0, 200).AsParallel().Select(c => Guid.NewGuid().ToString("N")));
 
+        [Injection]
         HttpClient httpClient;
 
         Microsoft.AspNetCore.Builder.IApplicationBuilder app;
@@ -75,7 +76,7 @@ namespace WebAPI50
             this.app = app;
             logger.LogInformation(test123);
 
-            httpClient = httpClientFactory.CreateClient();
+            //httpClient = httpClientFactory.CreateClient();
 
             cache.Set("key", 123);
             Debug.Assert(123 == cache.Get<int>("key"));
@@ -411,6 +412,7 @@ namespace WebAPI50
         "{\"arg\":{\"menu_item\":\"\",\"bbbb\":\"\",\"bbb\":\"\",\"aaa\":[\"aa\",\"bb\"],\"a\":\"http://127.0.0.1:5000/doc/index.html\",\"b\":\"\",\"c\":{\"c1\":\"ok\",\"c2\":\"😀😭\",\"c3\":[{\"c31\":\"cc1\",\"c32\":\"cc2\",\"aaa\":[]},{\"c31\":\"cc3\",\"c32\":\"cc4\",\"aaa\":[]},{\"c31\":\"cc5\",\"c32\":\"cc6\",\"aaa\":[]}]},\"d\":19,\"e\":false,\"f\":\"2019-12-02T06:24\",\"myEnum\":4},\"dateTime\":\"2019-12-02T08:24\",\"mm\":111.0123456,\"fff\":555,\"bbb\":true}")]
         public virtual async ValueTask<IResult<Test004>> Test001(Session session, Test004 arg, [CheckNull(CheckValueType = true)] DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
         {
+            //var bing = await httpClient.GetStringAsync("https://www.bing.com/");
 
             var r = Utils.Hosting;
 

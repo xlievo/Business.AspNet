@@ -3,6 +3,7 @@ using Business.Core.Result;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace WebAPI50.Annotations
@@ -49,6 +50,9 @@ namespace WebAPI50.Annotations
 
     public class SessionCheck : ArgumentAttribute
     {
+        [Injection]
+        readonly HttpClient httpClient;
+
         public SessionCheck(int state = -81, string message = null) : base(state, message)
         {
             this.CanNull = false;
@@ -57,6 +61,8 @@ namespace WebAPI50.Annotations
 
         public override async ValueTask<IResult> Proces(dynamic value)
         {
+            //var bing = await httpClient.GetStringAsync("https://www.bing.com/");
+
             var key = value.Key as string;
 
             //..1: check 2: convert
