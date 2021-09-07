@@ -821,7 +821,7 @@
             <param name="c"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.CreateBusiness(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.Action{Business.AspNet.LogOptions},System.Object[])">
+        <member name="M:Business.AspNet.Utils.CreateBusiness(Microsoft.AspNetCore.Builder.IApplicationBuilder,System.Action{Business.AspNet.LogOptions})">
             <summary>
             Configure Business.Core in the startup class configure method
             <para>Injection context parameter type: "Context", "WebSocket", "HttpFile"</para>

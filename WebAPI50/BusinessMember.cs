@@ -69,11 +69,11 @@ namespace WebAPI50
         [Injection]
         HttpClient httpClient;
 
-        Microsoft.AspNetCore.Builder.IApplicationBuilder app;
+        [Injection]
+        IApplicationBuilder app;
 
-        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, ILogger<BusinessMember> logger, string test123, Microsoft.AspNetCore.Builder.ApplicationBuilder app)
+        public BusinessMember(IHttpClientFactory httpClientFactory, IMemoryCache cache, ILogger<BusinessMember> logger, string test123, ApplicationBuilder app)
         {
-            this.app = app;
             logger.LogInformation(test123);
 
             //httpClient = httpClientFactory.CreateClient();
@@ -81,6 +81,12 @@ namespace WebAPI50
             cache.Set("key", 123);
             Debug.Assert(123 == cache.Get<int>("key"));
             Debug.Assert("test123" == test123);
+
+            this.BindAfter += () =>
+            {
+                this.app.ToString().Log();
+                "BindAfter".Log();
+            };
 
             //this.BindAfter += () =>
             //{

@@ -1697,7 +1697,7 @@ namespace Business.AspNet
         /// <param name="logOptions">logOptions">Output all non business exceptions or errors in the application</param>
         /// <param name="constructorArguments">constructorArguments</param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, Action<LogOptions> logOptions = null, params object[] constructorArguments)
+        public static BootstrapAll<IBusiness> CreateBusiness(this IApplicationBuilder app, Action<LogOptions> logOptions = null)
         {
             if (null == app) { throw new ArgumentNullException(nameof(app)); }
 
@@ -1763,7 +1763,8 @@ namespace Business.AspNet
 
             Configer.GlobalLog = (logType, message) => Log(logType, message);
 
-            bootstrap = Bootstrap.CreateAll<IBusiness>(constructorArguments, type => app.ApplicationServices.GetService(type));
+            bootstrap = Bootstrap.CreateAll<IBusiness>()
+                .UseInjection((name, type) => app.ApplicationServices.GetService(type));
 
             bootstrap.Config.ResultType = typeof(ResultObject<>).GetGenericTypeDefinition();
 

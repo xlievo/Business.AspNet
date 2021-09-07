@@ -108,7 +108,23 @@ namespace WebAPI50
                             break;
                     }
                 };
-            }, "test123", app)
+            })
+            //, "test123", app
+            .UseInjection((name, type) =>
+            {
+                switch (name)
+                {
+                    case "test123": return "test123";
+                }
+
+                switch (type)
+                {
+                    case Type when typeof(IApplicationBuilder).IsAssignableFrom(type):
+                        return app;
+                }
+
+                return null;
+            })
             .UseDoc(options =>
             {
                 options.Navigtion = true;
