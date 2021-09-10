@@ -734,10 +734,6 @@ namespace Business.AspNet
         ///// Text.Json format grouping
         ///// </summary>
         //public const string XML = "x";
-        ///// <summary>
-        ///// UDP format grouping
-        ///// </summary>
-        //public const string GroupUDP = "u";
     }
 
     /// <summary>
@@ -888,7 +884,10 @@ namespace Business.AspNet
             public Newtonsoft.Json.JsonSerializerSettings OutNewtonsoftJsonSerializerSettings { get; }
         }
 
-        internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
+        internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] {
+            MessagePack.Resolvers.NativeDateTimeResolver.Instance, /*MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance,*/
+            MessagePack.Resolvers.ContractlessStandardResolver.Instance
+        }));
 
         /// <summary>
         /// Socket type

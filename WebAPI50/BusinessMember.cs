@@ -80,7 +80,7 @@ namespace WebAPI50
 
             cache.Set("key", 123);
             Debug.Assert(123 == cache.Get<int>("key"));
-            Debug.Assert("test123" == test123);
+            Debug.Assert(nameof(test123) == test123);
 
             this.BindAfter += () =>
             {

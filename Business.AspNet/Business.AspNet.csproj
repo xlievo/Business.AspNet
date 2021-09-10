@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
-    <Version>0.9.6.5</Version>
+    <Version>0.9.6.6</Version>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>https://github.com/xlievo/Business.AspNet
 https://www.nuget.org/packages/Business.AspNet</Description>
@@ -15,9 +15,9 @@ https://www.nuget.org/packages/Business.AspNet</Description>
     <PackageTags>Business.Core, Business.AspNet</PackageTags>
     <Authors>xlievo</Authors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <AssemblyVersion>0.9.6.5</AssemblyVersion>
+    <AssemblyVersion>0.9.6.6</AssemblyVersion>
     <Company>www.tmopen.com</Company>
-    <FileVersion>0.9.6.5</FileVersion>
+    <FileVersion>0.9.6.6</FileVersion>
     <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
