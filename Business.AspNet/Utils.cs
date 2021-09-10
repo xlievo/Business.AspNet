@@ -202,15 +202,15 @@ namespace Business.AspNet
         /// <summary>
         /// The results of the state is greater than or equal to 1: success, equal to 0: system level exceptions, less than 0: business class error.
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("S")]
         [Newtonsoft.Json.JsonProperty("S")]
+        [System.Text.Json.Serialization.JsonPropertyName("S")]
         public int State { get; }
 
         /// <summary>
         /// Success can be null
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("M")]
         [Newtonsoft.Json.JsonProperty("M")]
+        [System.Text.Json.Serialization.JsonPropertyName("M")]
         public string Message { get; }
 
         /// <summary>
@@ -221,53 +221,53 @@ namespace Business.AspNet
         /// <summary>
         /// Specific Byte/Json data objects
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("D")]
         [Newtonsoft.Json.JsonProperty("D")]
+        [System.Text.Json.Serialization.JsonPropertyName("D")]
         public Type Data { get; }
 
         /// <summary>
         /// Whether there is value
         /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("H")]
         [Newtonsoft.Json.JsonProperty("H")]
+        [System.Text.Json.Serialization.JsonPropertyName("H")]
         public bool HasData { get; }
 
         /// <summary>
         /// Gets the token of this result, used for callback
         /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public string Callback { get; set; }
 
         /// <summary>
         /// Data type
         /// </summary>
         [MessagePack.IgnoreMember]
-        [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public System.Type DataType { get; }
 
         /// <summary>
         /// Result object generic definition
         /// </summary>
         [MessagePack.IgnoreMember]
-        [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public System.Type GenericDefinition { get; }
 
         /// <summary>
         /// Return data or not
         /// </summary>
         [MessagePack.IgnoreMember]
-        [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public bool HasDataResult { get; }
 
         /// <summary>
         /// Business info
         /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
         [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public BusinessInfo Business { get; set; }
 
         /// <summary>
@@ -884,10 +884,7 @@ namespace Business.AspNet
             public Newtonsoft.Json.JsonSerializerSettings OutNewtonsoftJsonSerializerSettings { get; }
         }
 
-        internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] {
-            MessagePack.Resolvers.NativeDateTimeResolver.Instance, /*MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance,*/
-            MessagePack.Resolvers.ContractlessStandardResolver.Instance
-        }));
+        internal MessagePack.MessagePackSerializerOptions useMessagePackOptions = MessagePack.Resolvers.ContractlessStandardResolver.Options.WithResolver(MessagePack.Resolvers.CompositeResolver.Create(new MessagePack.Formatters.IMessagePackFormatter[] { new MessagePack.Formatters.IgnoreFormatter<Type>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodBase>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.MethodInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.PropertyInfo>(), new MessagePack.Formatters.IgnoreFormatter<System.Reflection.FieldInfo>() }, new MessagePack.IFormatterResolver[] { MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance }));
 
         /// <summary>
         /// Socket type
@@ -975,30 +972,35 @@ namespace Business.AspNet
         /// <summary>
         /// token
         /// </summary>
+        [Newtonsoft.Json.JsonProperty("K")]
         [System.Text.Json.Serialization.JsonPropertyName("K")]
         public string Key { get; set; }
 
         /// <summary>
         /// Client IP address
         /// </summary>
+        [Newtonsoft.Json.JsonProperty("R")]
         [System.Text.Json.Serialization.JsonPropertyName("R")]
         public Remote Remote { get; set; }
 
         /// <summary>
         /// Request path
         /// </summary>
+        [Newtonsoft.Json.JsonProperty("P")]
         [System.Text.Json.Serialization.JsonPropertyName("P")]
         public string Path { get; set; }
 
         /// <summary>
         /// Request callback data
         /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public string Callback { get; set; }
 
         /// <summary>
         /// Source of request
         /// </summary>
+        [Newtonsoft.Json.JsonIgnore]
         [System.Text.Json.Serialization.JsonIgnore]
         public OriginValue Origin { get; set; }
 
@@ -2273,7 +2275,7 @@ namespace Business.AspNet
         }
 
         /// <summary>
-        /// MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.NativeGuidResolver.Instance, MessagePack.Resolvers.NativeDecimalResolver.Instance, MessagePack.Resolvers.TypelessObjectResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance
+        /// MessagePack.Resolvers.NativeDateTimeResolver.Instance, MessagePack.Resolvers.ContractlessStandardResolver.Instance
         /// </summary>
         /// <param name="bootstrap"></param>
         /// <param name="options"></param>
