@@ -104,7 +104,7 @@ namespace WebAPI
                             break;
                     }
                 };
-            }, "test123")
+            })
             .UseDoc(options =>
             {
                 options.Debug = true;

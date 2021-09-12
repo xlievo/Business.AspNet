@@ -5,6 +5,7 @@ using Business.Core.Auth;
 using Business.Core.Result;
 using Business.Core.Utils;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using System;
 using System.Net.Http;
 using System.Net.WebSockets;
@@ -258,11 +259,25 @@ namespace WebAPI50
             Callback = token.Callback,
             Path = token.Path,
         };
+    }
+
+    public class WebSocketManagement : Business.AspNet.WebSocketManagement
+    {
+        [Injection]
+        IMemoryCache cache;
+
+        [Injection]
+        string test111 = string.Empty;
 
         /********** Optional WebSocket: WebSocketAccept WebSocketReceive WebSocketDispose **********/
 
         public sealed override async ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context)
         {
+            test111.Log();
+            cache.Set(test111, test111);
+            var test = cache.Get<string>(test111);
+            //var bing = await httpClient.GetStringAsync("https://www.bing.com/");
+
             // checked and return a token
             if (!context.Request.Query.TryGetValue("t", out Microsoft.Extensions.Primitives.StringValues t) || string.IsNullOrWhiteSpace(t))
             {
@@ -270,7 +285,7 @@ namespace WebAPI50
             }
 
 #if DEBUG
-            Console.WriteLine($"WebSockets Add:{t} Connections:{Utils.WebSocketContainer.WebSockets.Count}");
+            Console.WriteLine($"WebSockets Add:{t} Connections:{WebSockets.Count + 1}");
 #endif
             return new WebSocketAcceptReply(t, "ok!!!");
         }
@@ -278,9 +293,14 @@ namespace WebAPI50
         public override ValueTask WebSocketDispose(HttpContext context, string token)
         {
 #if DEBUG
-            Console.WriteLine($"WebSockets Remove:{token} Connectionss:{Utils.WebSocketContainer.WebSockets.Count}");
+            Console.WriteLine($"WebSockets Remove:{token} Connectionss:{WebSockets.Count}");
 #endif
             return default;
+        }
+
+        public override ValueTask<IResultObject<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer)
+        {
+            return base.WebSocketReceive(context, webSocket, buffer);
         }
     }
 }

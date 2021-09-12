@@ -419,9 +419,9 @@ namespace WebAPI50
         public virtual async ValueTask<IResult<Test004>> Test001(Session session, Test004 arg, [CheckNull(CheckValueType = true)] DateTime? dateTime, HttpFile httpFile = default, [Ignore(IgnoreMode.BusinessArg)][Test2] decimal mm = 0.0234m, [Ignore(IgnoreMode.BusinessArg)] int fff = 666, [Ignore(IgnoreMode.BusinessArg)] bool bbb = true, Context context = null, WebSocket webSocket = null)
         {
             //var bing = await httpClient.GetStringAsync("https://www.bing.com/");
-
+            //this.SendAsync<string>("sss");
             var r = Utils.Hosting;
-
+            
             context?.Response.Headers.TryAdd("sss", "qqq");
 
             var ss = System.Text.Encoding.UTF8.GetBytes("a1");
@@ -621,7 +621,7 @@ namespace WebAPI50
                 var context = value as Context;
 
                 var session = new TestInjectionArg { Method = context.Request.Method, Body = await context.Request.Body.StreamReadStringAsync() };
-
+                
                 return this.ResultCreate(session);//return out session
             }
         }

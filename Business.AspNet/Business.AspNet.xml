@@ -563,7 +563,17 @@
             <param name="token"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.IBusiness.WebSocketAccept(Microsoft.AspNetCore.Http.HttpContext)">
+        <member name="T:Business.AspNet.WebSocketManagement">
+            <summary>
+            WebSocketManagement
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.WebSocketManagement.WebSockets">
+            <summary>
+            WebSocket container
+            </summary>
+        </member>
+        <member name="M:Business.AspNet.WebSocketManagement.WebSocketAccept(Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
             Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
             <para>checked and return a token</para>
@@ -571,7 +581,7 @@
             <param name="context"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.IBusiness.WebSocketReceive(Microsoft.AspNetCore.Http.HttpContext,System.Net.WebSockets.WebSocket,System.Byte[])">
+        <member name="M:Business.AspNet.WebSocketManagement.WebSocketReceive(Microsoft.AspNetCore.Http.HttpContext,System.Net.WebSockets.WebSocket,System.Byte[])">
             <summary>
             Receive a websocket packet, return IReceiveData object
             </summary>
@@ -580,7 +590,7 @@
             <param name="buffer"></param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.IBusiness.WebSocketDispose(Microsoft.AspNetCore.Http.HttpContext,System.String)">
+        <member name="M:Business.AspNet.WebSocketManagement.WebSocketDispose(Microsoft.AspNetCore.Http.HttpContext,System.String)">
             <summary>
             WebSocket dispose
             </summary>
@@ -598,31 +608,6 @@
             <summary>
             Get the requested token
             </summary>
-            <returns></returns>
-        </member>
-        <member name="M:Business.AspNet.BusinessBase.WebSocketAccept(Microsoft.AspNetCore.Http.HttpContext)">
-            <summary>
-            Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
-            <para>checked and return a token</para>
-            </summary>
-            <param name="context"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Business.AspNet.BusinessBase.WebSocketReceive(Microsoft.AspNetCore.Http.HttpContext,System.Net.WebSockets.WebSocket,System.Byte[])">
-            <summary>
-            Receive a websocket packet, return IReceiveData object
-            </summary>
-            <param name="context"></param>
-            <param name="webSocket"></param>
-            <param name="buffer"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Business.AspNet.BusinessBase.WebSocketDispose(Microsoft.AspNetCore.Http.HttpContext,System.String)">
-            <summary>
-            WebSocket dispose
-            </summary>
-            <param name="context"></param>
-            <param name="token"></param>
             <returns></returns>
         </member>
         <member name="T:Business.AspNet.Context">
@@ -831,11 +816,22 @@
             <param name="constructorArguments">constructorArguments</param>
             <returns></returns>
         </member>
-        <member name="M:Business.AspNet.Utils.UseWebSocket(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Microsoft.AspNetCore.Builder.WebSocketOptions})">
+        <member name="M:Business.AspNet.Utils.UseWebSocket(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Microsoft.AspNetCore.Builder.WebSocketOptions},System.Type)">
             <summary>
             Configuration greater than contract.
             <para>"appsettings.json" -> "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }</para>
             </summary>
+            <param name="bootstrap"></param>
+            <param name="options"></param>
+            <param name="webSocketManagement"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.UseWebSocket``1(Business.Core.BootstrapAll{Business.AspNet.IBusiness},System.Action{Microsoft.AspNetCore.Builder.WebSocketOptions})">
+            <summary>
+            Configuration greater than contract.
+            <para>"appsettings.json" -> "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }</para>
+            </summary>
+            <typeparam name="WebSocketManagement"></typeparam>
             <param name="bootstrap"></param>
             <param name="options"></param>
             <returns></returns>
@@ -896,11 +892,6 @@
             </summary>
         </member>
         <member name="T:Business.AspNet.Utils.WebSocketContainer">
-            <summary>
-            WebSocket container
-            </summary>
-        </member>
-        <member name="F:Business.AspNet.Utils.WebSocketContainer.WebSockets">
             <summary>
             WebSocket container
             </summary>
@@ -1034,6 +1025,13 @@
             <typeparam name="Type"></typeparam>
             <param name="value"></param>
             <param name="options"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Business.AspNet.Utils.GetAccessors(System.Type)">
+            <summary>
+            GetAccessors Field, Propertie
+            </summary>
+            <param name="type"></param>
             <returns></returns>
         </member>
     </members>

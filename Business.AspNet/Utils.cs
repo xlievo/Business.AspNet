@@ -790,7 +790,9 @@ namespace Business.AspNet
         /// </summary>
         public Action<LogType, string> Log = (type, message) => Help.Console(message);
 
-        internal bool useWebSocket;
+        internal Action<Func<string, Type, object>> useWebSocket;
+
+        internal WebSocketManagement webSocketManagement;
 
         internal readonly System.Collections.Concurrent.BlockingCollection<WebSocketData> webSocketSendQueue = new System.Collections.Concurrent.BlockingCollection<WebSocketData>();
 
@@ -1044,6 +1046,17 @@ namespace Business.AspNet
         /// <param name="token"></param>
         /// <returns></returns>
         ValueTask<IToken> GetToken(HttpContext context, Token token);
+    }
+
+    /// <summary>
+    /// WebSocketManagement
+    /// </summary>
+    public class WebSocketManagement
+    {
+        /// <summary>
+        /// WebSocket container
+        /// </summary>
+        public static readonly Utils.WebSocketContainer WebSockets = new Utils.WebSocketContainer();
 
         /// <summary>
         /// Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
@@ -1051,7 +1064,8 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context);
+        //[Ignore]
+        public virtual ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context) => new ValueTask<WebSocketAcceptReply>(new WebSocketAcceptReply(string.Empty));
 
         /// <summary>
         /// Receive a websocket packet, return IReceiveData object
@@ -1060,7 +1074,7 @@ namespace Business.AspNet
         /// <param name="webSocket"></param>
         /// <param name="buffer"></param>
         /// <returns></returns>
-        ValueTask<IResultObject<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer);
+        public virtual ValueTask<IResultObject<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => new ValueTask<IResultObject<byte[]>>((IResultObject<byte[]>)buffer.MessagePackDeserialize(Utils.Hosting.socketType));
 
         /// <summary>
         /// WebSocket dispose
@@ -1068,7 +1082,7 @@ namespace Business.AspNet
         /// <param name="context"></param>
         /// <param name="token"></param>
         /// <returns></returns>
-        ValueTask WebSocketDispose(HttpContext context, string token);
+        public virtual ValueTask WebSocketDispose(HttpContext context, string token) => default;
     }
 
     /// <summary>
@@ -1094,34 +1108,6 @@ namespace Business.AspNet
         /// <returns></returns>
         [Ignore]
         public virtual ValueTask<IToken> GetToken(HttpContext context, Token token) => new ValueTask<IToken>(Task.FromResult<IToken>(token));
-
-        /// <summary>
-        /// Accept a websocket connection. If null token is returned, it means reject, default string.Empty accept.
-        /// <para>checked and return a token</para>
-        /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
-        [Ignore]
-        public virtual ValueTask<WebSocketAcceptReply> WebSocketAccept(HttpContext context) => new ValueTask<WebSocketAcceptReply>(new WebSocketAcceptReply(string.Empty));
-
-        /// <summary>
-        /// Receive a websocket packet, return IReceiveData object
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="webSocket"></param>
-        /// <param name="buffer"></param>
-        /// <returns></returns>
-        [Ignore]
-        public virtual ValueTask<IResultObject<byte[]>> WebSocketReceive(HttpContext context, WebSocket webSocket, byte[] buffer) => new ValueTask<IResultObject<byte[]>>((IResultObject<byte[]>)buffer.MessagePackDeserialize(Utils.Hosting.socketType));
-
-        /// <summary>
-        /// WebSocket dispose
-        /// </summary>
-        /// <param name="context"></param>
-        /// <param name="token"></param>
-        /// <returns></returns>
-        [Ignore]
-        public virtual ValueTask WebSocketDispose(HttpContext context, string token) => default;
     }
 
     /// <summary>
@@ -1284,7 +1270,6 @@ namespace Business.AspNet
     public static class Utils
     {
         internal static BootstrapAll<IBusiness> bootstrap;
-        internal static IBusiness businessFirst;
 
         /// <summary>
         /// "Context", "HttpFile", "WebSocket" 
@@ -1897,8 +1882,6 @@ namespace Business.AspNet
 
             bootstrap.Config.BuildAfter = strap =>
             {
-                businessFirst = bootstrap.BusinessList.FirstOrDefault().Value;
-
                 if (null != Hosting.useServer)
                 {
                     var contextFactory = app.ApplicationServices.GetService<IHttpContextFactory>();
@@ -1931,8 +1914,10 @@ namespace Business.AspNet
 
                 #region AcceptWebSocket
 
-                if (Hosting.useWebSocket)
+                if (null != Hosting.useWebSocket)
                 {
+                    Hosting.useWebSocket(bootstrap.Config.Injection);
+
                     app.UseWebSockets(Hosting.webSocketOptions);
 
                     app.Use(async (context, next) =>
@@ -2017,33 +2002,50 @@ namespace Business.AspNet
         /// </summary>
         /// <param name="bootstrap"></param>
         /// <param name="options"></param>
+        /// <param name="webSocketManagement"></param>
         /// <returns></returns>
-        public static BootstrapAll<IBusiness> UseWebSocket(this BootstrapAll<IBusiness> bootstrap, Action<WebSocketOptions> options = null)
+        public static BootstrapAll<IBusiness> UseWebSocket(this BootstrapAll<IBusiness> bootstrap, Action<WebSocketOptions> options = null, Type webSocketManagement = null)
         {
-            Hosting.useWebSocket = true;
+            if (null == webSocketManagement) { webSocketManagement = typeof(WebSocketManagement); }
 
-            options?.Invoke(Hosting.webSocketOptions);
-
-            //Configuration greater than contract
-            var cfg = Hosting.Config.GetSection("WebSockets");
-
-            var keepAliveInterval = cfg.GetValue("KeepAliveInterval", Hosting.webSocketOptions.KeepAliveInterval.TotalSeconds);
-            Hosting.webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(keepAliveInterval);
-
-            Hosting.webSocketOptions.ReceiveBufferSize = cfg.GetValue("ReceiveBufferSize", Hosting.webSocketOptions.ReceiveBufferSize);
-
-            var webSocketAllowedOrigins = cfg.GetSection("AllowedOrigins").Get<string[]>();
-
-            if (null != webSocketAllowedOrigins)
+            Hosting.useWebSocket = injection => 
             {
-                foreach (var item in webSocketAllowedOrigins)
+                Hosting.webSocketManagement = webSocketManagement.SetInjection(injection) as WebSocketManagement;
+
+                options?.Invoke(Hosting.webSocketOptions);
+
+                //Configuration greater than contract
+                var cfg = Hosting.Config.GetSection("WebSockets");
+
+                var keepAliveInterval = cfg.GetValue("KeepAliveInterval", Hosting.webSocketOptions.KeepAliveInterval.TotalSeconds);
+                Hosting.webSocketOptions.KeepAliveInterval = TimeSpan.FromSeconds(keepAliveInterval);
+
+                Hosting.webSocketOptions.ReceiveBufferSize = cfg.GetValue("ReceiveBufferSize", Hosting.webSocketOptions.ReceiveBufferSize);
+
+                var webSocketAllowedOrigins = cfg.GetSection("AllowedOrigins").Get<string[]>();
+
+                if (null != webSocketAllowedOrigins)
                 {
-                    Hosting.webSocketOptions.AllowedOrigins.Add(item);
+                    foreach (var item in webSocketAllowedOrigins)
+                    {
+                        Hosting.webSocketOptions.AllowedOrigins.Add(item);
+                    }
                 }
-            }
+            };
 
             return bootstrap;
         }
+
+        /// <summary>
+        /// Configuration greater than contract.
+        /// <para>"appsettings.json" -> "WebSocket": { "KeepAliveInterval": 120, "ReceiveBufferSize": 4096, "AllowedOrigins": [] }</para>
+        /// </summary>
+        /// <typeparam name="WebSocketManagement"></typeparam>
+        /// <param name="bootstrap"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        public static BootstrapAll<IBusiness> UseWebSocket<WebSocketManagement>(this BootstrapAll<IBusiness> bootstrap, Action<WebSocketOptions> options = null)
+            where WebSocketManagement : AspNet.WebSocketManagement => UseWebSocket(bootstrap, options, typeof(WebSocketManagement));
 
         /// <summary>
         /// Configuration greater than contract.
@@ -2368,17 +2370,12 @@ namespace Business.AspNet
 
         static async ValueTask Keep(HttpContext context, WebSocket webSocket)
         {
-            if (null == businessFirst)
-            {
-                return;
-            }
-
-            var acceptBusiness = businessFirst;
             WebSocketAcceptReply reply = default;
 
             try
             {
-                reply = await acceptBusiness.WebSocketAccept(context);
+                reply = await Hosting.webSocketManagement.WebSocketAccept(context);
+                //reply = await acceptBusiness.WebSocketAccept(context);
 
                 if (string.IsNullOrEmpty(reply.Token))
                 {
@@ -2393,7 +2390,7 @@ namespace Business.AspNet
 
                 webSocket.SendAsync(reply.Message); //accept ok! client checked
 
-                WebSocketContainer.WebSockets.TryAdd(reply.Token, webSocket);
+                WebSocketManagement.WebSockets.TryAdd(reply.Token, webSocket);
 
                 //var remote = string.Format("{0}:{1}", context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
                 var remote = new Remote(context.Request.Headers.TryGetValue(ForwardedHeadersDefaults.XForwardedForHeaderName, out StringValues remote2) ? remote2.ToString() : context.Connection.RemoteIpAddress.MapToIPv4().ToString(), context.Connection.RemotePort);
@@ -2419,7 +2416,7 @@ namespace Business.AspNet
 
                     try
                     {
-                        var receiveData = await acceptBusiness.WebSocketReceive(context, webSocket, buffer);
+                        var receiveData = await Hosting.webSocketManagement.WebSocketReceive(context, webSocket, buffer);
 
                         if (string.IsNullOrWhiteSpace(receiveData.Business.BusinessName) || !bootstrap.BusinessList.TryGetValue(receiveData.Business.BusinessName, out IBusiness business))
                         {
@@ -2477,12 +2474,12 @@ namespace Business.AspNet
             {
                 if (null != reply.Token)
                 {
-                    WebSocketContainer.WebSockets.TryRemove(reply.Token, out _);
+                    WebSocketManagement.WebSockets.TryRemove(reply.Token, out _);
                 }
 
                 try
                 {
-                    await acceptBusiness.WebSocketDispose(context, reply.Token);
+                    await Hosting.webSocketManagement.WebSocketDispose(context, reply.Token);
                 }
                 catch (Exception ex)
                 {
@@ -2498,10 +2495,10 @@ namespace Business.AspNet
         /// </summary>
         public class WebSocketContainer : System.Collections.Concurrent.ConcurrentDictionary<string, WebSocket>
         {
-            /// <summary>
-            /// WebSocket container
-            /// </summary>
-            public static readonly WebSocketContainer WebSockets = new WebSocketContainer();
+            ///// <summary>
+            ///// WebSocket container
+            ///// </summary>
+            //public static readonly WebSocketContainer WebSockets = new WebSocketContainer();
 
             /// <summary>
             /// Send socket object
@@ -2658,7 +2655,7 @@ namespace Business.AspNet
         /// <param name="data"></param>
         /// <param name="id"></param>
         /// <param name="method"></param>
-        public static void SendAsync<Data>(this IBusiness business, Data data, string[] id = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null) => WebSocketContainer.WebSockets.SendBytesAsync(ResultCreate(Hosting.ResultType, data?.MessagePackSerialize(), businessInfo: new BusinessInfo(business.Configer.Info.BusinessName, method)).ToBytes(false), id);
+        public static void SendAsync<Data>(this IBusiness business, Data data, string[] id = null, [System.Runtime.CompilerServices.CallerMemberName] string method = null) => WebSocketManagement.WebSockets.SendBytesAsync(ResultCreate(Hosting.ResultType, data?.MessagePackSerialize(), businessInfo: new BusinessInfo(business.Configer.Info.BusinessName, method)).ToBytes(false), id);
 
         /// <summary>
         /// Closes the WebSocket connection as an asynchronous operation using the close handshake defined in the WebSocket protocol specification section 7.
@@ -2819,5 +2816,61 @@ namespace Business.AspNet
         }
         */
         #endregion
+
+        /// <summary>
+        /// GetAccessors Field, Propertie
+        /// </summary>
+        /// <param name="type"></param>
+        /// <returns></returns>
+        static System.Collections.Concurrent.ConcurrentDictionary<string, Accessor> GetAccessors(this Type type)
+        {
+            var accessors = new System.Collections.Concurrent.ConcurrentDictionary<string, Accessor>();
+
+            foreach (var field in type.GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static))
+            {
+                if (typeof(MulticastDelegate).IsAssignableFrom(field.FieldType))
+                {
+                    continue;
+                }
+
+                var accessor = field.GetAccessor(field.IsDefined(typeof(InjectionAttribute), false));
+                if (null == accessor.Getter || null == accessor.Setter) { continue; }
+                accessors.TryAdd(field.Name, accessor);
+            }
+
+            foreach (var property in type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.FlattenHierarchy | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static))
+            {
+                if (typeof(MulticastDelegate).IsAssignableFrom(property.PropertyType))
+                {
+                    continue;
+                }
+
+                var accessor = property.GetAccessor(property.IsDefined(typeof(InjectionAttribute), false));
+                if (null == accessor.Getter || null == accessor.Setter) { continue; }
+                accessors.TryAdd(property.Name, accessor);
+            }
+
+            return accessors;
+        }
+
+        static Accessor GetAccessor(this System.Reflection.FieldInfo fieldInfo, bool injection = false)
+        {
+            if (null == fieldInfo) { throw new ArgumentNullException(nameof(fieldInfo)); }
+
+            var getter = Core.Utils.Emit.FieldAccessorGenerator.CreateGetter(fieldInfo);
+            var setter = Core.Utils.Emit.FieldAccessorGenerator.CreateSetter(fieldInfo);
+
+            return new Accessor(fieldInfo.FieldType, getter, setter, fieldInfo.Name, injection);
+        }
+
+        static Accessor GetAccessor(this System.Reflection.PropertyInfo propertyInfo, bool injection = false)
+        {
+            if (null == propertyInfo) { throw new ArgumentNullException(nameof(propertyInfo)); }
+
+            var getter = Core.Utils.Emit.PropertyAccessorGenerator.CreateGetter(propertyInfo);
+            var setter = Core.Utils.Emit.PropertyAccessorGenerator.CreateSetter(propertyInfo);
+
+            return new Accessor(propertyInfo.PropertyType, getter, setter, propertyInfo.Name, injection);
+        }
     }
 }

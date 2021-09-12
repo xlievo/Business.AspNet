@@ -110,21 +110,7 @@ namespace WebAPI50
                 };
             })
             //, "test123", app
-            .UseInjection((name, type) =>
-            {
-                switch (name)
-                {
-                    case "test123": return "test123";
-                }
-
-                switch (type)
-                {
-                    case Type when typeof(IApplicationBuilder).IsAssignableFrom(type):
-                        return app;
-                }
-
-                return null;
-            })
+            
             .UseDoc(options =>
             {
                 options.Navigtion = true;
@@ -143,7 +129,7 @@ namespace WebAPI50
             //})
             .UseMessagePack(options => options.WithCompression(MessagePack.MessagePackCompression.Lz4Block))
             .UseResultType(typeof(MyResultObject<>))//use ResultObject
-            .UseWebSocket(options =>
+            .UseWebSocket<WebSocketManagement>(options =>
             {
                 options.KeepAliveInterval = TimeSpan.FromSeconds(120);
                 options.ReceiveBufferSize = 1024 * 500;
@@ -178,11 +164,27 @@ namespace WebAPI50
             //{
 
             //}))
+            .UseInjection((name, type) =>
+            {
+                switch (name)
+                {
+                    case "test123": return "test123";
+                    case "test111": return "test111";
+                }
+
+                switch (type)
+                {
+                    case Type when typeof(IApplicationBuilder).IsAssignableFrom(type):
+                        return app;
+                }
+
+                return null;
+            })
             .UseLogger(new Logger(async logs =>
             {
                 //logs.JsonSerialize().Log();
 
-                await logs.Log(logClient);
+                //await logs.Log(logClient);
 
                 //x.Count().ToString().Log();
                 //foreach (var item in x)
