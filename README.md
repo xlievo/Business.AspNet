@@ -213,8 +213,8 @@ app.CreateBusiness().UseLogger(new Logger(async logs =>
     Interval = TimeSpan.FromSeconds(6),
     MaxNumber = 2000
 }));
-	
-~~this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> logs) =>~~
+
+this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> logs) =>
 {
     logs.JsonSerialize().Log();
 }
@@ -308,6 +308,7 @@ app.CreateBusiness()
 ```
 
 ## Do you think it's over? Did not!
+
 ~~You also need to understand call wrapping and return wrapping~~
 
 ***
