@@ -214,12 +214,9 @@ app.CreateBusiness().UseLogger(new Logger(async logs =>
     MaxNumber = 2000
 }));
 	
-this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
+~~this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> logs) =>~~
 {
-foreach (var item in log)
-    {
-        Console.WriteLine(item.ToString());
-    }
+    logs.JsonSerialize().Log();
 }
 , new Logger.BatchOptions
 {
