@@ -188,24 +188,35 @@ c: **[System.Net.WebSockets.WebSocket]** Current websocket object, Valid only fo
 [Hosting.AppSettings] An object of the appsettings.json configuration file [Appsettings] node
 
 ## About logger
-Register log callback in business class constructor  
+Register log callback in bootstrap or business class constructor  
 
 **single**
 ```C#
+app.CreateBusiness().UseLogger(new Logger(async log =>
+{
+    log.JsonSerialize().Log();
+}));
+	
 this.Logger = new Logger(async (Logger.LoggerData log) =>
 {
-    Console.WriteLine(log.ToString());
+    log.JsonSerialize().Log();
 });
 ```
 **batch**  
 In the production environment, batch logging can reduce the occupation of thread pool and the request to log server  
 ```C#
-this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> log) =>
+app.CreateBusiness().UseLogger(new Logger(async logs =>
 {
-    foreach (var item in log)
-    {
-        Console.WriteLine(item.ToString());
-    }
+    logs.JsonSerialize().Log();
+}, new Logger.BatchOptions
+{
+    Interval = TimeSpan.FromSeconds(6),
+    MaxNumber = 2000
+}));
+
+this.Logger = new Logger(async (IEnumerable<Logger.LoggerData> logs) =>
+{
+    logs.JsonSerialize().Log();
 }
 , new Logger.BatchOptions
 {
@@ -242,15 +253,25 @@ Ubuntu: apt-get install apache2-utils
 
 a: **First, you must locate the calling business class**  
 ```C#
-Utils.bootstrap.BusinessList.TryGetValue(businessName, out BusinessBase business);
+var bootstrap = app.CreateBusiness();
 ```
-b: **Call the Command.AsyncCall method of the business class**  
+b: **Call the Command.AsyncCallFull method of the business class** 
 ```C#
-var result = await business.Command.AsyncCall(
-    "cmd",//Business method or alias
-    new object[] { },//Method parameters, excluding injection parameters
-    "group",//Business grouping
-    new UseEntry(new Token { }));//Parameter object to be injected
+bootstrap.UseBusinessGroup(new BusinessGroup(Grouping.TextJson, new JsonArgAttribute(), new CommandAttribute(), new LoggerAttribute { ValueType = Logger.ValueType.In }))
+```
+c: **Call the Command.AsyncCallFull method of the business class**  
+```C#
+if (bootstrap.BusinessList.TryGetValue("businessName", out Business.AspNet.IBusiness business))
+{
+    var cmd = business.Command.GetCommand(
+        "cmd", //Business method or alias
+        "group"); ////Business grouping
+
+    var result = cmd.AsyncCallFull<byte[]>(
+        null, //Method parameters, excluding injection parameters
+        new Token { }, //token
+        new Business.Core.Annotations.UseEntry[] { }); //Parameter object to be injected
+}
 ```
 
 ## Unified adjustment of asp.net server settings
@@ -287,6 +308,7 @@ app.CreateBusiness()
 ```
 
 ## Do you think it's over? Did not!
+
 ~~You also need to understand call wrapping and return wrapping~~
 
 ***
