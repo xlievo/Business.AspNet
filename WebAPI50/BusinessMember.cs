@@ -86,7 +86,22 @@ namespace WebAPI50
             {
                 this.app.ToString().Log();
                 "BindAfter".Log();
+
+                this.Configer.CallAfterMethod += async method =>
+                {
+                    if (method.Result is IResult result)
+                    {
+                        if (1 == result.State)
+                        {
+
+                            //...//
+                            //result.m = "ssssss";
+                            method.Result = this.ResultCreate(result.State, "ssssss");
+                        }
+                    }
+                };
             };
+
 
             //this.BindAfter += () =>
             //{
@@ -239,6 +254,55 @@ namespace WebAPI50
             }
         }
 
+        /// <summary>
+        /// zzzzZZZZZZZZZZZZZZZZZZZZZzzzzzzzzzzzz
+        /// </summary>
+        //[Parameters]
+        public class Z
+        {
+            /// <summary>
+            /// aaa2
+            /// </summary>
+            public string a { get; set; }
+
+            /// <summary>
+            /// bbb2
+            /// </summary>
+            public DateTime b { get; set; }
+
+            public int c { get; set; }
+
+            public Test001Result2 d { get; set; }
+
+            public bool e { get; set; }
+
+            public List<string> f { get; set; }
+
+            public struct Test001Result2
+            {
+                /// <summary>
+                /// aaa2
+                /// </summary>
+                public string a { get; set; }
+
+                /// <summary>
+                /// bbb2
+                /// </summary>
+                public string b { get; set; }
+            }
+        }
+
+        //post json
+        [NotBody]
+        public virtual async ValueTask<IResult<Z>> TestZ(Token token2,  HttpFile files, Context context)
+        {
+            var d = await context.Request.Body.StreamReadStringAsync();
+
+            var d2 = d.TryJsonDeserialize<Z>();
+
+            return this.ResultCreate(d2);
+        }
+
         public class SourceAddArg
         {
             [Size(Min = 1, Max = 128)]
@@ -320,6 +384,15 @@ namespace WebAPI50
             //var dd3 = arg.JsonSerialize().TryJsonDeserialize<IList<Test00122>>();
 
             return this.ResultCreate(new { arg, arg2, arg3 });
+        }
+
+        public virtual async ValueTask<dynamic> TestFile(Context context)
+        {
+            var path = System.IO.Path.Combine(AppContext.BaseDirectory, "aaa.txt");
+
+            var txt = System.IO.File.ReadAllBytes(path);
+
+            return context.File(txt, "application/octet-stream", "aaa.txt");
         }
 
         /// <summary>
@@ -421,7 +494,7 @@ namespace WebAPI50
             //var bing = await httpClient.GetStringAsync("https://www.bing.com/");
             //this.SendAsync<string>("sss");
             var r = Utils.Hosting;
-            
+
             context?.Response.Headers.TryAdd("sss", "qqq");
 
             var ss = System.Text.Encoding.UTF8.GetBytes("a1");
@@ -621,7 +694,7 @@ namespace WebAPI50
                 var context = value as Context;
 
                 var session = new TestInjectionArg { Method = context.Request.Method, Body = await context.Request.Body.StreamReadStringAsync() };
-                
+
                 return this.ResultCreate(session);//return out session
             }
         }

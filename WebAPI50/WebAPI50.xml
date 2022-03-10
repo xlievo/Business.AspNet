@@ -104,6 +104,31 @@
             MyEnum C
             </summary>
         </member>
+        <member name="T:WebAPI50.BusinessMember.Z">
+            <summary>
+            zzzzZZZZZZZZZZZZZZZZZZZZZzzzzzzzzzzzz
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Z.a">
+            <summary>
+            aaa2
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Z.b">
+            <summary>
+            bbb2
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Z.Test001Result2.a">
+            <summary>
+            aaa2
+            </summary>
+        </member>
+        <member name="P:WebAPI50.BusinessMember.Z.Test001Result2.b">
+            <summary>
+            bbb2
+            </summary>
+        </member>
         <member name="T:WebAPI50.BusinessMember.Test00122">
             <summary>
             Test0011Test0011Test0011Test0011

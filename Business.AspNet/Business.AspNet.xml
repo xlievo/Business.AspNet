@@ -610,6 +610,16 @@
             </summary>
             <returns></returns>
         </member>
+        <member name="T:Business.AspNet.NotBodyAttribute">
+            <summary>
+            Do not handle Request.Body
+            </summary>
+        </member>
+        <member name="F:Business.AspNet.NotBodyAttribute.DefaultKey">
+            <summary>
+            DefaultKey
+            </summary>
+        </member>
         <member name="T:Business.AspNet.Context">
             <summary>
             A class for an MVC controller with view support.

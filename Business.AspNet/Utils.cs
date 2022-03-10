@@ -1111,6 +1111,18 @@ namespace Business.AspNet
     }
 
     /// <summary>
+    /// Do not handle Request.Body
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method)]
+    public sealed class NotBodyAttribute : GroupAttribute
+    {
+        /// <summary>
+        /// DefaultKey
+        /// </summary>
+        public readonly static string DefaultKey = new NotBodyAttribute().GroupKey();
+    }
+
+    /// <summary>
     /// A class for an MVC controller with view support.
     /// </summary>
     public class Context : Controller
@@ -1143,6 +1155,7 @@ namespace Business.AspNet
             //g = route.Group;
             IDictionary<string, string> parameters = null;
             var ctd = Utils.Hosting.routeCTD;
+            var hasBodyType = false;
 
             switch (Request.Method)
             {
@@ -1172,8 +1185,9 @@ namespace Business.AspNet
                         else
                         {
                             c = route.Command;
-                            d = System.Web.HttpUtility.UrlDecode(await Request.Body.StreamReadStringAsync(), System.Text.Encoding.UTF8);
+                            //d = System.Web.HttpUtility.UrlDecode(await Request.Body.StreamReadStringAsync(), System.Text.Encoding.UTF8);
                             t = Request.Query.TryGetValue(ctd.T, out value2) ? (string)value2 : null;
+                            hasBodyType = true;
                         }
                     }
                     break;
@@ -1189,9 +1203,9 @@ namespace Business.AspNet
 
             #endregion
 
-            #region benchmark
+            #region benchmark test
 
-            if ("benchmark" == c)
+            if ("benchmark" == c && null != d)
             {
                 var arg = d.TryJsonDeserialize<DocUI.BenchmarkArg>();
                 if (default(DocUI.BenchmarkArg).Equals(arg))
@@ -1231,6 +1245,15 @@ namespace Business.AspNet
                 $"ErrorCmd {errorCmd}".Log(LogType.Error);
                 return errorCmd;
             }
+
+            #region NotBody
+
+            if (hasBodyType && !cmd.Meta.Attributes.ContainsKey(NotBodyAttribute.DefaultKey))
+            {
+                d = await Request.Body.StreamReadStringAsync();
+            }
+
+            #endregion
 
             var token = await business.GetToken(HttpContext, new Token //token
             {
@@ -2008,7 +2031,7 @@ namespace Business.AspNet
         {
             if (null == webSocketManagement) { webSocketManagement = typeof(WebSocketManagement); }
 
-            Hosting.useWebSocket = injection => 
+            Hosting.useWebSocket = injection =>
             {
                 Hosting.webSocketManagement = webSocketManagement.SetInjection(injection) as WebSocketManagement;
 
@@ -2092,7 +2115,6 @@ namespace Business.AspNet
 
                 #region Kestrel
 
-                //IIS
                 if (null != c.KestrelOptions)
                 {
                     var kestrelOptions = c.KestrelOptions;
